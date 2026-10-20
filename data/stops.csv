@@ -1,0 +1,6 @@
+stopId,stopName,passingBuses,fullDayTimes,halfDayTimes
+ST101,Sector 17 Terminal,"B-101;B-102;B-103","07:30;07:45;08:05","07:15;07:30;07:45"
+ST102,Central Metro Station,"B-101;B-102;B-103","07:45;08:00;08:20","07:25;07:40;08:00"
+ST103,Tech Park Junction,"B-101;B-102","08:05;08:15","07:40;07:55"
+ST104,Green Valley Chowk,"B-102;B-103","08:30;08:35","08:10;08:15"
+ST105,College Campus Main Gate,"B-101;B-102;B-103","08:25;08:45;08:55","08:00;08:25;08:30"
