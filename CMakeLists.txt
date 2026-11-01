@@ -8,15 +8,19 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Core Gui)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core Gui)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Core Gui Network)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core Gui Network)
 
 include_directories(include)
 
 set(SOURCES
+    src/UserAccount.cpp
+    src/AuthManager.cpp
     src/Student.cpp
     src/Driver.cpp
     src/Conductor.cpp
+    src/Admin.cpp
+    src/Parent.cpp
     src/Stop.cpp
     src/Route.cpp
     src/Bus.cpp
@@ -24,6 +28,10 @@ set(SOURCES
     src/RouteOptimizer.cpp
     src/ConnectingBusEngine.cpp
     src/AttendanceLogger.cpp
+    src/QRPassSystem.cpp
+    src/ComplaintEngine.cpp
+    src/MaintenanceManager.cpp
+    src/NotificationCenter.cpp
     src/FileHandler.cpp
     src/SystemManager.cpp
     src/MainWindow.cpp
@@ -31,10 +39,14 @@ set(SOURCES
 )
 
 set(HEADERS
+    include/UserAccount.hpp
+    include/AuthManager.hpp
     include/Person.hpp
     include/Student.hpp
     include/Driver.hpp
     include/Conductor.hpp
+    include/Admin.hpp
+    include/Parent.hpp
     include/Stop.hpp
     include/Route.hpp
     include/Bus.hpp
@@ -44,6 +56,10 @@ set(HEADERS
     include/RouteOptimizer.hpp
     include/ConnectingBusEngine.hpp
     include/AttendanceLogger.hpp
+    include/QRPassSystem.hpp
+    include/ComplaintEngine.hpp
+    include/MaintenanceManager.hpp
+    include/NotificationCenter.hpp
     include/Exceptions.hpp
     include/FileHandler.hpp
     include/SystemManager.hpp
@@ -52,4 +68,9 @@ set(HEADERS
 
 add_executable(smart_college_bus_system_gui ${SOURCES} ${HEADERS})
 
-target_link_libraries(smart_college_bus_system_gui PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui)
+target_link_libraries(smart_college_bus_system_gui PRIVATE 
+    Qt${QT_VERSION_MAJOR}::Widgets 
+    Qt${QT_VERSION_MAJOR}::Core 
+    Qt${QT_VERSION_MAJOR}::Gui 
+    Qt${QT_VERSION_MAJOR}::Network
+)
