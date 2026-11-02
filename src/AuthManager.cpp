@@ -19,7 +19,7 @@ UserSession AuthManager::login(const string& username, const string& password) {
         if (acc.getUsername() == username && acc.validatePassword(password)) {
             currentSession.activeAccount = &acc;
             currentSession.isAuthenticated = true;
-            cout << "🔑 [AUTH SUCCESS] Welcome, " << acc.getUsername() 
+            cout << "[AUTH] [AUTH SUCCESS] Welcome, " << acc.getUsername() 
                       << "! Logged in as Role: " << acc.getRoleString() << "\n";
             return currentSession;
         }
@@ -27,13 +27,13 @@ UserSession AuthManager::login(const string& username, const string& password) {
 
     currentSession.activeAccount = nullptr;
     currentSession.isAuthenticated = false;
-    cout << "❌ [AUTH FAILED] Invalid Username or Password.\n";
+    cout << "[ERROR] [AUTH FAILED] Invalid Username or Password.\n";
     return currentSession;
 }
 
 void AuthManager::logout() {
     if (currentSession.isAuthenticated && currentSession.activeAccount) {
-        cout << "🔒 [LOGOUT] User " << currentSession.activeAccount->getUsername() << " logged out.\n";
+        cout << "[LOGOUT] [LOGOUT] User " << currentSession.activeAccount->getUsername() << " logged out.\n";
     }
     currentSession.activeAccount = nullptr;
     currentSession.isAuthenticated = false;

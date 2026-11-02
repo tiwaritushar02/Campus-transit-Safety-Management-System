@@ -21,6 +21,7 @@
 #include <QGraphicsEllipseItem>
 #include <QTimer>
 #include "SystemManager.hpp"
+#include "RouteOptimizer.hpp"
 
 using namespace std;
 
@@ -31,74 +32,106 @@ private:
     SystemManager sysManager;
 
     // Stacked View Navigation
-    QStackedWidget* stackedWidget;
-    QWidget* loginWidget;
-    QWidget* portalWidget;
+    QStackedWidget* stackedWidget = nullptr;
+    QWidget* loginWidget = nullptr;
+    QWidget* portalWidget = nullptr;
 
     // Login Form Widgets
-    QComboBox* loginRoleCombo;
-    QLineEdit* loginUserEdit;
-    QLineEdit* loginPassEdit;
-    QLabel* loginStatusLabel;
+    QComboBox* loginRoleCombo = nullptr;
+    QLineEdit* loginUserEdit = nullptr;
+    QLineEdit* loginPassEdit = nullptr;
+    QLabel* loginStatusLabel = nullptr;
 
     // Logged In Banner
-    QLabel* loggedUserLabel;
-    QLabel* loggedRoleBadge;
-    QComboBox* scheduleComboBox;
-    QTabWidget* tabWidget;
+    QLabel* loggedUserLabel = nullptr;
+    QLabel* loggedRoleBadge = nullptr;
+    QComboBox* scheduleComboBox = nullptr;
+    QTabWidget* tabWidget = nullptr;
 
     // Tab Widgets for Role Filtering
-    QWidget* studentTabWidget;
-    QWidget* driverTabWidget;
-    QWidget* adminTabWidget;
-    QWidget* parentTabWidget;
-    QWidget* routeVisualizerTabWidget;
-    QWidget* fleetAndComplaintsTabWidget;
+    QWidget* studentTabWidget = nullptr;
+    QWidget* driverTabWidget = nullptr;
+    QWidget* adminTabWidget = nullptr;
+    QWidget* parentTabWidget = nullptr;
+    QWidget* routeVisualizerTabWidget = nullptr;
+    QWidget* fleetAndComplaintsTabWidget = nullptr;
 
     // Tab 1: Student Portal
-    QLineEdit* studentRollInput;
-    QLabel* studentInfoLabel;
-    QTableWidget* scheduleTable;
-    QLineEdit* ratingDriverIdInput;
-    QComboBox* ratingStarCombo;
-    QLineEdit* ratingFeedbackInput;
+    QLineEdit* studentRollInput = nullptr;
+    QLabel* studentInfoLabel = nullptr;
+    QTableWidget* scheduleTable = nullptr;
+    QLineEdit* ratingDriverIdInput = nullptr;
+    QComboBox* ratingStarCombo = nullptr;
+    QLineEdit* ratingFeedbackInput = nullptr;
 
     // Tab 2: Driver Portal
-    QComboBox* driverBusCombo;
-    QLineEdit* driverDelayReasonInput;
-    QLineEdit* driverDelayMinsInput;
-    QLineEdit* misbehaviorRollInput;
-    QLineEdit* misbehaviorDescInput;
+    QComboBox* driverBusCombo = nullptr;
+    QLineEdit* driverDelayReasonInput = nullptr;
+    QLineEdit* driverDelayMinsInput = nullptr;
+    QLineEdit* misbehaviorRollInput = nullptr;
+    QLineEdit* misbehaviorDescInput = nullptr;
 
     // Tab 3: Admin Control Panel
-    QComboBox* adminBusCombo;
-    QLineEdit* adminRegInput;
-    QLineEdit* adminCapInput;
-    QComboBox* adminRouteCombo;
-    QComboBox* adminTimingStopCombo;
-    QComboBox* adminTimingBusCombo;
-    QComboBox* adminTimingScheduleCombo;
-    QLineEdit* adminNewTimeInput;
+    QComboBox* adminBusCombo = nullptr;
+    QLineEdit* adminRegInput = nullptr;
+    QLineEdit* adminCapInput = nullptr;
+    QComboBox* adminRouteCombo = nullptr;
+    QComboBox* adminTimingStopCombo = nullptr;
+    QComboBox* adminTimingBusCombo = nullptr;
+    QComboBox* adminTimingScheduleCombo = nullptr;
+    QLineEdit* adminNewTimeInput = nullptr;
+
+    // Admin Attendance Module
+    QComboBox* adminBoardRollCombo = nullptr;
+    QComboBox* adminBoardBusCombo = nullptr;
+    QTableWidget* adminAttendanceTable = nullptr;
+    QLabel* adminAttendanceStatusLabel = nullptr;
+    QLabel* statFleetCountLabel = nullptr;
+    QLabel* statActiveRoutesLabel = nullptr;
+    QLabel* statAttendanceCountLabel = nullptr;
+
+    // Admin Student Registration & Directory
+    QLineEdit* adminNewStudentNameInput = nullptr;
+    QLineEdit* adminNewStudentRollInput = nullptr;
+    QLineEdit* adminNewStudentPhoneInput = nullptr;
+    QComboBox* adminNewStudentStopCombo = nullptr;
+    QComboBox* adminNewStudentBusCombo = nullptr;
+    QComboBox* adminNewStudentFeeCombo = nullptr;
+    QComboBox* adminStudentLookupCombo = nullptr;
+    QLabel* adminStudentLookupInfoLabel = nullptr;
+
+    // Complaints Module
+    QTableWidget* complaintTable = nullptr;
+    QLabel* studentDelayBannerLabel = nullptr;
 
     // Tab 4: Parent Portal
-    QLineEdit* parentPhoneInput;
-    QLabel* parentInfoLabel;
+    QLineEdit* parentPhoneInput = nullptr;
+    QLabel* parentInfoLabel = nullptr;
 
     // Tab 5: Route Optimizer & Visualizer
-    QGraphicsView* graphView;
-    QGraphicsScene* graphScene;
-    QComboBox* startStopCombo;
-    QComboBox* destStopCombo;
-    QLabel* routeInfoLabel;
-    QTimer* simTimer;
-    int simStep;
+    QGraphicsView* graphView = nullptr;
+    QGraphicsScene* graphScene = nullptr;
+    QComboBox* startStopCombo = nullptr;
+    QComboBox* destStopCombo = nullptr;
+    QComboBox* algorithmCombo = nullptr;
+    QLabel* routeInfoLabel = nullptr;
+    QTimer* simTimer = nullptr;
+    int simStep = 0;
+    QTimer* visTimer = nullptr;
+    int visStep = 0;
+    AlgorithmMetrics currentMetrics;
+    vector<QGraphicsItem*> searchVisItems;
     vector<string> currentSimStops;
-    QGraphicsEllipseItem* busMarker;
+    QGraphicsEllipseItem* busMarker = nullptr;
+    QGraphicsPathItem* optimalRoutePathItem = nullptr;
+    QGraphicsPathItem* optimalRouteGlowItem = nullptr;
+    QGraphicsEllipseItem* sourceHighlightMarker = nullptr;
+    vector<pair<int, int>> activeSimWaypoints;
 
     // Fleet Table
-    QTableWidget* fleetTable;
-    QLineEdit* boardRollInput;
-    QComboBox* boardBusCombo;
+    QTableWidget* fleetTable = nullptr;
+    QLineEdit* boardRollInput = nullptr;
+    QComboBox* boardBusCombo = nullptr;
 
     // GUI Initialization Helpers
     void setupUI();
@@ -115,6 +148,10 @@ private:
     void setupTabsForRole(UserRole role, const string& username);
     void renderRouteGraph();
     void refreshFleetTable();
+    void refreshAttendanceTable();
+    void refreshComplaintTable();
+    void checkAndShowDelayNotice();
+    void fitCorridorView();
 
 private slots:
     // Authentication Slots
@@ -127,6 +164,7 @@ private slots:
     void onFindConnectingBuses();
     void onShowDigitalQRPass();
     void onSubmitDriverRating();
+    void onStudentReportDriver();
     void onTriggerStudentSOS();
 
     void onDriverStartTrip();
@@ -137,13 +175,27 @@ private slots:
     void onAdminUpdateBus();
     void onAdminUpdateTiming();
     void onAdminBroadcastNotice();
+    void onAdminMarkAttendance();
+    void onAdminScanQRAttendance();
+    void onAdminRegisterStudent();
+    void onAdminLookupStudentChanged(int idx);
+    void onAdminResolveComplaint();
 
     void onParentTrackChild();
 
     void onOptimizeRoute();
+    void onVisualizeAlgorithmSearch();
+    void onVisStep();
     void onStartLiveSim();
     void onSimStep();
     void onBoardStudent();
+    void onZoomIn();
+    void onZoomOut();
+    void onFitCorridor();
+    void onOpenWebMap();
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);

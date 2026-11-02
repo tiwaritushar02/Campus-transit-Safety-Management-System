@@ -26,7 +26,7 @@ void MaintenanceManager::logConditionReport(const string& busId, const string& i
     for (auto& r : records) {
         if (r.busId == busId) {
             r.conditionIssues += " | Reported: " + issue;
-            cout << "🔧 [MAINTENANCE LOGGED] Bus [" << busId << "] Issue logged: " << issue << "\n";
+            cout << "[MAINTENANCE] [MAINTENANCE LOGGED] Bus [" << busId << "] Issue logged: " << issue << "\n";
             return;
         }
     }
@@ -40,7 +40,7 @@ void MaintenanceManager::updateMaintenanceDates(const string& busId, const strin
             r.nextServiceDueDate = nextService;
             r.pucExpiryDate = pucExp;
             r.insuranceExpiryDate = insExp;
-            cout << "✅ Maintenance dates updated for Bus " << busId << "\n";
+            cout << "[SUCCESS] Maintenance dates updated for Bus " << busId << "\n";
             return;
         }
     }

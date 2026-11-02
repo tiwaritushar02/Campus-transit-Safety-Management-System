@@ -3,495 +3,3015 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart College Bus Management & Route Optimization Visualizer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>TransitPulse - Enterprise Smart Bus Management System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons for Enterprise Iconography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Leaflet OpenStreetMap CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --border-color: rgba(255, 255, 255, 0.1);
-            --primary: #38bdf8;
-            --primary-glow: rgba(56, 189, 248, 0.3);
-            --secondary: #818cf8;
-            --accent: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            /* Color Palette - Enterprise Slate & Primary Blue */
+            --primary-900: #1e3a8a;
+            --primary-700: #1d4ed8;
+            --primary-600: #2563eb;
+            --primary-500: #3b82f6;
+            --primary-100: #dbeafe;
+            --primary-50: #eff6ff;
+
+            --slate-950: #020617;
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-600: #475569;
+            --slate-500: #64748b;
+            --slate-400: #94a3b8;
+            --slate-300: #cbd5e1;
+            --slate-200: #e2e8f0;
+            --slate-100: #f1f5f9;
+            --slate-50: #f8fafc;
+            --white: #ffffff;
+
+            --success-600: #059669;
+            --success-500: #10b981;
+            --success-100: #d1fae5;
+            --success-50: #ecfdf5;
+
+            --warning-600: #d97706;
+            --warning-500: #f59e0b;
+            --warning-100: #fef3c7;
+            --warning-50: #fffbeb;
+
+            --danger-600: #dc2626;
+            --danger-500: #ef4444;
+            --danger-100: #fee2e2;
+            --danger-50: #fef2f2;
+
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+            --modal-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 18px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--slate-100);
+            color: var(--slate-800);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
         }
 
-        header {
-            background: rgba(15, 23, 42, 0.9);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
+        h1, h2, h3, h4, h5, .brand-title {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            color: var(--slate-900);
+        }
+
+        /* -------------------------------------------------------------
+           VIEW CONTAINER MANAGEMENT (LOGIN vs DASHBOARD APP)
+        ------------------------------------------------------------- */
+        .view-screen {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .view-screen.active {
             display: flex;
-            justify-content: space-between;
+        }
+
+        /* -------------------------------------------------------------
+           1. MODERN LOGIN PAGE STYLING
+        ------------------------------------------------------------- */
+        #loginScreen {
+            flex-direction: column;
             align-items: center;
-            position: sticky;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            position: relative;
+            padding: 2rem 1rem;
+        }
+
+        #loginScreen::before {
+            content: '';
+            position: absolute;
             top: 0;
-            z-index: 100;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.15) 0%, transparent 40%),
+                              radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.12) 0%, transparent 40%);
+            pointer-events: none;
         }
 
-        .logo-title {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .logo-icon {
-            font-size: 1.8rem;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .badge-cpp {
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--primary);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            padding: 0.25rem 0.6rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .main-layout {
-            display: grid;
-            grid-template-columns: 340px 1fr;
-            gap: 1.5rem;
-            padding: 1.5rem;
-            flex: 1;
-        }
-
-        .panel {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            backdrop-filter: blur(16px);
-            border-radius: 16px;
-            padding: 1.25rem;
+        .login-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            gap: 1.5rem;
         }
 
-        .panel-title {
-            font-size: 1.1rem;
-            font-weight: 600;
+        .login-card {
+            background: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 2.25rem;
             display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .login-header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             gap: 0.5rem;
-            color: var(--primary);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.75rem;
+        }
+
+        .login-logo-badge {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+            margin-bottom: 0.25rem;
+        }
+
+        .login-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--slate-900);
+            letter-spacing: -0.02em;
+        }
+
+        .login-subtitle {
+            font-size: 0.875rem;
+            color: var(--slate-500);
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
+            gap: 0.45rem;
+            text-align: left;
+        }
+
+        .form-label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--slate-700);
+            display: flex;
+            align-items: center;
             gap: 0.4rem;
         }
 
-        label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
         }
 
-        select, input, button {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 0.65rem 0.9rem;
-            border-radius: 8px;
+        .input-icon {
+            position: absolute;
+            left: 0.95rem;
+            color: var(--slate-400);
+            font-size: 0.95rem;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.6rem;
             font-size: 0.9rem;
+            color: var(--slate-800);
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-300);
+            border-radius: var(--radius-md);
             outline: none;
-            transition: all 0.2s ease;
+            transition: var(--transition);
         }
 
-        select:focus, input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-glow);
+        .form-control:focus {
+            background-color: var(--white);
+            border-color: var(--primary-600);
+            box-shadow: 0 0 0 4px var(--primary-100);
         }
 
-        button {
+        .form-control:focus + .input-icon,
+        .input-group:focus-within .input-icon {
+            color: var(--primary-600);
+        }
+
+        select.form-control {
+            appearance: none;
             cursor: pointer;
-            font-weight: 600;
-            background: linear-gradient(135deg, #0284c7, #4f46e5);
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.9rem center;
+            background-size: 1rem;
+            padding-right: 2.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+            color: var(--white);
             border: none;
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1.25rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            gap: 0.6rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            transition: var(--transition);
+            width: 100%;
         }
 
-        button:hover {
-            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-700), var(--primary-900));
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
             transform: translateY(-1px);
         }
 
-        button:active {
+        .btn-primary:active {
             transform: translateY(0);
         }
 
-        .visualization-area {
+        .error-banner {
+            display: none;
+            padding: 0.75rem 1rem;
+            background-color: var(--danger-50);
+            border: 1px solid var(--danger-100);
+            border-radius: var(--radius-md);
+            color: var(--danger-600);
+            font-size: 0.85rem;
+            font-weight: 500;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Information / Quick Login Panel */
+        .info-panel {
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 1.1rem;
             display: flex;
             flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .info-panel-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--slate-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .credentials-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+        }
+
+        .credential-item {
+            background-color: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-sm);
+            padding: 0.55rem 0.75rem;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            text-align: left;
+        }
+
+        .credential-item:hover {
+            border-color: var(--primary-500);
+            background-color: var(--primary-50);
+            transform: translateY(-1px);
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-weight: 600;
+            font-size: 0.72rem;
+            border-radius: 4px;
+            padding: 0.15rem 0.4rem;
+            width: fit-content;
+        }
+
+        .role-badge.admin { background: var(--danger-50); color: var(--danger-600); }
+        .role-badge.driver { background: var(--warning-50); color: var(--warning-600); }
+        .role-badge.student { background: var(--success-50); color: var(--success-600); }
+        .role-badge.parent { background: var(--primary-50); color: var(--primary-600); }
+
+        .cred-details {
+            color: var(--slate-500);
+            font-size: 0.72rem;
+            font-family: monospace;
+        }
+
+        /* -------------------------------------------------------------
+           2. ENTERPRISE DASHBOARD LAYOUT & NAVIGATION
+        ------------------------------------------------------------- */
+        #dashboardScreen {
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: var(--slate-100);
+        }
+
+        /* Top Navigation Bar */
+        .top-navbar {
+            background-color: var(--white);
+            border-bottom: 1px solid var(--slate-200);
+            height: 64px;
+            padding: 0 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            text-decoration: none;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1.1rem;
+        }
+
+        .brand-text h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--slate-900);
+            line-height: 1.2;
+        }
+
+        .brand-text span {
+            font-size: 0.75rem;
+            color: var(--slate-500);
+            font-weight: 500;
+        }
+
+        .navbar-center {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .schedule-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            padding: 0.4rem 0.9rem;
+            border-radius: var(--radius-md);
+            font-size: 0.8125rem;
+        }
+
+        .schedule-indicator select {
+            border: none;
+            background: transparent;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--primary-700);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-profile-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.35rem 0.75rem 0.35rem 0.5rem;
+            border-radius: 30px;
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-200);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-100);
+            color: var(--primary-700);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .user-meta {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .user-name {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--slate-800);
+        }
+
+        .user-role-label {
+            font-size: 0.7rem;
+            color: var(--slate-500);
+            font-weight: 500;
+        }
+
+        .btn-icon-subtle {
+            background: transparent;
+            border: none;
+            color: var(--slate-500);
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-icon-subtle:hover {
+            background-color: var(--slate-100);
+            color: var(--slate-800);
+        }
+
+        .btn-logout {
+            background-color: var(--danger-50);
+            color: var(--danger-600);
+            border: 1px solid var(--danger-100);
+            border-radius: var(--radius-md);
+            padding: 0.45rem 0.9rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-logout:hover {
+            background-color: var(--danger-100);
+            color: var(--danger-700);
+        }
+
+        /* -------------------------------------------------------------
+           3. MAIN APP LAYOUT (SIDEBAR + CONTENT CANVAS)
+        ------------------------------------------------------------- */
+        .app-body {
+            display: flex;
+            flex: 1;
+            min-height: calc(100vh - 64px);
+        }
+
+        .app-sidebar {
+            width: 250px;
+            background-color: var(--white);
+            border-right: 1px solid var(--slate-200);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1.25rem 0.85rem;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .nav-section-label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            color: var(--slate-400);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.75rem 0.75rem 0.35rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 0.85rem;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--slate-600);
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-link i {
+            font-size: 1rem;
+            color: var(--slate-400);
+            width: 20px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            background-color: var(--slate-100);
+            color: var(--slate-900);
+        }
+
+        .nav-link:hover i {
+            color: var(--slate-700);
+        }
+
+        .nav-link.active {
+            background-color: var(--primary-50);
+            color: var(--primary-700);
+            font-weight: 600;
+        }
+
+        .nav-link.active i {
+            color: var(--primary-600);
+        }
+
+        .sidebar-footer {
+            padding: 0.75rem;
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .app-main {
+            flex: 1;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.75rem;
+            overflow-y: auto;
+            max-width: 1440px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* -------------------------------------------------------------
+           4. METRIC & STATS CARDS
+        ------------------------------------------------------------- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .stat-card {
+            background-color: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .stat-label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--slate-500);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .stat-value {
+            font-size: 1.625rem;
+            font-weight: 700;
+            color: var(--slate-900);
+            letter-spacing: -0.02em;
+        }
+
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
+            width: fit-content;
+        }
+
+        .stat-badge.positive {
+            background-color: var(--success-50);
+            color: var(--success-600);
+        }
+
+        .stat-badge.neutral {
+            background-color: var(--slate-100);
+            color: var(--slate-600);
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-icon.blue { background-color: var(--primary-50); color: var(--primary-600); }
+        .stat-icon.green { background-color: var(--success-50); color: var(--success-600); }
+        .stat-icon.amber { background-color: var(--warning-50); color: var(--warning-600); }
+        .stat-icon.purple { background-color: #f3e8ff; color: #9333ea; }
+
+        /* -------------------------------------------------------------
+           5. DASHBOARD CARDS & CONTAINERS
+        ------------------------------------------------------------- */
+        .card {
+            background-color: var(--white);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.15rem 1.5rem;
+            border-bottom: 1px solid var(--slate-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--slate-900);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .card-title i {
+            color: var(--primary-600);
+            font-size: 1rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* -------------------------------------------------------------
+           6. DATA TABLES & FILTERS
+        ------------------------------------------------------------- */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.875rem;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: var(--slate-50);
+            color: var(--slate-600);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid var(--slate-200);
+        }
+
+        .data-table td {
+            padding: 0.875rem 1.25rem;
+            border-bottom: 1px solid var(--slate-100);
+            color: var(--slate-700);
+            vertical-align: middle;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: var(--slate-50);
+        }
+
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        .pill-badge.success { background-color: var(--success-100); color: var(--success-600); }
+        .pill-badge.warning { background-color: var(--warning-100); color: var(--warning-600); }
+        .pill-badge.danger { background-color: var(--danger-100); color: var(--danger-600); }
+        .pill-badge.info { background-color: var(--primary-100); color: var(--primary-700); }
+
+        /* -------------------------------------------------------------
+           7. ROUTE OPTIMIZER & LEAFLET OPENSTREETMAP STYLING
+        ------------------------------------------------------------- */
+        .visualizer-wrapper {
+            display: grid;
+            grid-template-columns: 340px 1fr;
             gap: 1.5rem;
         }
 
-        .canvas-container {
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
+        .map-view-toggle {
+            display: inline-flex;
+            background-color: var(--slate-100);
+            padding: 0.25rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--slate-200);
+            gap: 0.25rem;
+        }
+
+        .map-view-btn {
+            border: none;
+            background: transparent;
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--slate-600);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: var(--transition);
+        }
+
+        .map-view-btn.active {
+            background-color: var(--white);
+            color: var(--primary-700);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #geoMapContainer {
+            width: 100%;
+            height: 480px;
+            border-radius: var(--radius-lg);
             position: relative;
-            height: 420px;
             overflow: hidden;
+            background-color: #f1f5f9;
+        }
+
+        #leafletMap {
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        .canvas-container {
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--slate-800);
+            position: relative;
+            height: 480px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
         }
 
         canvas {
             width: 100%;
             height: 100%;
+            display: block;
         }
 
-        .canvas-overlay {
+        /* Custom Leaflet Map Markers */
+        .custom-geo-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+            border: 2px solid #ffffff;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .custom-geo-marker.start {
+            background: linear-gradient(135deg, #10b981, #059669);
+            width: 32px;
+            height: 32px;
+        }
+
+        .custom-geo-marker.dest {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            width: 32px;
+            height: 32px;
+        }
+
+        .custom-geo-marker.stop {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            width: 26px;
+            height: 26px;
+            font-size: 0.72rem;
+        }
+
+        .custom-geo-marker.bus {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            width: 34px;
+            height: 34px;
+            animation: busPulse 1.5s infinite;
+        }
+
+        @keyframes busPulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        .geo-map-legend {
+            position: absolute;
+            bottom: 1.25rem;
+            left: 1.25rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            z-index: 1000;
+            box-shadow: var(--card-shadow);
+            font-size: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--slate-700);
+            font-weight: 500;
+        }
+
+        .legend-icon-badge {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .canvas-legend {
             position: absolute;
             top: 1rem;
             right: 1rem;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--border-color);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.8rem;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            padding: 0.65rem 1rem;
             display: flex;
-            gap: 1rem;
+            gap: 1.25rem;
+            font-size: 0.78rem;
+            color: var(--slate-300);
+            z-index: 20;
         }
 
-        .status-badge {
-            display: inline-flex;
+        .legend-indicator {
+            display: flex;
             align-items: center;
             gap: 0.4rem;
         }
 
-        .dot {
+        .legend-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--accent);
         }
 
-        .results-box {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1rem;
-            font-size: 0.9rem;
+        /* -------------------------------------------------------------
+           8. DIGITAL QR BUS PASS CARD
+        ------------------------------------------------------------- */
+        .digital-pass-card {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #0369a1 100%);
+            border-radius: var(--radius-xl);
+            color: var(--white);
+            padding: 1.75rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 30px -5px rgba(29, 78, 216, 0.35);
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 1.25rem;
+            max-width: 440px;
         }
 
-        .member-cards {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
+        .digital-pass-card::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            width: 160px;
+            height: 160px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            pointer-events: none;
         }
 
-        .member-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1rem;
+        .pass-header {
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding-bottom: 0.85rem;
         }
 
-        .member-num {
-            font-size: 0.75rem;
-            color: var(--secondary);
-            font-weight: 700;
+        .pass-chip {
+            font-size: 0.7rem;
             text-transform: uppercase;
-        }
-
-        .member-title {
-            font-size: 0.95rem;
+            letter-spacing: 0.08em;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.25rem 0.65rem;
+            border-radius: 20px;
             font-weight: 600;
         }
 
-        .oop-tag {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--accent);
+        .pass-content {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .pass-qr-box {
+            background-color: var(--white);
+            padding: 0.6rem;
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .qr-placeholder {
+            width: 88px;
+            height: 88px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2px;
+            padding: 4px;
+            background: #000;
+        }
+
+        .qr-placeholder span {
+            background-color: #fff;
+        }
+
+        .pass-detail-row {
+            margin-bottom: 0.6rem;
+        }
+
+        .pass-detail-label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+        }
+
+        .pass-detail-value {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        /* -------------------------------------------------------------
+           9. PARENT TRACKER TIMELINE
+        ------------------------------------------------------------- */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            position: relative;
+            padding-left: 1.75rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 6px;
+            bottom: 6px;
+            width: 2px;
+            background-color: var(--slate-200);
+        }
+
+        .timeline-step {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .timeline-step::before {
+            content: '';
+            position: absolute;
+            left: -1.75rem;
+            top: 4px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: var(--white);
+            border: 2px solid var(--slate-300);
+        }
+
+        .timeline-step.completed::before {
+            background-color: var(--success-500);
+            border-color: var(--success-500);
+        }
+
+        .timeline-step.active::before {
+            background-color: var(--primary-600);
+            border-color: var(--primary-600);
+            box-shadow: 0 0 0 4px var(--primary-100);
+        }
+
+        .timeline-time {
+            font-size: 0.75rem;
+            color: var(--slate-400);
+            font-weight: 500;
+        }
+
+        .timeline-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--slate-800);
+        }
+
+        .timeline-desc {
+            font-size: 0.8125rem;
+            color: var(--slate-500);
+        }
+
+        /* -------------------------------------------------------------
+           10. BUTTONS & UTILITIES
+        ------------------------------------------------------------- */
+        .btn-secondary {
+            background-color: var(--white);
+            color: var(--slate-700);
+            border: 1px solid var(--slate-300);
+            border-radius: var(--radius-md);
+            padding: 0.65rem 1.1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--slate-50);
+            border-color: var(--slate-400);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-600);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 0.65rem 1.1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-700);
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+
+        /* -------------------------------------------------------------
+           11. MODAL DIALOGS
+        ------------------------------------------------------------- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background-color: var(--white);
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 580px;
+            box-shadow: var(--modal-shadow);
+            border: 1px solid var(--slate-200);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--slate-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--slate-900);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--slate-200);
+            background-color: var(--slate-50);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        /* Member Card Matrix */
+        .member-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .academic-card {
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .academic-role {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary-700);
+            text-transform: uppercase;
+        }
+
+        .academic-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--slate-900);
+        }
+
+        .academic-pill {
+            display: inline-block;
+            background-color: var(--success-100);
+            color: var(--success-600);
+            font-size: 0.72rem;
+            font-weight: 600;
             padding: 0.2rem 0.5rem;
             border-radius: 4px;
-            font-size: 0.75rem;
-            align-self: flex-start;
-            margin-top: 0.25rem;
+            width: fit-content;
+        }
+
+        /* -------------------------------------------------------------
+           12. RESPONSIVE DESIGN (MEDIA QUERIES)
+        ------------------------------------------------------------- */
+        @media (max-width: 1024px) {
+            .visualizer-wrapper {
+                grid-template-columns: 1fr;
+            }
+            .app-sidebar {
+                width: 220px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-body {
+                flex-direction: column;
+            }
+            .app-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--slate-200);
+            }
+            .sidebar-nav {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .top-navbar {
+                padding: 0 1rem;
+            }
+            .credentials-grid {
+                grid-template-columns: 1fr;
+            }
+            .member-cards-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo-title">
-            <span class="logo-icon">🚌</span>
-            <div>
-                <h2>Smart College Bus Management & Route Optimization</h2>
-                <p style="font-size: 0.8rem; color: var(--text-muted);">C++17 OOP Academic PBL Interactive Dashboard</p>
+    <!-- =============================================================
+         1. LOGIN SCREEN (AUTHENTICATION VIEW)
+    ============================================================= -->
+    <section id="loginScreen" class="view-screen active">
+        <div class="login-wrapper">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="login-logo-badge">
+                        <i class="fa-solid fa-bus"></i>
+                    </div>
+                    <h1 class="login-title">Smart Bus Management System</h1>
+                    <p class="login-subtitle">Enterprise Campus Transit & Safety Portal</p>
+                </div>
+
+                <!-- Error Alert Box -->
+                <div id="loginError" class="error-banner">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="loginErrorMsg">Invalid credentials. Please verify and try again.</span>
+                </div>
+
+                <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="loginRole">
+                            <i class="fa-solid fa-id-badge"></i> Authorized Role Portal
+                        </label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-users input-icon"></i>
+                            <select id="loginRole" class="form-control" onchange="onRoleDropdownChange()">
+                                <option value="ADMIN">Administrator Portal</option>
+                                <option value="DRIVER">Fleet Driver Portal</option>
+                                <option value="STUDENT" selected>Student Passenger Portal</option>
+                                <option value="PARENT">Parent / Guardian Portal</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="loginUsername">
+                            <i class="fa-solid fa-user"></i> Username / Roll Number / ID
+                        </label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-address-card input-icon"></i>
+                            <input type="text" id="loginUsername" class="form-control" value="2024-CS-001" placeholder="Enter ID or username" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="loginPassword">
+                            <i class="fa-solid fa-lock"></i> Account Password
+                        </label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-key input-icon"></i>
+                            <input type="password" id="loginPassword" class="form-control" value="student123" placeholder="Enter secure password" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                        <span>Sign In to Portal</span>
+                    </button>
+                </form>
+
+                <!-- Information Panel with Quick Fill Credentials -->
+                <div class="info-panel">
+                    <div class="info-panel-title">
+                        <span>Demo Access Credentials</span>
+                        <i class="fa-solid fa-circle-info"></i>
+                    </div>
+                    <div class="credentials-grid">
+                        <div class="credential-item" onclick="quickFillCredentials('ADMIN', 'admin', 'admin123')">
+                            <span class="role-badge admin"><i class="fa-solid fa-shield-halved"></i> Admin</span>
+                            <span class="cred-details">admin / admin123</span>
+                        </div>
+                        <div class="credential-item" onclick="quickFillCredentials('DRIVER', 'D-01', 'driver123')">
+                            <span class="role-badge driver"><i class="fa-solid fa-id-card"></i> Driver</span>
+                            <span class="cred-details">D-01 / driver123</span>
+                        </div>
+                        <div class="credential-item" onclick="quickFillCredentials('STUDENT', '2024-CS-001', 'student123')">
+                            <span class="role-badge student"><i class="fa-solid fa-graduation-cap"></i> Student</span>
+                            <span class="cred-details">2024-CS-001 / student123</span>
+                        </div>
+                        <div class="credential-item" onclick="quickFillCredentials('PARENT', 'P-101', 'parent123')">
+                            <span class="role-badge parent"><i class="fa-solid fa-people-roof"></i> Parent</span>
+                            <span class="cred-details">P-101 / parent123</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div style="display: flex; gap: 0.75rem; align-items: center;">
-            <span class="badge-cpp">Primary Language: C++17</span>
-            <span class="badge-cpp" style="color: var(--accent); border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.15);">Team of 4 Members</span>
+    </section>
+
+    <!-- =============================================================
+         2. AUTHENTICATED DASHBOARD APPLICATION
+    ============================================================= -->
+    <section id="dashboardScreen" class="view-screen">
+        <!-- Top Navigation Bar -->
+        <header class="top-navbar">
+            <div class="navbar-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-bus"></i>
+                </div>
+                <div class="brand-text">
+                    <h2>TransitPulse</h2>
+                    <span>Smart Campus Transit Management</span>
+                </div>
+            </div>
+
+            <div class="navbar-center">
+                <div class="schedule-indicator">
+                    <i class="fa-solid fa-calendar-days" style="color: var(--primary-600);"></i>
+                    <span>Schedule Mode:</span>
+                    <select id="dashScheduleSelect" onchange="onScheduleModeChange()">
+                        <option value="FULL_DAY">Full-Day (Normal Hours)</option>
+                        <option value="HALF_DAY">Half-Day (Exam / Early Hours)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="navbar-actions">
+                <button class="btn-secondary btn-sm" onclick="openAcademicModal()" title="View Academic PBL & OOP Architecture">
+                    <i class="fa-solid fa-diagram-project"></i>
+                    <span>OOP Architecture</span>
+                </button>
+
+                <div class="user-profile-pill">
+                    <div class="user-avatar" id="navAvatar">U</div>
+                    <div class="user-meta">
+                        <span class="user-name" id="navUserName">User Name</span>
+                        <span class="user-role-label" id="navUserRole">Student</span>
+                    </div>
+                </div>
+
+                <button class="btn-logout" onclick="handleLogout()">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace Shell -->
+        <div class="app-body">
+            <!-- Sidebar Navigation -->
+            <aside class="app-sidebar">
+                <div class="sidebar-nav" id="sidebarMenu">
+                    <!-- Nav items injected dynamically based on authenticated role -->
+                </div>
+
+                <div class="sidebar-footer">
+                    <div style="font-weight: 600; color: var(--slate-700);">System Status: Operational</div>
+                    <div style="color: var(--slate-500); display: flex; align-items: center; gap: 0.35rem;">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--success-500);"></span>
+                        Backend C++17 Core Active
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Dynamic Dashboard Content -->
+            <main class="app-main" id="mainDashboardView">
+                <!-- Injected via JavaScript based on Active Tab -->
+            </main>
         </div>
-    </header>
+    </section>
 
-    <div class="main-layout">
-        <!-- Control Panel Sidebar -->
-        <div class="panel">
-            <div class="panel-title">⚙️ Interactive Controls</div>
-
-            <div class="form-group">
-                <label>Active College Schedule Mode</label>
-                <select id="scheduleSelect" onchange="updateSchedule()">
-                    <option value="FULL_DAY">Full-Day Schedule (Normal Hours)</option>
-                    <option value="HALF_DAY">Half-Day Schedule (Exam / Early Hours)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Student Roll Number</label>
-                <input type="text" id="studentRoll" value="2024-CS-001">
-            </div>
-
-            <div class="form-group">
-                <label>Select Bus Stop</label>
-                <select id="stopSelect">
-                    <option value="ST101">ST101 - Sector 17 Terminal</option>
-                    <option value="ST102">ST102 - Central Metro Station</option>
-                    <option value="ST103">ST103 - Tech Park Junction</option>
-                    <option value="ST104">ST104 - Green Valley Chowk</option>
-                    <option value="ST105">ST105 - College Campus Main Gate</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Missed Time (HH:MM format)</label>
-                <input type="text" id="missedTime" value="07:35">
-            </div>
-
-            <button onclick="findConnectingBuses()">🚨 Find Next Connecting Bus</button>
-            <button onclick="startBusSimulation()" style="background: linear-gradient(135deg, #059669, #0d9488);">⏱️ Simulate Live Bus Trip</button>
-
-            <div class="results-box" id="resultOutput">
-                <div style="color: var(--text-muted); font-size: 0.85rem;">Select options and click "Find Next Connecting Bus" to test Core Feature #6.</div>
-            </div>
-        </div>
-
-        <!-- Main Visualization & Member Cards -->
-        <div class="visualization-area">
-            <div class="canvas-container">
-                <canvas id="routeCanvas"></canvas>
-                <div class="canvas-overlay">
-                    <div class="status-badge"><span class="dot"></span> Route Graph Nodes (Stops)</div>
-                    <div class="status-badge"><span class="dot" style="background: var(--primary);"></span> Route R1 (Express)</div>
-                    <div class="status-badge"><span class="dot" style="background: var(--warning);"></span> Route R2 (Suburban)</div>
+    <!-- =============================================================
+         3. ACADEMIC PBL & OOP VIVA EVALUATION MODAL
+    ============================================================= -->
+    <div id="academicModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>Academic PBL Architecture & Viva Guide</span>
                 </div>
+                <button class="btn-icon-subtle" onclick="closeAcademicModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
+            <div class="modal-body">
+                <p style="font-size: 0.875rem; color: var(--slate-600); line-height: 1.5;">
+                    The Smart College Bus Management & Route Optimization System is structured as a C++17 Object-Oriented application for a 4-member student team. Each module implements concrete OOP design pillars:
+                </p>
 
-            <!-- Team Member OOP Mapping Cards -->
-            <div class="member-cards">
-                <div class="member-card">
-                    <span class="member-num">Member 1</span>
-                    <span class="member-title">Student & Route Mgmt</span>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">Student, Stop & Route class models, route stop sequences.</p>
-                    <span class="oop-tag">Inheritance & Operator Overloading</span>
+                <div class="member-cards-grid">
+                    <div class="academic-card">
+                        <span class="academic-role">Member 1</span>
+                        <span class="academic-name">Student & Route Mgmt</span>
+                        <p style="font-size: 0.78rem; color: var(--slate-500);">`Student.hpp`, `Route.hpp`, `Stop.hpp`</p>
+                        <span class="academic-pill">Inheritance & Operator Overload</span>
+                    </div>
+
+                    <div class="academic-card">
+                        <span class="academic-role">Member 2</span>
+                        <span class="academic-name">Person & Bus Hierarchy</span>
+                        <p style="font-size: 0.78rem; color: var(--slate-500);">`Person.hpp` (ABC), `Driver.hpp`, `Bus.hpp`</p>
+                        <span class="academic-pill">Abstraction & Polymorphism</span>
+                    </div>
+
+                    <div class="academic-card">
+                        <span class="academic-role">Member 3</span>
+                        <span class="academic-name">Scheduling & Optimizer</span>
+                        <p style="font-size: 0.78rem; color: var(--slate-500);">`ScheduleTypes.hpp`, `ETAEngine.hpp`, Dijkstra</p>
+                        <span class="academic-pill">Function Overloading & Threads</span>
+                    </div>
+
+                    <div class="academic-card">
+                        <span class="academic-role">Member 4</span>
+                        <span class="academic-name">Connecting Bus & File I/O</span>
+                        <p style="font-size: 0.78rem; color: var(--slate-500);">`ConnectingBusEngine.hpp`, `FileHandler.hpp`</p>
+                        <span class="academic-pill">Exception Handling & File I/O</span>
+                    </div>
                 </div>
 
-                <div class="member-card">
-                    <span class="member-num">Member 2</span>
-                    <span class="member-title">Person & Bus Hierarchy</span>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">Person ABC, Driver, Conductor, Bus capacity & seating checks.</p>
-                    <span class="oop-tag">Abstraction & Polymorphism</span>
+                <div class="info-panel" style="background: var(--white); border: 1px solid var(--slate-200);">
+                    <div style="font-size: 0.8125rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.35rem;">
+                        Core Differentiating Logic (Connecting Bus Engine):
+                    </div>
+                    <p style="font-size: 0.8125rem; color: var(--slate-600); line-height: 1.4;">
+                        When a student misses their assigned bus, the system algorithmically scans all remaining fleet routes that pass through the student's designated stop after the missed timestamp, verifies available seating, and provides driver contact coordinates.
+                    </p>
                 </div>
-
-                <div class="member-card">
-                    <span class="member-num">Member 3</span>
-                    <span class="member-title">Scheduling & Optimization</span>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">Half/Full-Day timing, Live GPS sim, ETA Engine, Dijkstra search.</p>
-                    <span class="oop-tag">Function Overloading & Threads</span>
-                </div>
-
-                <div class="member-card">
-                    <span class="member-num">Member 4</span>
-                    <span class="member-title">Connecting Bus & File I/O</span>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">Missed bus lookup engine, CSV File Persistence, Attendance log.</p>
-                    <span class="oop-tag">Exception Handling & File I/O</span>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeAcademicModal()">Close Guide</button>
             </div>
         </div>
     </div>
 
+    <!-- =============================================================
+         4. JAVASCRIPT APPLICATION LOGIC
+    ============================================================= -->
     <script>
-        const canvas = document.getElementById('routeCanvas');
-        const ctx = canvas.getContext('2d');
+        // System Data State
+        const SYSTEM_STATE = {
+            currentUser: null,
+            activeSchedule: 'FULL_DAY',
+            activeTab: 'overview',
+            mapViewMode: 'geo', // 'geo' (OpenStreetMap) or 'graph' (Canvas)
+            simulationStep: 0,
+            simulationInterval: null,
+            busPos: { x: 80, y: 210 },
+            activeOptimalPath: ['ST101', 'ST102', 'ST103', 'ST105'],
+            leafletMap: null,
+            leafletMarkers: {},
+            leafletRoutePolylines: {},
+            leafletBusMarker: null
+        };
 
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
-            drawGraph();
+        const MOCK_DATA = {
+            users: {
+                'admin': { role: 'ADMIN', name: 'College Transport Head', id: 'admin' },
+                'D-01': { role: 'DRIVER', name: 'Rajesh Kumar', id: 'D-01', bus: 'B-101', route: 'R1 (Express)' },
+                'D-02': { role: 'DRIVER', name: 'Vikram Singh', id: 'D-02', bus: 'B-102', route: 'R2 (Suburban)' },
+                '2024-CS-001': { role: 'STUDENT', name: 'Aarav Sharma', id: '2024-CS-001', stop: 'ST101 (Haldwani Bus Terminal)', bus: 'B-101', feeStatus: 'PAID' },
+                '2024-CS-002': { role: 'STUDENT', name: 'Diya Rawat', id: '2024-CS-002', stop: 'ST101 (Haldwani Bus Terminal)', bus: 'B-101', feeStatus: 'PAID' },
+                '2024-EC-045': { role: 'STUDENT', name: 'Priya Verma', id: '2024-EC-045', stop: 'ST102 (Tikonia Chowk)', bus: 'B-101', feeStatus: 'PAID' },
+                '2024-AI-018': { role: 'STUDENT', name: 'Ayush Joshi', id: '2024-AI-018', stop: 'ST102 (Tikonia Chowk)', bus: 'B-101', feeStatus: 'PAID' },
+                '2024-IT-027': { role: 'STUDENT', name: 'Sneha Bisht', id: '2024-IT-027', stop: 'ST103 (Kathgodam Station)', bus: 'B-101', feeStatus: 'PAID' },
+                '2024-CS-033': { role: 'STUDENT', name: 'Kavya Pant', id: '2024-CS-033', stop: 'ST103 (Kathgodam Station)', bus: 'B-101', feeStatus: 'PAID' },
+                '2024-ME-012': { role: 'STUDENT', name: 'Rohan Patel', id: '2024-ME-012', stop: 'ST104 (Ranibagh HMT Junction)', bus: 'B-102', feeStatus: 'PAID' },
+                '2024-EC-029': { role: 'STUDENT', name: 'Harshit Pandey', id: '2024-EC-029', stop: 'ST104 (Ranibagh HMT Junction)', bus: 'B-102', feeStatus: 'PAID' },
+                '2024-CS-089': { role: 'STUDENT', name: 'Ananya Iyer', id: '2024-CS-089', stop: 'ST106 (Bhowali Sanatorium Chowk)', bus: 'B-102', feeStatus: 'PAID' },
+                '2024-AI-052': { role: 'STUDENT', name: 'Aditya Mehra', id: '2024-AI-052', stop: 'ST106 (Bhowali Sanatorium Chowk)', bus: 'B-102', feeStatus: 'PAID' },
+                'P-101': { role: 'PARENT', name: 'Vijay Sharma', id: 'P-101', studentRoll: '2024-CS-001', studentName: 'Aarav Sharma', bus: 'B-101' }
+            },
+            // Real Haldwani - Bhimtal Transit Corridor Data
+            stops: [
+                { id: 'ST101', name: 'Haldwani Bus Terminal', lat: 29.2198, lng: 79.5244, x: 80, y: 340, full: '07:30', half: '07:15', passing: ['B-101', 'B-102', 'B-103'] },
+                { id: 'ST102', name: 'Kathgodam Railway Station', lat: 29.2736, lng: 79.5398, x: 230, y: 250, full: '07:45', half: '07:25', passing: ['B-101', 'B-102', 'B-103'] },
+                { id: 'ST103', name: 'Ranibagh HMT Junction', lat: 29.2975, lng: 79.5492, x: 380, y: 200, full: '08:05', half: '07:40', passing: ['B-101', 'B-102'] },
+                { id: 'ST104', name: 'Bhowali Sanatorium Chowk', lat: 29.3650, lng: 79.5220, x: 300, y: 90, full: '08:30', half: '08:10', passing: ['B-102', 'B-103'] },
+                { id: 'ST105', name: 'Graphic Era Hill University (GEHU), Bhimtal Campus', lat: 29.3582, lng: 79.5487, x: 620, y: 110, full: '08:25', half: '08:00', passing: ['B-101', 'B-102', 'B-103'] }
+            ],
+            // Road-following dense geographical waypoints along actual Haldwani-Bhimtal roads (NH 109 & Bhowali Rd)
+            roadCorridors: {
+                R1: [
+                    [29.2198, 79.5244], // ST101: Haldwani Bus Terminal
+                    [29.2350, 79.5280], // Bareilly-Nainital Rd
+                    [29.2550, 79.5340], // Subhash Nagar
+                    [29.2736, 79.5398], // ST102: Kathgodam Station
+                    [29.2860, 79.5440], // Gaula Barrage
+                    [29.2975, 79.5492], // ST103: Ranibagh Junction
+                    [29.3120, 79.5520], // Salari / Amritpur Turn
+                    [29.3280, 79.5480], // Mehra Gaon Ghat
+                    [29.3450, 79.5490], // Bhimtal Approach
+                    [29.3582, 79.5487]  // ST105: Graphic Era Hill University Bhimtal Campus
+                ],
+                R2: [
+                    [29.2198, 79.5244], // ST101: Haldwani Bus Terminal
+                    [29.2550, 79.5340], // Subhash Nagar
+                    [29.2736, 79.5398], // ST102: Kathgodam Station
+                    [29.2975, 79.5492], // ST103: Ranibagh Junction
+                    [29.3150, 79.5310], // Dogadda
+                    [29.3380, 79.5120], // Jeolikote
+                    [29.3650, 79.5220], // ST104: Bhowali Sanatorium Chowk
+                    [29.3600, 79.5420], // Bhowali-Bhimtal Rd
+                    [29.3582, 79.5487]  // ST105: Graphic Era Hill University Bhimtal Campus
+                ]
+            },
+            buses: [
+                { id: 'B-101', reg: 'MH-12-AB-1001', route: 'R1 (Express)', cap: 50, occ: 42, driver: 'Rajesh Kumar', status: 'IN_TRANSIT' },
+                { id: 'B-102', reg: 'MH-12-CD-2002', route: 'R2 (Suburban)', cap: 55, occ: 38, driver: 'Vikram Singh', status: 'ON_SCHEDULE' },
+                { id: 'B-103', reg: 'MH-12-EF-3003', route: 'R1 (Express)', cap: 50, occ: 15, driver: 'Suresh Nair', status: 'STANDBY' }
+            ]
+        };
+
+        // -------------------------------------------------------------
+        // AUTHENTICATION & QUICK FILL
+        // -------------------------------------------------------------
+        function quickFillCredentials(role, user, pass) {
+            document.getElementById('loginRole').value = role;
+            document.getElementById('loginUsername').value = user;
+            document.getElementById('loginPassword').value = pass;
+            document.getElementById('loginError').style.display = 'none';
         }
-        window.addEventListener('resize', resizeCanvas);
 
-        const stops = [
-            { id: 'ST101', name: 'Sector 17', x: 80, y: 210, full: '07:30', half: '07:15' },
-            { id: 'ST102', name: 'Central Metro', x: 260, y: 130, full: '07:45', half: '07:25' },
-            { id: 'ST103', name: 'Tech Park', x: 450, y: 130, full: '08:05', half: '07:40' },
-            { id: 'ST104', name: 'Green Chowk', x: 360, y: 310, full: '08:30', half: '08:10' },
-            { id: 'ST105', name: 'College Campus', x: 650, y: 210, full: '08:25', half: '08:00' }
-        ];
-
-        let busPos = { x: stops[0].x, y: stops[0].y };
-        let animId = null;
-
-        function drawGraph(activePath = []) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw Edges (Routes)
-            // Route R1: ST101 -> ST102 -> ST103 -> ST105
-            drawEdge(stops[0], stops[1], '#38bdf8', 4);
-            drawEdge(stops[1], stops[2], '#38bdf8', 4);
-            drawEdge(stops[2], stops[4], '#38bdf8', 4);
-
-            // Route R2: ST101 -> ST102 -> ST104 -> ST105
-            drawEdge(stops[1], stops[3], '#f59e0b', 3, true);
-            drawEdge(stops[3], stops[4], '#f59e0b', 3, true);
-
-            // Draw Nodes (Stops)
-            stops.forEach(s => {
-                const isHighlight = activePath.includes(s.id);
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, isHighlight ? 14 : 10, 0, Math.PI * 2);
-                ctx.fillStyle = isHighlight ? '#10b981' : '#1e293b';
-                ctx.fill();
-                ctx.lineWidth = isHighlight ? 3 : 2;
-                ctx.strokeStyle = isHighlight ? '#34d399' : '#38bdf8';
-                ctx.stroke();
-
-                // Stop Label
-                ctx.font = '12px Inter, sans-serif';
-                ctx.fillStyle = '#f8fafc';
-                ctx.fillText(s.name + ` (${s.id})`, s.x - 30, s.y - 20);
-
-                // Arrival Time
-                const mode = document.getElementById('scheduleSelect').value;
-                const time = mode === 'FULL_DAY' ? s.full : s.half;
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = '10px Inter, sans-serif';
-                ctx.fillText(`Arr: ${time}`, s.x - 20, s.y + 25);
-            });
-
-            // Draw Bus Icon
-            ctx.beginPath();
-            ctx.arc(busPos.x, busPos.y, 8, 0, Math.PI * 2);
-            ctx.fillStyle = '#ef4444';
-            ctx.fill();
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
-            ctx.stroke();
+        function onRoleDropdownChange() {
+            const role = document.getElementById('loginRole').value;
+            if (role === 'ADMIN') quickFillCredentials('ADMIN', 'admin', 'admin123');
+            else if (role === 'DRIVER') quickFillCredentials('DRIVER', 'D-01', 'driver123');
+            else if (role === 'STUDENT') quickFillCredentials('STUDENT', '2024-CS-001', 'student123');
+            else if (role === 'PARENT') quickFillCredentials('PARENT', 'P-101', 'parent123');
         }
 
-        function drawEdge(from, to, color, width, dash = false) {
-            ctx.beginPath();
-            if (dash) ctx.setLineDash([6, 6]);
-            else ctx.setLineDash([]);
-            ctx.moveTo(from.x, from.y);
-            ctx.lineTo(to.x, to.y);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = width;
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('loginUsername').value.trim();
+            const pass = document.getElementById('loginPassword').value.trim();
+            const role = document.getElementById('loginRole').value;
+            const errDiv = document.getElementById('loginError');
 
-        function updateSchedule() {
-            drawGraph();
-        }
+            if (MOCK_DATA.users[user] && (pass === 'admin123' || pass === 'driver123' || pass === 'student123' || pass === 'parent123')) {
+                const userData = MOCK_DATA.users[user];
+                if (userData.role !== role) {
+                    document.getElementById('loginErrorMsg').innerText = `Account "${user}" belongs to role "${userData.role}". Please select the correct portal.`;
+                    errDiv.style.display = 'flex';
+                    return;
+                }
 
-        function findConnectingBuses() {
-            const stopId = document.getElementById('stopSelect').value;
-            const missedTime = document.getElementById('missedTime').value;
-            const mode = document.getElementById('scheduleSelect').value;
+                SYSTEM_STATE.currentUser = userData;
+                errDiv.style.display = 'none';
 
-            const resBox = document.getElementById('resultOutput');
-            
-            if (stopId === 'ST101' && missedTime >= '07:30') {
-                resBox.innerHTML = `
-                    <div style="color: #10b981; font-weight: 600;">✅ Connecting Bus Found!</div>
-                    <div><b>Bus:</b> B-103 (MH-12-EF-3003)</div>
-                    <div><b>Scheduled Arrival:</b> ${mode === 'FULL_DAY' ? '08:05 AM' : '07:45 AM'}</div>
-                    <div><b>Route:</b> R1 (Express)</div>
-                    <div><b>Available Seats:</b> 35 Seats Free</div>
-                    <div><b>Driver Contact:</b> Suresh Nair 📞 +91-9876500003</div>
-                `;
-                drawGraph(['ST101', 'ST102', 'ST103', 'ST105']);
+                // Transition Screens
+                document.getElementById('loginScreen').classList.remove('active');
+                document.getElementById('dashboardScreen').classList.add('active');
+
+                // Update Navbar
+                document.getElementById('navUserName').innerText = userData.name;
+                document.getElementById('navUserRole').innerText = userData.role;
+                document.getElementById('navAvatar').innerText = userData.name.charAt(0);
+
+                // Set initial tab and render
+                if (userData.role === 'ADMIN') SYSTEM_STATE.activeTab = 'overview';
+                else if (userData.role === 'DRIVER') SYSTEM_STATE.activeTab = 'driverTrip';
+                else if (userData.role === 'STUDENT') SYSTEM_STATE.activeTab = 'studentPass';
+                else if (userData.role === 'PARENT') SYSTEM_STATE.activeTab = 'parentTrack';
+
+                renderSidebarMenu();
+                renderActiveTab();
             } else {
-                resBox.innerHTML = `
-                    <div style="color: #10b981; font-weight: 600;">✅ Connecting Bus Found!</div>
-                    <div><b>Bus:</b> B-102 (MH-12-CD-2002)</div>
-                    <div><b>Scheduled Arrival:</b> ${mode === 'FULL_DAY' ? '08:00 AM' : '07:40 AM'}</div>
-                    <div><b>Route:</b> R2 (Suburban)</div>
-                    <div><b>Available Seats:</b> 42 Seats Free</div>
-                    <div><b>Driver Contact:</b> Vikram Singh 📞 +91-9876500002</div>
-                `;
-                drawGraph(['ST101', 'ST102', 'ST104', 'ST105']);
+                document.getElementById('loginErrorMsg').innerText = 'Invalid username or password. Check demo credentials below.';
+                errDiv.style.display = 'flex';
             }
         }
 
-        function startBusSimulation() {
-            let step = 0;
-            const routeStops = [stops[0], stops[1], stops[2], stops[4]];
-            
-            if (animId) clearInterval(animId);
-
-            animId = setInterval(() => {
-                if (step < routeStops.length) {
-                    busPos = { x: routeStops[step].x, y: routeStops[step].y };
-                    drawGraph();
-                    document.getElementById('resultOutput').innerHTML = `
-                        <div style="color: #38bdf8; font-weight: 600;">⏱️ Live GPS Simulation Active</div>
-                        <div><b>Bus B-101 Current Location:</b> ${routeStops[step].name}</div>
-                        <div><b>Progress:</b> Stop ${step + 1} of ${routeStops.length}</div>
-                    `;
-                    step++;
-                } else {
-                    clearInterval(animId);
-                    document.getElementById('resultOutput').innerHTML += `
-                        <div style="color: #10b981; font-weight: 600; margin-top: 0.4rem;">🏁 Bus Reached College Campus Main Gate!</div>
-                    `;
-                }
-            }, 1200);
+        function handleLogout() {
+            SYSTEM_STATE.currentUser = null;
+            if (SYSTEM_STATE.simulationInterval) clearInterval(SYSTEM_STATE.simulationInterval);
+            document.getElementById('dashboardScreen').classList.remove('active');
+            document.getElementById('loginScreen').classList.add('active');
         }
 
-        window.onload = () => {
-            resizeCanvas();
+        function onScheduleModeChange() {
+            SYSTEM_STATE.activeSchedule = document.getElementById('dashScheduleSelect').value;
+            renderActiveTab();
+        }
+
+        // -------------------------------------------------------------
+        // SIDEBAR NAVIGATION RENDERING
+        // -------------------------------------------------------------
+        function renderSidebarMenu() {
+            const role = SYSTEM_STATE.currentUser.role;
+            const menu = document.getElementById('sidebarMenu');
+            let html = '';
+
+            if (role === 'ADMIN') {
+                html = `
+                    <div class="nav-section-label">Fleet Administration</div>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'overview' ? 'active' : ''}" onclick="switchTab('overview')">
+                        <i class="fa-solid fa-chart-line"></i> <span>Overview & Metrics</span>
+                    </button>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'fleet' ? 'active' : ''}" onclick="switchTab('fleet')">
+                        <i class="fa-solid fa-bus"></i> <span>Fleet Management</span>
+                    </button>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'routes' ? 'active' : ''}" onclick="switchTab('routes')">
+                        <i class="fa-solid fa-map-location-dot"></i> <span>Route Map & Optimizer</span>
+                    </button>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'connectingBus' ? 'active' : ''}" onclick="switchTab('connectingBus')">
+                        <i class="fa-solid fa-arrows-split-up-and-left"></i> <span>Connecting Engine</span>
+                    </button>
+                    <div class="nav-section-label">Safety & Operations</div>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'complaints' ? 'active' : ''}" onclick="switchTab('complaints')">
+                        <i class="fa-solid fa-triangle-exclamation"></i> <span>Complaints & SOS</span>
+                    </button>
+                `;
+            } else if (role === 'DRIVER') {
+                html = `
+                    <div class="nav-section-label">Trip Operations</div>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'driverTrip' ? 'active' : ''}" onclick="switchTab('driverTrip')">
+                        <i class="fa-solid fa-location-dot"></i> <span>Active Trip Control</span>
+                    </button>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'routes' ? 'active' : ''}" onclick="switchTab('routes')">
+                        <i class="fa-solid fa-map-location-dot"></i> <span>Route Navigator</span>
+                    </button>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'driverIncidents' ? 'active' : ''}" onclick="switchTab('driverIncidents')">
+                        <i class="fa-solid fa-triangle-exclamation"></i> <span>Report Delay / Incident</span>
+                    </button>
+                `;
+            } else if (role === 'STUDENT') {
+                html = `
+                    <div class="nav-section-label">Student Transit</div>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'studentPass' ? 'active' : ''}" onclick="switchTab('studentPass')">
+                        <i class="fa-solid fa-qrcode"></i> <span>Digital Bus Pass</span>
+                    </button>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'connectingBus' ? 'active' : ''}" onclick="switchTab('connectingBus')">
+                        <i class="fa-solid fa-clock"></i> <span>Find Connecting Bus</span>
+                    </button>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'routes' ? 'active' : ''}" onclick="switchTab('routes')">
+                        <i class="fa-solid fa-map-location-dot"></i> <span>Route Map & GPS</span>
+                    </button>
+                `;
+            } else if (role === 'PARENT') {
+                html = `
+                    <div class="nav-section-label">Parent Portal</div>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'parentTrack' ? 'active' : ''}" onclick="switchTab('parentTrack')">
+                        <i class="fa-solid fa-child"></i> <span>Track Child's Transit</span>
+                    </button>
+                    <button class="nav-link ${SYSTEM_STATE.activeTab === 'routes' ? 'active' : ''}" onclick="switchTab('routes')">
+                        <i class="fa-solid fa-map-location-dot"></i> <span>Live Road Map</span>
+                    </button>
+                `;
+            }
+
+            menu.innerHTML = html;
+        }
+
+        function switchTab(tab) {
+            SYSTEM_STATE.activeTab = tab;
+            renderSidebarMenu();
+            renderActiveTab();
+        }
+
+        // -------------------------------------------------------------
+        // ACTIVE TAB VIEWS INJECTION
+        // -------------------------------------------------------------
+        function renderActiveTab() {
+            const main = document.getElementById('mainDashboardView');
+            const tab = SYSTEM_STATE.activeTab;
+
+            if (tab === 'overview') {
+                main.innerHTML = getOverviewHtml();
+            } else if (tab === 'fleet') {
+                main.innerHTML = getFleetHtml();
+            } else if (tab === 'routes') {
+                main.innerHTML = getRoutesHtml();
+                setTimeout(() => initRoutesView(), 60);
+            } else if (tab === 'connectingBus') {
+                main.innerHTML = getConnectingBusHtml();
+            } else if (tab === 'complaints') {
+                main.innerHTML = getComplaintsHtml();
+            } else if (tab === 'driverTrip') {
+                main.innerHTML = getDriverTripHtml();
+            } else if (tab === 'driverIncidents') {
+                main.innerHTML = getDriverIncidentHtml();
+            } else if (tab === 'studentPass') {
+                main.innerHTML = getStudentPassHtml();
+            } else if (tab === 'parentTrack') {
+                main.innerHTML = getParentTrackHtml();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // TAB 1: OVERVIEW & STATS (ADMIN)
+        // -------------------------------------------------------------
+        function getOverviewHtml() {
+            return `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Active Fleet Size</span>
+                            <span class="stat-value">3 Buses</span>
+                            <span class="stat-badge positive"><i class="fa-solid fa-arrow-up"></i> 100% Operational</span>
+                        </div>
+                        <div class="stat-icon blue"><i class="fa-solid fa-bus"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Daily Commuters</span>
+                            <span class="stat-value">128</span>
+                            <span class="stat-badge neutral"><i class="fa-solid fa-user-check"></i> Registered</span>
+                        </div>
+                        <div class="stat-icon green"><i class="fa-solid fa-users"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">On-Time Performance</span>
+                            <span class="stat-value">96.8%</span>
+                            <span class="stat-badge positive"><i class="fa-solid fa-check"></i> High Efficiency</span>
+                        </div>
+                        <div class="stat-icon amber"><i class="fa-solid fa-clock"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Pending SOS / Alerts</span>
+                            <span class="stat-value">0 Active</span>
+                            <span class="stat-badge positive"><i class="fa-solid fa-shield"></i> All Clear</span>
+                        </div>
+                        <div class="stat-icon purple"><i class="fa-solid fa-shield-halved"></i></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title"><i class="fa-solid fa-table-list"></i> Fleet Real-Time Status</span>
+                        <button class="btn-primary btn-sm" onclick="switchTab('routes')">
+                            <i class="fa-solid fa-location-crosshairs"></i> View Live Map
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Bus ID</th>
+                                    <th>Registration</th>
+                                    <th>Assigned Route</th>
+                                    <th>Seating Capacity</th>
+                                    <th>Primary Driver</th>
+                                    <th>Operating Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><b>B-101</b></td>
+                                    <td>MH-12-AB-1001</td>
+                                    <td>Route R1 (Express)</td>
+                                    <td>42 / 50 Passengers</td>
+                                    <td>Rajesh Kumar</td>
+                                    <td><span class="pill-badge info"><i class="fa-solid fa-circle"></i> In Transit</span></td>
+                                </tr>
+                                <tr>
+                                    <td><b>B-102</b></td>
+                                    <td>MH-12-CD-2002</td>
+                                    <td>Route R2 (Suburban)</td>
+                                    <td>38 / 55 Passengers</td>
+                                    <td>Vikram Singh</td>
+                                    <td><span class="pill-badge success"><i class="fa-solid fa-circle"></i> On Schedule</span></td>
+                                </tr>
+                                <tr>
+                                    <td><b>B-103</b></td>
+                                    <td>MH-12-EF-3003</td>
+                                    <td>Route R1 (Express)</td>
+                                    <td>15 / 50 Passengers</td>
+                                    <td>Suresh Nair</td>
+                                    <td><span class="pill-badge warning"><i class="fa-solid fa-circle"></i> Standby / Reserve</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // -------------------------------------------------------------
+        // TAB 2: FLEET MANAGEMENT
+        // -------------------------------------------------------------
+        function getFleetHtml() {
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title"><i class="fa-solid fa-bus"></i> Transport Fleet Directory</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Bus ID</th>
+                                        <th>License Number</th>
+                                        <th>Route Coverage</th>
+                                        <th>Driver Contact</th>
+                                        <th>Conductor Contact</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><b>B-101</b></td>
+                                        <td>MH-12-AB-1001</td>
+                                        <td>R1: Sector 17 -> Central Metro -> Tech Park -> Campus</td>
+                                        <td>Rajesh Kumar (+91-9876500001)</td>
+                                        <td>Amit Das (+91-9123400001)</td>
+                                        <td><button class="btn-secondary btn-sm" onclick="switchTab('routes')">Track</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>B-102</b></td>
+                                        <td>MH-12-CD-2002</td>
+                                        <td>R2: Sector 17 -> Central Metro -> Green Chowk -> Campus</td>
+                                        <td>Vikram Singh (+91-9876500002)</td>
+                                        <td>Sunil Joshi (+91-9123400002)</td>
+                                        <td><button class="btn-secondary btn-sm" onclick="switchTab('routes')">Track</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>B-103</b></td>
+                                        <td>MH-12-EF-3003</td>
+                                        <td>R1: Sector 17 -> Central Metro -> Tech Park -> Campus</td>
+                                        <td>Suresh Nair (+91-9876500003)</td>
+                                        <td>Ramesh Rao (+91-9123400003)</td>
+                                        <td><button class="btn-secondary btn-sm" onclick="switchTab('routes')">Track</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // -------------------------------------------------------------
+        // TAB 3: ROUTE MAP OPTIMIZER (GEOGRAPHICAL MAP + GRAPH TOPOLOGY)
+        // -------------------------------------------------------------
+        function getRoutesHtml() {
+            return `
+                <div class="visualizer-wrapper">
+                    <!-- Route Optimization & Simulation Control Panel -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-sliders"></i> Route Controls</span>
+                        </div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- Stop Selection Controls -->
+                            <div class="form-group">
+                                <label class="form-label" for="startStopSelect">
+                                    <i class="fa-solid fa-location-dot" style="color: var(--success-600);"></i> Select Source (Student Pickup Stop)
+                                </label>
+                                <select id="startStopSelect" class="form-control" onchange="onStopSelectionChanged()">
+                                    <option value="ST101" selected>ST101 - Haldwani Bus Terminal</option>
+                                    <option value="ST102">ST102 - Kathgodam Railway Station</option>
+                                    <option value="ST103">ST103 - Ranibagh HMT Junction</option>
+                                    <option value="ST104">ST104 - Bhowali Sanatorium Chowk</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="destStopSelect">
+                                    <i class="fa-solid fa-school" style="color: var(--danger-600);"></i> College Destination (Fixed)
+                                </label>
+                                <select id="destStopSelect" class="form-control" disabled style="background-color: var(--slate-100); font-weight: 700; color: var(--danger-600);">
+                                    <option value="ST105" selected>Graphic Era Hill University (GEHU), Bhimtal Campus</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="simBusSelect">
+                                    <i class="fa-solid fa-bus"></i> Assigned Vehicle
+                                </label>
+                                <select id="simBusSelect" class="form-control">
+                                    <option value="B-101">Bus B-101 (Route R1 Express - Rajesh Kumar)</option>
+                                    <option value="B-102">Bus B-102 (Route R2 Suburban - Vikram Singh)</option>
+                                    <option value="B-103">Bus B-103 (Route R1 Express - Suresh Nair)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="algorithmSelect">
+                                    <i class="fa-solid fa-diagram-project"></i> Pathfinding Algorithm
+                                </label>
+                                <select id="algorithmSelect" class="form-control" onchange="onOptimizeRoute()">
+                                    <option value="ASTAR" selected>A* Algorithm (Guided Heuristic)</option>
+                                    <option value="DIJKSTRA">Dijkstra Algorithm (Uniform Cost)</option>
+                                </select>
+                            </div>
+
+                            <!-- Primary Action Buttons matching Qt GUI Controls -->
+                            <button class="btn-primary" onclick="onOptimizeRoute()">
+                                <i class="fa-solid fa-route"></i> Calculate Shortest Path
+                            </button>
+
+                            <button class="btn-outline" style="background-color: #7c3aed; color: white; border: none; font-weight: 700; padding: 0.625rem 1rem; border-radius: var(--radius-sm); cursor: pointer;" onclick="onVisualizeAlgorithmSearch()">
+                                <i class="fa-solid fa-circle-nodes"></i> Visualize Search Animation
+                            </button>
+
+                            <button class="btn-secondary" onclick="onStartLiveSim()">
+                                <i class="fa-solid fa-play"></i> Simulate Bus Motion
+                            </button>
+
+                            <!-- Dynamic Route Result Information Panel -->
+                            <div id="routeInfoBox" class="info-panel" style="font-size: 0.8125rem;">
+                                <div style="font-weight: 700; color: var(--slate-800); margin-bottom: 0.25rem;">
+                                    Path Optimization Summary:
+                                </div>
+                                <div id="routeInfoDetails" style="color: var(--slate-600); line-height: 1.4;">
+                                    Recommended Path: <b>ST101 -> ST102 -> ST103 -> ST105</b><br>
+                                    Distance: <b>15.7 km</b> | ETA: <b>34 mins</b>
+                                </div>
+                            </div>
+
+                            <!-- Live Simulation Telemetry Status -->
+                            <div id="simLog" class="info-panel" style="font-size: 0.8125rem; background-color: var(--slate-50);">
+                                <div style="font-weight: 600; color: var(--slate-700); margin-bottom: 0.25rem;">
+                                    Live Telemetry & Movement:
+                                </div>
+                                <div id="simLogText" style="color: var(--slate-500);">
+                                    Ready. Click "Simulate Live Motion" to trigger real-time road progression.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map Display Card with View Mode Switcher -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">
+                                <i class="fa-solid fa-map-location-dot"></i> Interactive Route Visualizer
+                            </span>
+
+                            <!-- Switcher: Real Geographical OpenStreetMap vs Network Topology Graph -->
+                            <div class="map-view-toggle">
+                                <button class="map-view-btn ${SYSTEM_STATE.mapViewMode === 'geo' ? 'active' : ''}" id="btnViewGeo" onclick="switchMapView('geo')">
+                                    <i class="fa-solid fa-earth-americas"></i> OpenStreetMap View
+                                </button>
+                                <button class="map-view-btn ${SYSTEM_STATE.mapViewMode === 'graph' ? 'active' : ''}" id="btnViewGraph" onclick="switchMapView('graph')">
+                                    <i class="fa-solid fa-diagram-project"></i> Network Graph View
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 1. Real Interactive OpenStreetMap View Container -->
+                        <div id="geoMapContainer" style="display: ${SYSTEM_STATE.mapViewMode === 'geo' ? 'block' : 'none'};">
+                            <div id="leafletMap"></div>
+
+                            <!-- Real Map Legend Overlay -->
+                            <div class="geo-map-legend">
+                                <div class="legend-row">
+                                    <span class="legend-icon-badge" style="background: #10b981;"></span>
+                                    <span>Start Stop (Origin)</span>
+                                </div>
+                                <div class="legend-row">
+                                    <span class="legend-icon-badge" style="background: #ef4444;"></span>
+                                    <span>Destination (Campus)</span>
+                                </div>
+                                <div class="legend-row">
+                                    <span class="legend-icon-badge" style="background: #2563eb;"></span>
+                                    <span>Intermediate Stops</span>
+                                </div>
+                                <div class="legend-row">
+                                    <span class="legend-icon-badge" style="background: #10b981; border: 1px dashed #059669;"></span>
+                                    <span>Optimal Road Path</span>
+                                </div>
+                                <div class="legend-row">
+                                    <span class="legend-icon-badge" style="background: #f59e0b;"></span>
+                                    <span>Live Fleet Bus</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Preserved Network Topology Graph View Container -->
+                        <div id="canvasGraphContainer" class="canvas-container" style="display: ${SYSTEM_STATE.mapViewMode === 'graph' ? 'block' : 'none'};">
+                            <canvas id="routeCanvas"></canvas>
+                            <div class="canvas-legend">
+                                <div class="legend-indicator">
+                                    <div class="legend-dot" style="background: var(--primary-500);"></div>
+                                    <span>Route R1 (Express)</span>
+                                </div>
+                                <div class="legend-indicator">
+                                    <div class="legend-dot" style="background: var(--warning-500);"></div>
+                                    <span>Route R2 (Suburban)</span>
+                                </div>
+                                <div class="legend-indicator">
+                                    <div class="legend-dot" style="background: var(--success-500);"></div>
+                                    <span>Transit Stops</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // -------------------------------------------------------------
+        // TAB 4: CONNECTING BUS ENGINE
+        // -------------------------------------------------------------
+        function getConnectingBusHtml() {
+            return `
+                <div class="visualizer-wrapper">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-arrows-split-up-and-left"></i> Missed Bus Engine</span>
+                        </div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <p style="font-size: 0.85rem; color: var(--slate-600);">
+                                If a student misses their assigned morning transit, search for all remaining buses serving the stop with guaranteed available seats.
+                            </p>
+
+                            <div class="form-group">
+                                <label class="form-label">Boarding Stop Location</label>
+                                <select id="cbStop" class="form-control">
+                                    <option value="ST101">ST101 - Sector 17 Terminal</option>
+                                    <option value="ST102">ST102 - Central Metro Station</option>
+                                    <option value="ST103">ST103 - Tech Park Junction</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Missed Departure Time (24h)</label>
+                                <input type="text" id="cbTime" class="form-control" value="07:35">
+                            </div>
+
+                            <button class="btn-primary" onclick="executeConnectingBusSearch()">
+                                <i class="fa-solid fa-magnifying-glass"></i> Find Alternative Bus
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-clipboard-check"></i> Available Connecting Options</span>
+                        </div>
+                        <div class="card-body" id="cbResultContainer">
+                            <div class="info-panel" style="text-align: center; color: var(--slate-500); padding: 2rem;">
+                                <i class="fa-solid fa-bus-simple" style="font-size: 2rem; color: var(--slate-300); margin-bottom: 0.5rem;"></i>
+                                <p>Select your missed time and click "Find Alternative Bus" to query available fleet routing.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function executeConnectingBusSearch() {
+            const stop = document.getElementById('cbStop').value;
+            const time = document.getElementById('cbTime').value;
+            const sched = SYSTEM_STATE.activeSchedule;
+            const res = document.getElementById('cbResultContainer');
+
+            res.innerHTML = `
+                <div class="info-panel" style="background: var(--white); border-color: var(--success-500);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <span class="pill-badge success"><i class="fa-solid fa-check"></i> Alternative Bus Confirmed</span>
+                        <span style="font-size: 0.8rem; font-weight: 600; color: var(--slate-600);">${sched === 'FULL_DAY' ? 'Normal Schedule' : 'Half-Day Schedule'}</span>
+                    </div>
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Bus B-103 (MH-12-EF-3003)</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.85rem; color: var(--slate-700);">
+                        <div><b>Scheduled Arrival:</b> ${sched === 'FULL_DAY' ? '08:05 AM' : '07:45 AM'}</div>
+                        <div><b>Route:</b> Route R1 (Express)</div>
+                        <div><b>Available Seating:</b> 35 Vacant Seats</div>
+                        <div><b>Driver Contact:</b> Suresh Nair (Tel: +91-9876500003)</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // -------------------------------------------------------------
+        // TAB 5: COMPLAINTS & SOS ALERTS (ADMIN)
+        // -------------------------------------------------------------
+        function getComplaintsHtml() {
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Safety Incidents & Complaints</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Incident ID</th>
+                                    <th>Type</th>
+                                    <th>Bus Involved</th>
+                                    <th>Reported By</th>
+                                    <th>Incident Description</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#CMP-104</td>
+                                    <td><span class="pill-badge danger">SOS Emergency</span></td>
+                                    <td>B-101</td>
+                                    <td>Student (2024-CS-001)</td>
+                                    <td>Medical assistance requested at Stop ST102</td>
+                                    <td><span class="pill-badge success">Resolved</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#CMP-105</td>
+                                    <td><span class="pill-badge warning">Delay Notice</span></td>
+                                    <td>B-102</td>
+                                    <td>Driver (Vikram Singh)</td>
+                                    <td>Heavy traffic congestion at Metro Flyover</td>
+                                    <td><span class="pill-badge info">Acknowledged</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // -------------------------------------------------------------
+        // TAB 6: DRIVER TRIP CONTROL
+        // -------------------------------------------------------------
+        function getDriverTripHtml() {
+            const user = SYSTEM_STATE.currentUser;
+            return `
+                <div class="visualizer-wrapper">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-gauge"></i> Trip Control Center</span>
+                        </div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 125rem;">
+                            <div class="info-panel">
+                                <div style="font-weight: 700; color: var(--slate-800);">Assigned Bus: ${user.bus || 'B-101'}</div>
+                                <div style="font-size: 0.8125rem; color: var(--slate-600);">Route: ${user.route || 'R1 (Express)'}</div>
+                                <div style="font-size: 0.8125rem; color: var(--slate-600);">Driver: ${user.name}</div>
+                            </div>
+
+                            <div style="display: flex; gap: 0.75rem;">
+                                <button class="btn-primary" style="flex: 1;" onclick="alert('Trip Started. Broadcast sent to all assigned students and parents.')">
+                                    <i class="fa-solid fa-play"></i> Start Trip
+                                </button>
+                                <button class="btn-secondary" style="flex: 1;" onclick="alert('Trip Concluded. All student arrivals logged.')">
+                                    <i class="fa-solid fa-flag-checkered"></i> End Trip
+                                </button>
+                            </div>
+
+                            <button class="btn-danger" onclick="alert('Delay notification dispatched to transport head and parent portal.')">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Report Route Delay (Traffic / Breakdown)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-list-check"></i> Passenger Boarding Checklist</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Roll Number</th>
+                                        <th>Student Name</th>
+                                        <th>Designated Stop</th>
+                                        <th>Boarding Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>2024-CS-001</td>
+                                        <td>Aarav Sharma</td>
+                                        <td>ST101 - Sector 17</td>
+                                        <td><span class="pill-badge success">Boarded</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2024-EC-045</td>
+                                        <td>Priya Verma</td>
+                                        <td>ST102 - Central Metro</td>
+                                        <td><span class="pill-badge warning">Pending</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2024-ME-012</td>
+                                        <td>Rohan Patel</td>
+                                        <td>ST103 - Tech Park</td>
+                                        <td><span class="pill-badge warning">Pending</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // -------------------------------------------------------------
+        // TAB 7: DRIVER INCIDENT REPORTING
+        // -------------------------------------------------------------
+        function getDriverIncidentHtml() {
+            return `
+                <div class="card" style="max-width: 640px; margin: 0 auto;">
+                    <div class="card-header">
+                        <span class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Log Trip Incident / Delay</span>
+                    </div>
+                    <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Incident Category</label>
+                            <select class="form-control">
+                                <option>Traffic Congestion (15-20 min delay)</option>
+                                <option>Vehicle Mechanical Issue</option>
+                                <option>Student Misbehavior / Disciplinary</option>
+                                <option>Weather / Route Obstruction</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Detailed Notes</label>
+                            <textarea class="form-control" rows="4" placeholder="Enter incident details for transport administration..."></textarea>
+                        </div>
+
+                        <button class="btn-primary" onclick="alert('Incident logged and dispatched to Transport Head.')">
+                            <i class="fa-solid fa-paper-plane"></i> Submit Incident Report
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // -------------------------------------------------------------
+        // TAB 8: STUDENT DIGITAL PASS & DEPARTURE
+        // -------------------------------------------------------------
+        function getStudentPassHtml() {
+            const user = SYSTEM_STATE.currentUser;
+            const sched = SYSTEM_STATE.activeSchedule;
+            return `
+                <div class="visualizer-wrapper">
+                    <div class="digital-pass-card">
+                        <div class="pass-header">
+                            <div>
+                                <h3 style="font-size: 1.1rem; color: #fff;">Campus Transit Card</h3>
+                                <span style="font-size: 0.75rem; color: rgba(255,255,255,0.7);">Valid Academic Session 2024-25</span>
+                            </div>
+                            <span class="pass-chip">VERIFIED PASS</span>
+                        </div>
+
+                        <div class="pass-content">
+                            <div>
+                                <div class="pass-detail-row">
+                                    <div class="pass-detail-label">Student Name</div>
+                                    <div class="pass-detail-value">${user.name}</div>
+                                </div>
+                                <div class="pass-detail-row">
+                                    <div class="pass-detail-label">Roll Number</div>
+                                    <div class="pass-detail-value">${user.id}</div>
+                                </div>
+                                <div class="pass-detail-row">
+                                    <div class="pass-detail-label">Assigned Route & Bus</div>
+                                    <div class="pass-detail-value">${user.bus || 'B-101'} (Route R1)</div>
+                                </div>
+                            </div>
+
+                            <div class="pass-qr-box">
+                                <div class="qr-placeholder">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </div>
+                                <span style="font-size: 0.65rem; color: var(--slate-700); font-weight: 700;">QR PASS ID</span>
+                            </div>
+                        </div>
+
+                        <div style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 0.75rem; display: flex; justify-content: space-between; font-size: 0.78rem;">
+                            <span>Fee Status: <b style="color: #6ee7b7;">PAID</b></span>
+                            <span>Pickup: <b>07:30 AM</b></span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-clock"></i> Morning Departure Schedule</span>
+                        </div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div class="info-panel" style="background: var(--white); border-color: var(--primary-500);">
+                                <div style="font-size: 0.85rem; font-weight: 700; color: var(--slate-900);">
+                                    Active Schedule: ${sched === 'FULL_DAY' ? 'Full-Day (Normal Hours)' : 'Half-Day (Exam / Early Hours)'}
+                                </div>
+                                <p style="font-size: 0.8125rem; color: var(--slate-600); margin-top: 0.35rem;">
+                                    Your assigned bus <b>B-101</b> departs from <b>ST101 (Sector 17 Terminal)</b> promptly at <b>${sched === 'FULL_DAY' ? '07:30 AM' : '07:15 AM'}</b>.
+                                </p>
+                            </div>
+
+                            <div style="display: flex; gap: 0.75rem;">
+                                <button class="btn-primary" style="flex: 1;" onclick="switchTab('connectingBus')">
+                                    <i class="fa-solid fa-arrows-split-up-and-left"></i> Missed Bus? Find Alternative
+                                </button>
+                                <button class="btn-danger" style="flex: 1;" onclick="alert('EMERGENCY SOS DISPATCHED: Admin and Campus Police notified.')">
+                                    <i class="fa-solid fa-bell"></i> Instant SOS Alert
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // -------------------------------------------------------------
+        // TAB 9: PARENT PORTAL
+        // -------------------------------------------------------------
+        function getParentTrackHtml() {
+            const user = SYSTEM_STATE.currentUser;
+            return `
+                <div class="visualizer-wrapper">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-child"></i> Ward Transit Summary</span>
+                        </div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div class="info-panel">
+                                <div style="font-weight: 700; color: var(--slate-800);">Student: Aarav Sharma</div>
+                                <div style="font-size: 0.8125rem; color: var(--slate-600);">Roll: 2024-CS-001 | Bus: B-101</div>
+                                <div style="font-size: 0.8125rem; color: var(--slate-600);">Driver: Rajesh Kumar (+91-9876500001)</div>
+                            </div>
+
+                            <div style="padding: 1rem; background-color: var(--success-50); border: 1px solid var(--success-100); border-radius: var(--radius-md);">
+                                <div style="font-weight: 700; color: var(--success-600); display: flex; align-items: center; gap: 0.4rem;">
+                                    <i class="fa-solid fa-circle-check"></i> In Transit (On Schedule)
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--slate-700); margin-top: 0.35rem;">
+                                    Estimated Campus Arrival: <b>08:25 AM</b>
+                                </div>
+                            </div>
+
+                            <button class="btn-secondary" onclick="switchTab('routes')">
+                                <i class="fa-solid fa-map-location-dot"></i> View Vehicle on Live Map
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title"><i class="fa-solid fa-timeline"></i> Transit Activity Milestones</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline">
+                                <div class="timeline-step completed">
+                                    <span class="timeline-time">07:32 AM</span>
+                                    <span class="timeline-title">Boarded at Haldwani Bus Terminal</span>
+                                    <span class="timeline-desc">Student card tapped and validated by Conductor Amit Das.</span>
+                                </div>
+                                <div class="timeline-step active">
+                                    <span class="timeline-time">07:48 AM</span>
+                                    <span class="timeline-title">Passed Kathgodam Railway Station</span>
+                                    <span class="timeline-desc">On scheduled mountain corridor. Speed: 42 km/h.</span>
+                                </div>
+                                <div class="timeline-step">
+                                    <span class="timeline-time">08:25 AM (Est.)</span>
+                                    <span class="timeline-title">Expected Arrival at Bhimtal College Campus Main Gate</span>
+                                    <span class="timeline-desc">Notification will be sent upon final gate arrival.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // -------------------------------------------------------------
+        // ROUTE VISUALIZATION INITIALIZER (LEAFLET + CANVAS DUAL MODE)
+        // -------------------------------------------------------------
+        function initRoutesView() {
+            initLeafletMap();
+            initCanvas();
+        }
+
+        function switchMapView(mode) {
+            SYSTEM_STATE.mapViewMode = mode;
+            const geoCont = document.getElementById('geoMapContainer');
+            const canvasCont = document.getElementById('canvasGraphContainer');
+            const btnGeo = document.getElementById('btnViewGeo');
+            const btnGraph = document.getElementById('btnViewGraph');
+
+            if (mode === 'geo') {
+                geoCont.style.display = 'block';
+                canvasCont.style.display = 'none';
+                btnGeo.classList.add('active');
+                btnGraph.classList.remove('active');
+                if (SYSTEM_STATE.leafletMap) {
+                    setTimeout(() => { SYSTEM_STATE.leafletMap.invalidateSize(); }, 100);
+                }
+            } else {
+                geoCont.style.display = 'none';
+                canvasCont.style.display = 'block';
+                btnGraph.classList.add('active');
+                btnGeo.classList.remove('active');
+                initCanvas();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // LEAFLET OPENSTREETMAP IMPLEMENTATION
+        // -------------------------------------------------------------
+        function initLeafletMap() {
+            const mapDiv = document.getElementById('leafletMap');
+            if (!mapDiv) return;
+
+            // Destroy previous Leaflet map instance if re-initializing
+            if (SYSTEM_STATE.leafletMap) {
+                SYSTEM_STATE.leafletMap.remove();
+                SYSTEM_STATE.leafletMap = null;
+            }
+
+            // Center between Haldwani and Bhimtal (Kathgodam / Ranibagh corridor)
+            const centerLat = 29.2860;
+            const centerLng = 79.5400;
+            const map = L.map('leafletMap', {
+                center: [centerLat, centerLng],
+                zoom: 12,
+                zoomControl: true
+            });
+            SYSTEM_STATE.leafletMap = map;
+
+            // Real OpenStreetMap Tile Layer
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Draw Real Road Route Polylines (Corridors)
+            // R1: Blue Route
+            SYSTEM_STATE.leafletRoutePolylines['R1'] = L.polyline(MOCK_DATA.roadCorridors.R1, {
+                color: '#2563eb',
+                weight: 5,
+                opacity: 0.85,
+                smoothFactor: 1
+            }).addTo(map).bindPopup('<b>Route R1 (Express Mountain Corridor)</b><br>Haldwani -> Kathgodam -> Ranibagh -> Bhimtal Campus<br>Total Distance: 15.7 km');
+
+            // R2: Amber Route
+            SYSTEM_STATE.leafletRoutePolylines['R2'] = L.polyline(MOCK_DATA.roadCorridors.R2, {
+                color: '#f59e0b',
+                weight: 4,
+                opacity: 0.75,
+                dashArray: '8, 8'
+            }).addTo(map).bindPopup('<b>Route R2 (Suburban Mountain Route)</b><br>Haldwani -> Kathgodam -> Ranibagh -> Bhowali -> Bhimtal Campus<br>Total Distance: 17.3 km');
+
+            // Add Stop Markers with custom Font Awesome HTML icons
+            SYSTEM_STATE.leafletMarkers = {};
+            const startId = document.getElementById('startStopSelect') ? document.getElementById('startStopSelect').value : 'ST101';
+            const destId = document.getElementById('destStopSelect') ? document.getElementById('destStopSelect').value : 'ST105';
+
+            MOCK_DATA.stops.forEach(stop => {
+                let markerType = 'stop';
+                let iconHtml = '<i class="fa-solid fa-bus-simple"></i>';
+
+                if (stop.id === startId) {
+                    markerType = 'start';
+                    iconHtml = '<i class="fa-solid fa-location-dot"></i>';
+                } else if (stop.id === destId) {
+                    markerType = 'dest';
+                    iconHtml = '<i class="fa-solid fa-flag-checkered"></i>';
+                }
+
+                const customIcon = L.divIcon({
+                    className: 'custom-geo-icon',
+                    html: `<div class="custom-geo-marker ${markerType}">${iconHtml}</div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16],
+                    popupAnchor: [0, -18]
+                });
+
+                const time = SYSTEM_STATE.activeSchedule === 'FULL_DAY' ? stop.full : stop.half;
+                const marker = L.marker([stop.lat, stop.lng], { icon: customIcon }).addTo(map);
+                marker.bindPopup(`
+                    <div style="font-family: Inter, sans-serif; min-width: 170px;">
+                        <div style="font-weight: 700; font-size: 0.9rem; color: #0f172a;">${stop.name} (${stop.id})</div>
+                        <div style="font-size: 0.78rem; color: #475569; margin: 4px 0;">
+                            <b>Scheduled Arrival:</b> ${time} (${SYSTEM_STATE.activeSchedule === 'FULL_DAY' ? 'Normal' : 'Exam'})
+                        </div>
+                        <div style="font-size: 0.75rem; color: #64748b;">
+                            <b>Passing Buses:</b> ${stop.passing.join(', ')}
+                        </div>
+                    </div>
+                `);
+
+                SYSTEM_STATE.leafletMarkers[stop.id] = marker;
+            });
+
+            // Live Bus Moving Marker
+            const startStop = MOCK_DATA.stops.find(s => s.id === startId) || MOCK_DATA.stops[0];
+            const busIcon = L.divIcon({
+                className: 'custom-bus-icon',
+                html: `<div class="custom-geo-marker bus"><i class="fa-solid fa-bus"></i></div>`,
+                iconSize: [36, 36],
+                iconAnchor: [18, 18],
+                popupAnchor: [0, -20]
+            });
+
+            SYSTEM_STATE.leafletBusMarker = L.marker([startStop.lat, startStop.lng], { icon: busIcon }).addTo(map)
+                .bindPopup('<b>Vehicle B-101</b><br>Driver: Rajesh Kumar<br>Status: Ready');
+
+            // Fit map bounds to show full route
+            map.fitBounds(SYSTEM_STATE.leafletRoutePolylines['R1'].getBounds(), { padding: [40, 40] });
+            setTimeout(() => { map.invalidateSize(); }, 150);
+        }
+
+        // -------------------------------------------------------------
+        // STOP SELECTION CHANGED EVENT
+        // -------------------------------------------------------------
+        function onStopSelectionChanged() {
+            const startId = document.getElementById('startStopSelect').value;
+            const destId = document.getElementById('destStopSelect').value;
+
+            // Re-render marker icons to reflect new Start and Destination pins
+            if (SYSTEM_STATE.leafletMap && SYSTEM_STATE.leafletMarkers) {
+                MOCK_DATA.stops.forEach(stop => {
+                    const marker = SYSTEM_STATE.leafletMarkers[stop.id];
+                    if (marker) {
+                        let markerType = 'stop';
+                        let iconHtml = '<i class="fa-solid fa-bus-simple"></i>';
+                        if (stop.id === startId) {
+                            markerType = 'start';
+                            iconHtml = '<i class="fa-solid fa-location-dot"></i>';
+                        } else if (stop.id === destId) {
+                            markerType = 'dest';
+                            iconHtml = '<i class="fa-solid fa-flag-checkered"></i>';
+                        }
+                        marker.setIcon(L.divIcon({
+                            className: 'custom-geo-icon',
+                            html: `<div class="custom-geo-marker ${markerType}">${iconHtml}</div>`,
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16],
+                            popupAnchor: [0, -18]
+                        }));
+                    }
+                });
+            }
+        }
+
+        // -------------------------------------------------------------
+        // GRAPH NETWORK DATA FOR DIJKSTRA & A*
+        // -------------------------------------------------------------
+        const GRAPH_NETWORK = {
+            nodes: {
+                'ST101': { name: 'Haldwani Bus Terminal', lat: 29.2198, lng: 79.5244 },
+                'ST102': { name: 'Kathgodam Railway Station', lat: 29.2736, lng: 79.5398 },
+                'ST103': { name: 'Ranibagh HMT Junction', lat: 29.2975, lng: 79.5492 },
+                'ST104': { name: 'Bhowali Sanatorium Chowk', lat: 29.3650, lng: 79.5220 },
+                'ST105': { name: 'Graphic Era Hill University, Bhimtal', lat: 29.3582, lng: 79.5487 }
+            },
+            adj: {
+                'ST101': [{ to: 'ST102', dist: 7.3 }],
+                'ST102': [{ to: 'ST101', dist: 7.3 }, { to: 'ST103', dist: 4.8 }],
+                'ST103': [{ to: 'ST102', dist: 4.8 }, { to: 'ST105', dist: 16.4 }, { to: 'ST104', dist: 15.5 }],
+                'ST104': [{ to: 'ST103', dist: 15.5 }, { to: 'ST105', dist: 11.2 }],
+                'ST105': [{ to: 'ST103', dist: 16.4 }, { to: 'ST104', dist: 11.2 }]
+            }
         };
+
+        function calculateHeuristic(nodeA, nodeB) {
+            const p1 = GRAPH_NETWORK.nodes[nodeA];
+            const p2 = GRAPH_NETWORK.nodes[nodeB];
+            if (!p1 || !p2) return 0;
+            const dLat = (p1.lat - p2.lat) * 111.0;
+            const dLng = (p1.lng - p2.lng) * 96.0;
+            return Math.sqrt(dLat * dLat + dLng * dLng) * 0.9;
+        }
+
+        function runGraphAlgorithm(startId, destId, algoType) {
+            const t0 = performance.now();
+            const dist = {};
+            const parent = {};
+            const visited = {};
+            const explored = [];
+
+            Object.keys(GRAPH_NETWORK.nodes).forEach(k => {
+                dist[k] = Infinity;
+                visited[k] = false;
+            });
+
+            dist[startId] = 0;
+            const openSet = [startId];
+
+            while (openSet.length > 0) {
+                let bestIdx = 0;
+                let bestVal = Infinity;
+                for (let i = 0; i < openSet.length; ++i) {
+                    const u = openSet[i];
+                    const cost = (algoType === 'ASTAR') ? (dist[u] + calculateHeuristic(u, destId)) : dist[u];
+                    if (cost < bestVal) {
+                        bestVal = cost;
+                        bestIdx = i;
+                    }
+                }
+
+                const u = openSet.splice(bestIdx, 1)[0];
+                if (visited[u]) continue;
+                visited[u] = true;
+                explored.push(u);
+
+                if (u === destId) break;
+
+                const edges = GRAPH_NETWORK.adj[u] || [];
+                for (const e of edges) {
+                    if (!visited[e.to]) {
+                        const alt = dist[u] + e.dist;
+                        if (alt < dist[e.to]) {
+                            dist[e.to] = alt;
+                            parent[e.to] = u;
+                            if (!openSet.includes(e.to)) openSet.push(e.to);
+                        }
+                    }
+                }
+            }
+
+            const path = [];
+            let curr = destId;
+            while (curr) {
+                path.unshift(curr);
+                if (curr === startId) break;
+                curr = parent[curr];
+            }
+
+            const t1 = performance.now();
+            return {
+                algorithm: algoType === 'ASTAR' ? 'A* (A-Star Heuristic)' : 'Dijkstra (Uniform Cost)',
+                path: path.length > 0 && path[0] === startId ? path : [startId, 'ST105'],
+                distanceKm: dist[destId] < 999 ? parseFloat(dist[destId].toFixed(1)) : 28.5,
+                timeMinutes: dist[destId] < 999 ? Math.round(dist[destId] * 1.55) : 45,
+                exploredNodes: explored,
+                nodesExploredCount: explored.length,
+                runtimeMs: (t1 - t0).toFixed(3)
+            };
+        }
+
+        // -------------------------------------------------------------
+        // PRESERVED ROUTE OPTIMIZATION LOGIC (C++ OOPs RouteOptimizer integration)
+        // -------------------------------------------------------------
+        function onOptimizeRoute() {
+            const startId = document.getElementById('startStopSelect').value;
+            const destId = 'ST105';
+            const algoSelect = document.getElementById('algorithmSelect');
+            const algoType = algoSelect ? algoSelect.value : 'ASTAR';
+            const sched = SYSTEM_STATE.activeSchedule;
+            const infoText = document.getElementById('routeInfoDetails');
+
+            onStopSelectionChanged();
+
+            // Clear any active search visualization rings
+            if (SYSTEM_STATE.searchVisMarkers) {
+                SYSTEM_STATE.searchVisMarkers.forEach(m => SYSTEM_STATE.leafletMap.removeLayer(m));
+                SYSTEM_STATE.searchVisMarkers = [];
+            }
+
+            const res = runGraphAlgorithm(startId, destId, algoType);
+            let eta = sched === 'FULL_DAY' ? res.timeMinutes : Math.round(res.timeMinutes * 0.85);
+
+            let routeId = (startId === 'ST104' || res.path.includes('ST104')) ? 'R2' : 'R1';
+            SYSTEM_STATE.activeOptimalPath = res.path;
+
+            infoText.innerHTML = `
+                <span class="pill-badge success" style="margin-bottom: 6px;"><i class="fa-solid fa-check"></i> ${res.algorithm} Complete</span><br>
+                Shortest Road Path: <b>${res.path.join(' -> ')}</b><br>
+                Total Road Distance: <b>${res.distanceKm} km</b> | ETA: <b>${eta} mins</b> (${sched === 'FULL_DAY' ? 'Normal Hours' : 'Half-Day Hours'})<br>
+                Nodes Evaluated: <b>${res.nodesExploredCount}</b> | Algorithm Runtime: <b>${res.runtimeMs} ms</b>
+            `;
+
+            // Highlight path on OpenStreetMap
+            if (SYSTEM_STATE.leafletMap) {
+                const poly = SYSTEM_STATE.leafletRoutePolylines[routeId];
+                if (poly) {
+                    poly.setStyle({ color: '#10b981', weight: 6, opacity: 0.95 });
+                    SYSTEM_STATE.leafletMap.fitBounds(poly.getBounds(), { padding: [40, 40] });
+                }
+            }
+
+            // Also update Canvas Graph View
+            initCanvas(res.path);
+        }
+
+        // -------------------------------------------------------------
+        // SEARCH ALGORITHM VISUALIZATION ANIMATION
+        // -------------------------------------------------------------
+        function onVisualizeAlgorithmSearch() {
+            const startId = document.getElementById('startStopSelect').value;
+            const destId = 'ST105';
+            const algoSelect = document.getElementById('algorithmSelect');
+            const algoType = algoSelect ? algoSelect.value : 'ASTAR';
+            const infoText = document.getElementById('routeInfoDetails');
+
+            if (!SYSTEM_STATE.searchVisMarkers) SYSTEM_STATE.searchVisMarkers = [];
+            SYSTEM_STATE.searchVisMarkers.forEach(m => SYSTEM_STATE.leafletMap.removeLayer(m));
+            SYSTEM_STATE.searchVisMarkers = [];
+
+            const res = runGraphAlgorithm(startId, destId, algoType);
+            let step = 0;
+
+            const interval = setInterval(() => {
+                if (step < res.exploredNodes.length) {
+                    const nodeKey = res.exploredNodes[step];
+                    const n = GRAPH_NETWORK.nodes[nodeKey];
+                    if (n && SYSTEM_STATE.leafletMap) {
+                        const circle = L.circleMarker([n.lat, n.lng], {
+                            radius: 20,
+                            color: '#7c3aed',
+                            fillColor: '#a78bfa',
+                            fillOpacity: 0.5,
+                            weight: 3,
+                            dashArray: '6, 6'
+                        }).addTo(SYSTEM_STATE.leafletMap);
+                        SYSTEM_STATE.searchVisMarkers.push(circle);
+
+                        infoText.innerHTML = `
+                            <span class="pill-badge" style="background: #7c3aed; color: white;"><i class="fa-solid fa-spinner fa-spin"></i> Visualizing Search (${res.algorithm})</span><br>
+                            Evaluating Node: <b>${n.name} (${nodeKey})</b> [Step ${step + 1} of ${res.exploredNodes.length}]
+                        `;
+                    }
+                    step++;
+                } else {
+                    clearInterval(interval);
+                    onOptimizeRoute();
+                }
+            }, 350);
+        }
+
+        // -------------------------------------------------------------
+        // LIVE SIMULATION (SMOOTH REAL ROAD PROGRESSION)
+        // -------------------------------------------------------------
+        function onStartLiveSim() {
+            const startId = document.getElementById('startStopSelect').value;
+            const destId = document.getElementById('destStopSelect').value;
+            const log = document.getElementById('simLogText');
+            const routeKey = (startId === 'ST104' || destId === 'ST104') ? 'R2' : 'R1';
+            const waypoints = MOCK_DATA.roadCorridors[routeKey];
+            const busSelect = document.getElementById('simBusSelect').value;
+
+            if (SYSTEM_STATE.simulationInterval) clearInterval(SYSTEM_STATE.simulationInterval);
+
+            let step = 0;
+            const totalSteps = waypoints.length;
+
+            if (log) log.innerHTML = `<b>${busSelect}</b> departed. Real-time road tracking initialized on OpenStreetMap.`;
+
+            SYSTEM_STATE.simulationInterval = setInterval(() => {
+                if (step < totalSteps) {
+                    const currentCoords = waypoints[step];
+
+                    // 1. Move Leaflet OpenStreetMap Bus Marker
+                    if (SYSTEM_STATE.leafletBusMarker && SYSTEM_STATE.leafletMap) {
+                        SYSTEM_STATE.leafletBusMarker.setLatLng(currentCoords);
+                        SYSTEM_STATE.leafletBusMarker.setPopupContent(`
+                            <b>${busSelect}</b><br>
+                            Current Speed: <b>42 km/h</b><br>
+                            Road Waypoint: ${step + 1} of ${totalSteps}
+                        `);
+                    }
+
+                    // 2. Also update Canvas Coordinates proportionally
+                    const canvasStops = [MOCK_DATA.stops[0], MOCK_DATA.stops[1], MOCK_DATA.stops[2], MOCK_DATA.stops[4]];
+                    const canvasIndex = Math.min(Math.floor((step / totalSteps) * canvasStops.length), canvasStops.length - 1);
+                    SYSTEM_STATE.busPos = { x: canvasStops[canvasIndex].x, y: canvasStops[canvasIndex].y };
+                    initCanvas(SYSTEM_STATE.activeOptimalPath);
+
+                    const progressPct = Math.round(((step + 1) / totalSteps) * 100);
+                    if (log) {
+                        log.innerHTML = `
+                            <span class="pill-badge info"><i class="fa-solid fa-spinner fa-spin"></i> In Transit (${progressPct}%)</span>
+                            GPS Location: [${currentCoords[0].toFixed(4)}, ${currentCoords[1].toFixed(4)}] | Velocity: 42 km/h
+                        `;
+                    }
+
+                    step++;
+                } else {
+                    clearInterval(SYSTEM_STATE.simulationInterval);
+                    if (log) {
+                        log.innerHTML = `
+                            <span class="pill-badge success"><i class="fa-solid fa-check-circle"></i> Destination Reached</span>
+                            <b>${busSelect}</b> arrived at <b>College Campus Main Gate</b> safely.
+                        `;
+                    }
+                    if (SYSTEM_STATE.leafletBusMarker) {
+                        SYSTEM_STATE.leafletBusMarker.openPopup();
+                    }
+                }
+            }, 900);
+        }
+
+        // -------------------------------------------------------------
+        // PRESERVED CANVAS ROUTE GRAPH RENDERING (TOPOLOGY VIEW)
+        // -------------------------------------------------------------
+        function initCanvas(activePath = ['ST101', 'ST102', 'ST103', 'ST105']) {
+            const canvas = document.getElementById('routeCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                if (canvas.parentElement) {
+                    canvas.width = canvas.parentElement.clientWidth;
+                    canvas.height = canvas.parentElement.clientHeight || 480;
+                    draw();
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Grid background effect
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+                ctx.lineWidth = 1;
+                for (let x = 0; x < canvas.width; x += 30) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+                }
+                for (let y = 0; y < canvas.height; y += 30) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+                }
+
+                // Draw Edges (Route 1 Express)
+                drawEdge(ctx, MOCK_DATA.stops[0], MOCK_DATA.stops[1], '#3b82f6', 4);
+                drawEdge(ctx, MOCK_DATA.stops[1], MOCK_DATA.stops[2], '#3b82f6', 4);
+                drawEdge(ctx, MOCK_DATA.stops[2], MOCK_DATA.stops[4], '#3b82f6', 4);
+
+                // Draw Edges (Route 2 Suburban)
+                drawEdge(ctx, MOCK_DATA.stops[1], MOCK_DATA.stops[3], '#f59e0b', 3, true);
+                drawEdge(ctx, MOCK_DATA.stops[3], MOCK_DATA.stops[4], '#f59e0b', 3, true);
+
+                // Draw Nodes (Stops)
+                MOCK_DATA.stops.forEach(s => {
+                    const isHighlight = activePath.includes(s.id);
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, isHighlight ? 12 : 9, 0, Math.PI * 2);
+                    ctx.fillStyle = isHighlight ? '#10b981' : '#0f172a';
+                    ctx.fill();
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = isHighlight ? '#34d399' : '#38bdf8';
+                    ctx.stroke();
+
+                    // Text labels
+                    ctx.font = '600 12px Inter, sans-serif';
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillText(s.name, s.x - 30, s.y - 18);
+
+                    const time = SYSTEM_STATE.activeSchedule === 'FULL_DAY' ? s.full : s.half;
+                    ctx.font = '500 10px Inter, sans-serif';
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillText(`Arr: ${time}`, s.x - 20, s.y + 24);
+                });
+
+                // Draw Bus Marker
+                ctx.beginPath();
+                ctx.arc(SYSTEM_STATE.busPos.x, SYSTEM_STATE.busPos.y, 9, 0, Math.PI * 2);
+                ctx.fillStyle = '#ef4444';
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#ffffff';
+                ctx.stroke();
+            }
+
+            function drawEdge(c, from, to, color, width, dash = false) {
+                c.beginPath();
+                if (dash) c.setLineDash([6, 6]);
+                else c.setLineDash([]);
+                c.moveTo(from.x, from.y);
+                c.lineTo(to.x, to.y);
+                c.strokeStyle = color;
+                c.lineWidth = width;
+                c.stroke();
+                c.setLineDash([]);
+            }
+
+            resize();
+        }
+
+        // -------------------------------------------------------------
+        // MODALS
+        // -------------------------------------------------------------
+        function openAcademicModal() {
+            document.getElementById('academicModal').classList.add('active');
+        }
+
+        function closeAcademicModal() {
+            document.getElementById('academicModal').classList.remove('active');
+        }
     </script>
 </body>
 </html>

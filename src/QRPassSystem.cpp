@@ -13,7 +13,7 @@ using namespace std;
 
 void DigitalPass::displayDigitalPassCard() const {
     cout << "┌─────────────────────────────────────────────────────────┐\n";
-    cout << "│              🎫 DIGITAL STUDENT BUS PASS                │\n";
+    cout << "│               DIGITAL STUDENT BUS PASS                │\n";
     cout << "├─────────────────────────────────────────────────────────┤\n";
     cout << "│ Pass ID:        " << left << setw(39) << passId << "│\n";
     cout << "│ Student Name:   " << left << setw(39) << studentName << "│\n";

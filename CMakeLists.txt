@@ -36,6 +36,7 @@ set(SOURCES
     src/SystemManager.cpp
     src/MainWindow.cpp
     src/qt_main.cpp
+    resources.qrc
 )
 
 set(HEADERS

@@ -2,7 +2,7 @@
 # Convenient launcher script for Smart College Bus System (CLI & Qt GUI)
 
 echo "==========================================================="
-echo " 🚌 SMART COLLEGE BUS SYSTEM LAUNCHER (C++ OOP & Qt GUI)"
+echo "  SMART COLLEGE BUS SYSTEM LAUNCHER (C++ OOP & Qt GUI)"
 echo "==========================================================="
 echo "  1. Run Interactive C++ Console Application"
 echo "  2. Run Academic Viva Self-Test Suite"
@@ -34,7 +34,7 @@ case $choice in
         ;;
     4)
         echo "Opening web visualizer..."
-        open web/index.html || xdg-open web/index.html || echo "Please open file:///Users/tushartiwari565/.gemini/antigravity/scratch/smart_college_bus_system/web/index.html in your browser."
+        open web/index.html || xdg-open web/index.html || echo "Please open file:///Users/tushartiwari565/Documents/project copy/web/index.html in your browser."
         ;;
     5)
         make clean && make

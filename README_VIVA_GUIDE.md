@@ -3,7 +3,7 @@
 
 ---
 
-## 📌 Project Overview
+##  Project Overview
 This project is an Object-Oriented C++17 application designed for college **Project-Based Learning (PBL)** evaluation for a **team of 4 students**. It solves the real-world problem of student college bus schedule confusion:
 
 1. **Schedule-Type Awareness**: Differentiates timing sets between **Half-Day (Exam / Early Hours)** and **Full-Day (Normal Hours)** schedules so students always know which bus timing applies today.
@@ -12,7 +12,7 @@ This project is an Object-Oriented C++17 application designed for college **Proj
 
 ---
 
-## 👥 Module Division & Member Ownership Table
+##  Module Division & Member Ownership Table
 
 | Member | Technical Ownership | Key Class Files | Specific OOP Concepts Demonstrated |
 |---|---|---|---|
@@ -23,7 +23,7 @@ This project is an Object-Oriented C++17 application designed for college **Proj
 
 ---
 
-## 🧠 Breakdown of the 4 Pillars of OOPs in Code
+##  Breakdown of the 4 Pillars of OOPs in Code
 
 ### 1. Abstraction
 - **File**: [`include/Person.hpp`](file:///Users/tushartiwari565/.gemini/antigravity/scratch/smart_college_bus_system/include/Person.hpp)
@@ -64,7 +64,7 @@ This project is an Object-Oriented C++17 application designed for college **Proj
 
 ---
 
-## 🛠️ Build & Run Commands
+##  Build & Run Commands
 
 ```bash
 # Navigate to project directory
@@ -82,7 +82,7 @@ make
 
 ---
 
-## 🎓 Viva Questions & Answers Guide for Team Members
+##  Viva Questions & Answers Guide for Team Members
 
 ### Member 1 Questions (Student & Route Management):
 - **Q: How does `Student` inherit from `Person`?**

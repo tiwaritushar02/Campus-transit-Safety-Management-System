@@ -8,6 +8,18 @@ bin/
 smart_bus_system
 smart_college_bus_system_gui
 
+# Qt generated MOC and resource files
+.qmake.stash
+moc_*
+qrc_*
+
+# macOS duplicate artifacts
+* 2*
+* 2.*
+
+# Runtime logs
+data/attendance.log
+
 # IDE and OS cache
 .qtcreator/
 *.pro.user*

@@ -18,8 +18,8 @@ NotificationCenter::NotificationCenter() {
 
 void NotificationCenter::initializeSampleNotifications() {
     notifications = {
-        {"NOTIF-101", TargetAudience::ALL_STUDENTS, "ALL", "🗓️ Schedule Notice", "College will follow Half-Day Schedule on Friday for Mid-Term Exams.", "2026-08-01 09:00"},
-        {"NOTIF-102", TargetAudience::SPECIFIC_BUS, "B-101", "⚠️ Delay Alert", "Bus B-101 is delayed by 15 minutes due to heavy traffic on Expressway.", "2026-08-02 07:40"}
+        {"NOTIF-101", TargetAudience::ALL_STUDENTS, "ALL", " Schedule Notice", "College will follow Half-Day Schedule on Friday for Mid-Term Exams.", "2026-08-01 09:00"},
+        {"NOTIF-102", TargetAudience::SPECIFIC_BUS, "B-101", "[WARNING] Delay Alert", "Bus B-101 is delayed by 15 minutes due to heavy traffic on Expressway.", "2026-08-02 07:40"}
     };
 }
 
@@ -33,12 +33,12 @@ void NotificationCenter::sendBroadcast(TargetAudience audience, const string& ti
     string id = "NOTIF-" + to_string(notifications.size() + 101);
     notifications.push_back({id, audience, targetFilter, title, messageText, string(buf)});
 
-    cout << "📢 [BROADCAST DISPATCHED] Title: " << title << " | Target: " << targetFilter << "\n";
+    cout << " [BROADCAST DISPATCHED] Title: " << title << " | Target: " << targetFilter << "\n";
 }
 
 void NotificationCenter::sendParentDropNotification(const string& parentPhone, const string& childName, const string& eventType, const string& timeStr) {
     string msg = "SMS/App Notification to Parent (" + parentPhone + "): 'Your child " + childName + " " + eventType + " at " + timeStr + ".'";
-    sendBroadcast(TargetAudience::ALL_PARENTS, "👨‍👩‍👧 Parent Alert", msg, childName);
+    sendBroadcast(TargetAudience::ALL_PARENTS, " Parent Alert", msg, childName);
 }
 
 void NotificationCenter::displayNotificationLog() const {

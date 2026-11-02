@@ -61,4 +61,6 @@ SOURCES += \
     src/MainWindow.cpp \
     src/qt_main.cpp
 
+RESOURCES += resources.qrc
+
 DESTDIR = bin

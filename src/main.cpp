@@ -16,8 +16,8 @@ using namespace std;
 void displayBanner() {
     cout << "\033[1;36m";
     cout << "===========================================================================\n";
-    cout << "  🚌 SMART COLLEGE BUS MANAGEMENT & ROUTE OPTIMIZATION SYSTEM (C++ OOP)   \n";
-    cout << "  🔒 Object-Oriented Multi-Role Authorization & Login System               \n";
+    cout << "   SMART COLLEGE BUS MANAGEMENT & ROUTE OPTIMIZATION SYSTEM (C++ OOP)   \n";
+    cout << "   Object-Oriented Multi-Role Authorization & Login System               \n";
     cout << "===========================================================================\n";
     cout << "\033[0m";
 }
@@ -25,17 +25,17 @@ void displayBanner() {
 void runAdminPortal(SystemManager& sysManager) {
     int choice = -1;
     while (choice != 0) {
-        cout << "\n\033[1;31m--- 🔴 ADMIN CONTROL PORTAL [Active Mode: " 
+        cout << "\n\033[1;31m---  ADMIN CONTROL PORTAL [Active Mode: " 
                   << ScheduleUtils::toString(sysManager.getScheduleType()) << "] ---\033[0m\n";
-        cout << " [1] 📊 View Transport System Analytics Dashboard\n";
-        cout << " [2] 🚌 Update Bus Details (Registration No, Seating Capacity, Route)\n";
-        cout << " [3] ⏰ Update Stop Departure Timings (Half-Day / Full-Day)\n";
-        cout << " [4] ➕ Add New Bus to Fleet\n";
-        cout << " [5] 📢 Dispatch Broadcast Notice (Students/Parents/Drivers)\n";
-        cout << " [6] 🚨 View Complaints, SOS Alerts & Lost Items\n";
-        cout << " [7] 🔧 View Fleet Maintenance & Compliance Schedule\n";
-        cout << " [8] 🗓️  Switch System Schedule Mode (Full-Day vs Half-Day)\n";
-        cout << " [0] 🔒 Logout from Admin Portal\n";
+        cout << " [1]  View Transport System Analytics Dashboard\n";
+        cout << " [2]  Update Bus Details (Registration No, Seating Capacity, Route)\n";
+        cout << " [3]  Update Stop Departure Timings (Half-Day / Full-Day)\n";
+        cout << " [4]  Add New Bus to Fleet\n";
+        cout << " [5]  Dispatch Broadcast Notice (Students/Parents/Drivers)\n";
+        cout << " [6] [ALERT] View Complaints, SOS Alerts & Lost Items\n";
+        cout << " [7]  View Fleet Maintenance & Compliance Schedule\n";
+        cout << " [8]   Switch System Schedule Mode (Full-Day vs Half-Day)\n";
+        cout << " [0]  Logout from Admin Portal\n";
         cout << "Enter Admin Choice (0-8): ";
 
         if (!(cin >> choice)) {
@@ -116,13 +116,13 @@ void runAdminPortal(SystemManager& sysManager) {
 void runDriverPortal(SystemManager& sysManager, const string& driverId) {
     int choice = -1;
     while (choice != 0) {
-        cout << "\n\033[1;33m--- 🟡 DRIVER PORTAL [Driver: " << driverId << "] ---\033[0m\n";
-        cout << " [1] 🚀 Start Trip\n";
-        cout << " [2] 🏁 End Trip\n";
-        cout << " [3] ⚠️ Report Delay (Traffic, Weather, Breakdown)\n";
-        cout << " [4] 🛑 Report Student Misbehavior (Vandalism, Fighting)\n";
-        cout << " [5] 🔧 Report Bus Condition Issue (Tyre, Engine, AC)\n";
-        cout << " [0] 🔒 Logout\n";
+        cout << "\n\033[1;33m---  DRIVER PORTAL [Driver: " << driverId << "] ---\033[0m\n";
+        cout << " [1]  Start Trip\n";
+        cout << " [2]  End Trip\n";
+        cout << " [3] [WARNING] Report Delay (Traffic, Weather, Breakdown)\n";
+        cout << " [4]  Report Student Misbehavior (Vandalism, Fighting)\n";
+        cout << " [5]  Report Bus Condition Issue (Tyre, Engine, AC)\n";
+        cout << " [0]  Logout\n";
         cout << "Enter Choice (0-5): ";
 
         if (!(cin >> choice)) {
@@ -168,14 +168,14 @@ void runDriverPortal(SystemManager& sysManager, const string& driverId) {
 void runStudentPortal(SystemManager& sysManager, const string& studentRoll) {
     int choice = -1;
     while (choice != 0) {
-        cout << "\n\033[1;32m--- 🟢 STUDENT / USER PORTAL [Roll: " << studentRoll << "] ---\033[0m\n";
-        cout << " [1] 🎫 View My Digital QR Bus Pass\n";
-        cout << " [2] 🚏 View Morning Departure Time\n";
-        cout << " [3] 🚨 Missed Bus? Search Connecting Bus\n";
+        cout << "\n\033[1;32m---  STUDENT / USER PORTAL [Roll: " << studentRoll << "] ---\033[0m\n";
+        cout << " [1]  View My Digital QR Bus Pass\n";
+        cout << " [2]  View Morning Departure Time\n";
+        cout << " [3] [ALERT] Missed Bus? Search Connecting Bus\n";
         cout << " [4] ⭐ Rate Driver (1-5 Stars) & Journey Feedback\n";
-        cout << " [5] 📢 Report Driver Issue (Rash driving, Overspeeding, Phone)\n";
-        cout << " [6] 🚨 SOS EMERGENCY BUTTON (Instant Admin Alert)\n";
-        cout << " [0] 🔒 Logout\n";
+        cout << " [5]  Report Driver Issue (Rash driving, Overspeeding, Phone)\n";
+        cout << " [6] [ALERT] SOS EMERGENCY BUTTON (Instant Admin Alert)\n";
+        cout << " [0]  Logout\n";
         cout << "Enter Choice (0-6): ";
 
         if (!(cin >> choice)) {
@@ -227,11 +227,11 @@ void runStudentPortal(SystemManager& sysManager, const string& studentRoll) {
 void runParentPortal(SystemManager& sysManager, const string& parentQuery) {
     int choice = -1;
     while (choice != 0) {
-        cout << "\n\033[1;34m--- 🔵 PARENT PORTAL ---\033[0m\n";
-        cout << " [1] 📡 Track Child's Bus & Live ETA\n";
-        cout << " [2] 🔔 View Boarding & Drop Notifications\n";
-        cout << " [3] 💳 View Transport Fee Status & Due Date\n";
-        cout << " [0] 🔒 Logout\n";
+        cout << "\n\033[1;34m---  PARENT PORTAL ---\033[0m\n";
+        cout << " [1]  Track Child's Bus & Live ETA\n";
+        cout << " [2]  View Boarding & Drop Notifications\n";
+        cout << " [3]  View Transport Fee Status & Due Date\n";
+        cout << " [0]  Logout\n";
         cout << "Enter Choice (0-3): ";
 
         if (!(cin >> choice)) {
@@ -271,12 +271,12 @@ int main(int argc, char* argv[]) {
 
     bool running = true;
     while (running) {
-        cout << "\n\033[1;35m--- 🔒 LOGIN & AUTHORIZATION SCREEN ---\033[0m\n";
+        cout << "\n\033[1;35m---  LOGIN & AUTHORIZATION SCREEN ---\033[0m\n";
         cout << "Default Credentials:\n";
-        cout << "  🔴 Admin:   admin       / admin123\n";
-        cout << "  🟡 Driver:  D-01        / driver123\n";
-        cout << "  🟢 Student: 2024-CS-001 / student123\n";
-        cout << "  🔵 Parent:  P-101       / parent123\n";
+        cout << "   Admin:   admin       / admin123\n";
+        cout << "   Driver:  D-01        / driver123\n";
+        cout << "   Student: 2024-CS-001 / student123\n";
+        cout << "   Parent:  P-101       / parent123\n";
         cout << "-----------------------------------------------------------\n";
         cout << "Enter Username / ID (or 'exit' to quit, 'test' for self-test): ";
         
@@ -298,7 +298,7 @@ int main(int argc, char* argv[]) {
 
         UserSession session = sysManager.login(username, password);
         if (!session.isAuthenticated || !session.activeAccount) {
-            cout << "❌ Login failed! Please check credentials.\n";
+            cout << "[ERROR] Login failed! Please check credentials.\n";
             continue;
         }
 

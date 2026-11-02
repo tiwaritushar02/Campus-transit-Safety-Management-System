@@ -29,7 +29,7 @@ public:
 
         if (verbose) {
             cout << "\n===========================================================\n";
-            cout << "  🚀 SIMULATION STARTED: Bus [" << bus.getBusId() << "] on Route [" << route.getRouteName() << "]\n";
+            cout << "   SIMULATION STARTED: Bus [" << bus.getBusId() << "] on Route [" << route.getRouteName() << "]\n";
             cout << "===========================================================\n";
         }
 
@@ -37,7 +37,7 @@ public:
             bus.setCurrentLocationStopId(stops[i].getStopId());
 
             if (verbose) {
-                cout << "  ⏱️  [LIVE GPS] Bus " << bus.getBusId() 
+                cout << "    [LIVE GPS] Bus " << bus.getBusId() 
                           << " arrived at Stop (" << (i + 1) << "/" << stops.size() << "): "
                           << stops[i].getStopName() << " [ID: " << stops[i].getStopId() << "]\n";
             }
@@ -49,7 +49,7 @@ public:
         }
 
         if (verbose) {
-            cout << "  ✅ SIMULATION COMPLETE: Bus [" << bus.getBusId() << "] reached final destination!\n";
+            cout << "  [SUCCESS] SIMULATION COMPLETE: Bus [" << bus.getBusId() << "] reached final destination!\n";
             cout << "===========================================================\n\n";
         }
     }

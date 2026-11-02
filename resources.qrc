@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>data/real_osm_basemap.png</file>
+    </qresource>
+</RCC>

@@ -31,9 +31,18 @@
 
 using namespace std;
 
+struct DelayNotice {
+    bool hasDelay = false;
+    string busId = "";
+    string reason = "";
+    int minutesDelayed = 0;
+    string timestamp = "";
+};
+
 class SystemManager {
 private:
     ScheduleType activeSchedule;
+    DelayNotice activeDelayNotice;
     
     // Polymorphic Person vector storing base pointers to Student/Driver/Conductor/Admin/Parent
     vector<shared_ptr<Person>> people;
@@ -73,8 +82,13 @@ public:
     bool adminUpdateBus(const string& busId, const string& newNumber, int newCapacity, const string& newRouteId);
     bool adminUpdateStopTiming(const string& stopId, const string& busId, ScheduleType schedule, const string& newTime);
     bool adminAddNewBus(const string& busId, const string& busNumber, int capacity, const string& routeId);
+    bool adminRegisterNewStudent(const Student& newStudent);
     void adminBroadcastNotice(TargetAudience audience, const string& title, const string& msg);
     void displayAnalyticsDashboard() const;
+
+    // Delay Management
+    const DelayNotice& getActiveDelayNotice() const { return activeDelayNotice; }
+    void clearDelayNotice() { activeDelayNotice.hasDelay = false; }
 
     // Driver Operations (Role 2: Driver)
     void driverStartTrip(const string& busId);
@@ -119,6 +133,8 @@ public:
     void processBoarding(const string& rollNumber, const string& busId);
 
     // Logs
+    AttendanceLogger& getAttendanceLogger() { return attendanceLogger; }
+    const AttendanceLogger& getAttendanceLogger() const { return attendanceLogger; }
     void displayAttendanceLogs() const { attendanceLogger.displayLogs(); }
     void runAcademicSelfTest();
 };

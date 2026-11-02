@@ -14,7 +14,7 @@ using namespace std;
 
 void ComplaintEngine::logComplaint(const Complaint& complaint) {
     complaints.push_back(complaint);
-    cout << "🚨 [COMPLAINT LOGGED] ID: " << complaint.complaintId 
+    cout << "[ALERT] [COMPLAINT LOGGED] ID: " << complaint.complaintId 
               << " | Reporter: " << complaint.reporterName 
               << " | Category: " << complaint.category << "\n";
 }
@@ -32,7 +32,7 @@ void ComplaintEngine::submitDriverRating(const string& driverId, const string& s
 void ComplaintEngine::reportLostItem(const string& busId, const string& itemDesc, const string& reportedBy, const string& phone) {
     string itemId = "LOST-" + to_string(lostItems.size() + 101);
     lostItems.push_back({itemId, busId, itemDesc, reportedBy, phone, "REPORTED"});
-    cout << "🎒 [LOST & FOUND] Item [" << itemDesc << "] reported on Bus " << busId << " (Ref ID: " << itemId << ")\n";
+    cout << " [LOST & FOUND] Item [" << itemDesc << "] reported on Bus " << busId << " (Ref ID: " << itemId << ")\n";
 }
 
 void ComplaintEngine::triggerSOSAlert(const string& senderName, const string& busId, const string& location) {
@@ -54,7 +54,7 @@ void ComplaintEngine::triggerSOSAlert(const string& senderName, const string& bu
     sos.adminActionNote = "DISPATCHING EMERGENCY ASSISTANCE";
 
     complaints.push_back(sos);
-    cout << "\033[1;31m🚨 🚨 🚨 [EMERGENCY SOS ALERT ACTIVATED] 🚨 🚨 🚨\033[0m\n";
+    cout << "\033[1;31m[EMERGENCY ALERT] [EMERGENCY SOS ALERT ACTIVATED] [EMERGENCY ALERT]\033[0m\n";
     cout << "  Location: " << location << " | Bus: " << busId << " | Sender: " << senderName << "\n";
 }
 
@@ -63,7 +63,7 @@ void ComplaintEngine::updateComplaintStatus(const string& complaintId, Complaint
         if (c.complaintId == complaintId) {
             c.status = newStatus;
             c.adminActionNote = actionNote;
-            cout << "✅ Complaint [" << complaintId << "] updated by Admin to Status Code: " << static_cast<int>(newStatus) << "\n";
+            cout << "[SUCCESS] Complaint [" << complaintId << "] updated by Admin to Status Code: " << static_cast<int>(newStatus) << "\n";
             return;
         }
     }
@@ -91,7 +91,7 @@ void ComplaintEngine::displayAllComplaints() const {
     } else {
         for (const auto& c : complaints) {
             cout << "ID: [" << c.complaintId << "] | Type: " 
-                      << (c.type == ComplaintType::SOS_EMERGENCY ? "🚨 SOS EMERGENCY" : "STANDARD")
+                      << (c.type == ComplaintType::SOS_EMERGENCY ? "[ALERT] SOS EMERGENCY" : "STANDARD")
                       << " | Category: " << left << setw(20) << c.category << "\n";
             cout << "  Reporter: " << c.reporterName << " -> Target: " << c.targetName << "\n";
             cout << "  Description: " << c.description << "\n";
@@ -111,7 +111,7 @@ void ComplaintEngine::displayLostAndFound() const {
     } else {
         for (const auto& item : lostItems) {
             cout << "Item Ref: [" << item.itemId << "] Bus: " << item.busId << " | Item: " << item.itemDescription
-                      << " | Reported By: " << item.reportedBy << " (📞 " << item.contactPhone << ") | Status: " << item.status << "\n";
+                      << " | Reported By: " << item.reportedBy << " (Tel: " << item.contactPhone << ") | Status: " << item.status << "\n";
         }
     }
     cout << "===========================================================\n\n";
