@@ -216,7 +216,7 @@ void SystemManager::driverReportMisbehavior(const string& driverName, const stri
     c.busId = "B-101";
     c.category = "STUDENT_MISBEHAVIOR";
     c.description = issue;
-    c.timestamp = "2026-08-02 08:15";
+    c.timestamp = ComplaintEngine::getCurrentTimestamp();
     c.status = ComplaintStatus::OPEN;
     
     complaintEngine.logComplaint(c);
@@ -240,19 +240,31 @@ void SystemManager::studentRateDriver(const string& studentRoll, const string& d
     complaintEngine.submitDriverRating(driverId, studentRoll, stars, feedback);
 }
 
-void SystemManager::studentReportDriver(const string& studentRoll, const string& busId, const string& issueCategory, const string& details) {
+Complaint SystemManager::studentReportDriver(const string& studentRoll, const string& busId, const string& issueCategory, const string& details) {
     Complaint c;
-    c.complaintId = "REP-" + to_string(rand() % 900 + 100);
+    c.complaintId = "CMP-" + to_string(rand() % 9000 + 1000);
     c.type = ComplaintType::STUDENT_TO_DRIVER;
     c.reporterName = studentRoll;
-    c.targetName = "Driver of " + busId;
+    
+    Bus* b = findBusById(busId);
+    if (b && b->getDriver()) {
+        c.targetName = b->getDriver()->getName() + " (" + b->getDriver()->getId() + ")";
+    } else {
+        c.targetName = "Driver of " + busId;
+    }
+    
     c.busId = busId;
     c.category = issueCategory;
     c.description = details;
-    c.timestamp = "2026-08-02 08:30";
+    c.timestamp = ComplaintEngine::getCurrentTimestamp();
     c.status = ComplaintStatus::OPEN;
 
     complaintEngine.logComplaint(c);
+    return c;
+}
+
+bool SystemManager::voteOnDriverComplaint(const string& complaintId, const string& studentRoll, bool isRight, string& outMsg) {
+    return complaintEngine.voteOnComplaint(complaintId, studentRoll, isRight, outMsg);
 }
 
 void SystemManager::triggerStudentSOS(const string& studentRoll, const string& busId, const string& stopId) {

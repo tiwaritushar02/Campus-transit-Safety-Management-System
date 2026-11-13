@@ -9,14 +9,60 @@
 #include <iomanip>
 #include <chrono>
 #include <ctime>
+#include <algorithm>
 
 using namespace std;
 
+string ComplaintEngine::getCurrentTimestamp() {
+    auto now = chrono::system_clock::now();
+    time_t now_c = chrono::system_clock::to_time_t(now);
+    char buf[64];
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&now_c));
+    return string(buf);
+}
+
 void ComplaintEngine::logComplaint(const Complaint& complaint) {
-    complaints.push_back(complaint);
-    cout << "🚨 [COMPLAINT LOGGED] ID: " << complaint.complaintId 
-              << " | Reporter: " << complaint.reporterName 
-              << " | Category: " << complaint.category << "\n";
+    Complaint c = complaint;
+    if (c.timestamp.empty()) {
+        c.timestamp = getCurrentTimestamp();
+    }
+    complaints.push_back(c);
+    cout << "🚨 [COMPLAINT LOGGED] ID: " << c.complaintId 
+         << " | Time: " << c.timestamp
+         << " | Reporter: " << c.reporterName 
+         << " | Category: " << c.category << "\n";
+}
+
+bool ComplaintEngine::voteOnComplaint(const string& complaintId, const string& studentRoll, bool isRight, string& outMsg) {
+    for (auto& c : complaints) {
+        if (c.complaintId == complaintId) {
+            // Check if already voted
+            if (find(c.voters.begin(), c.voters.end(), studentRoll) != c.voters.end()) {
+                outMsg = "You (" + studentRoll + ") have already cast your verification vote on this complaint.";
+                return false;
+            }
+            c.voters.push_back(studentRoll);
+            if (isRight) {
+                c.votesRight++;
+                outMsg = "Vote recorded: You verified report " + complaintId + " as RIGHT (Valid).\nCurrent Consensus: " +
+                         to_string(c.votesRight) + " Right vs " + to_string(c.votesWrong) + " Wrong.";
+            } else {
+                c.votesWrong++;
+                outMsg = "Vote recorded: You verified report " + complaintId + " as WRONG (Disputed).\nCurrent Consensus: " +
+                         to_string(c.votesRight) + " Right vs " + to_string(c.votesWrong) + " Wrong.";
+            }
+            return true;
+        }
+    }
+    outMsg = "Complaint ID " + complaintId + " not found.";
+    return false;
+}
+
+Complaint* ComplaintEngine::getComplaintById(const string& complaintId) {
+    for (auto& c : complaints) {
+        if (c.complaintId == complaintId) return &c;
+    }
+    return nullptr;
 }
 
 void ComplaintEngine::submitDriverRating(const string& driverId, const string& studentRoll, int stars, const string& feedback) {

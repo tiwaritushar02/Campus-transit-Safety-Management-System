@@ -86,7 +86,8 @@ public:
     // Student Operations (Role 3: Student)
     DigitalPass getStudentPass(const string& rollNumber);
     void studentRateDriver(const string& studentRoll, const string& driverId, int stars, const string& feedback);
-    void studentReportDriver(const string& studentRoll, const string& busId, const string& issueCategory, const string& details);
+    Complaint studentReportDriver(const string& studentRoll, const string& busId, const string& issueCategory, const string& details);
+    bool voteOnDriverComplaint(const string& complaintId, const string& studentRoll, bool isRight, string& outMsg);
     void triggerStudentSOS(const string& studentRoll, const string& busId, const string& stopId);
 
     // Parent Operations (Role 4: Parent)

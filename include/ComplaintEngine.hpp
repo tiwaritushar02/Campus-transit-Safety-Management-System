@@ -43,8 +43,13 @@ struct Complaint {
     string category;     // e.g. "Rash Driving", "Vandalism", "Over-speeding"
     string description;
     string timestamp;
-    ComplaintStatus status;
+    ComplaintStatus status = ComplaintStatus::OPEN;
     string adminActionNote;
+
+    // Student Community Verification Voting
+    int votesRight = 0;
+    int votesWrong = 0;
+    vector<string> voters; // Roll numbers of students who voted
 };
 
 struct DriverRating {
@@ -73,8 +78,11 @@ private:
 public:
     ComplaintEngine() = default;
 
+    static string getCurrentTimestamp();
+
     // File/Log Methods
     void logComplaint(const Complaint& complaint);
+    bool voteOnComplaint(const string& complaintId, const string& studentRoll, bool isRight, string& outMsg);
     void submitDriverRating(const string& driverId, const string& studentRoll, int stars, const string& feedback);
     void reportLostItem(const string& busId, const string& itemDesc, const string& reportedBy, const string& phone);
     void triggerSOSAlert(const string& senderName, const string& busId, const string& location);
@@ -84,6 +92,8 @@ public:
 
     // Getters & Analytics
     const vector<Complaint>& getComplaints() const { return complaints; }
+    vector<Complaint>& getMutableComplaints() { return complaints; }
+    Complaint* getComplaintById(const string& complaintId);
     const vector<DriverRating>& getRatings() const { return driverRatings; }
     const vector<LostItem>& getLostItems() const { return lostItems; }
 

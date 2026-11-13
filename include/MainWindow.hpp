@@ -63,6 +63,12 @@ private:
     QComboBox* ratingStarCombo;
     QLineEdit* ratingFeedbackInput;
 
+    // Student Complaint & Peer Voting Widgets
+    QComboBox* complaintDriverCombo;
+    QComboBox* complaintCategoryCombo;
+    QLineEdit* complaintDescInput;
+    QTableWidget* driverPollsTable;
+
     // Tab 2: Driver Portal
     QComboBox* driverBusCombo;
     QLineEdit* driverDelayReasonInput;
@@ -83,6 +89,7 @@ private:
     // Tab 4: Parent Portal
     QLineEdit* parentPhoneInput;
     QLabel* parentInfoLabel;
+    QPushButton* parentPayFeeBtn;
 
     // Tab 5: Route Optimizer & Visualizer
     QGraphicsView* graphView;
@@ -95,13 +102,18 @@ private:
     vector<string> currentSimStops;
     QGraphicsEllipseItem* busMarker;
 
-    // Fleet Table
+    // Tab 6: Fleet & Complaints Registry
     QTableWidget* fleetTable;
     QLineEdit* boardRollInput;
     QComboBox* boardBusCombo;
+    QTableWidget* complaintsTable;
+    QComboBox* adminComplaintSelectCombo;
+    QComboBox* adminComplaintStatusCombo;
+    QLineEdit* adminActionNoteInput;
 
     // GUI Initialization Helpers
     void setupUI();
+    QWidget* createTopHeader(bool isLoggedIn);
     QWidget* createLoginScreen();
     QWidget* createPortalScreen();
 
@@ -115,6 +127,8 @@ private:
     void setupTabsForRole(UserRole role, const string& username);
     void renderRouteGraph();
     void refreshFleetTable();
+    void refreshComplaintsTable();
+    void refreshDriverPollsTable();
 
 private slots:
     // Authentication Slots
@@ -128,6 +142,8 @@ private slots:
     void onShowDigitalQRPass();
     void onSubmitDriverRating();
     void onTriggerStudentSOS();
+    void onStudentFileComplaint();
+    void onVoteOnComplaint(const QString& compId, bool isRight);
 
     void onDriverStartTrip();
     void onDriverEndTrip();
@@ -137,8 +153,10 @@ private slots:
     void onAdminUpdateBus();
     void onAdminUpdateTiming();
     void onAdminBroadcastNotice();
+    void onAdminUpdateComplaintStatus();
 
     void onParentTrackChild();
+    void onParentPayFee();
 
     void onOptimizeRoute();
     void onStartLiveSim();
