@@ -1044,6 +1044,23 @@ QWidget* MainWindow::createRouteVisualizerTab() {
     routeInfoLabel->setStyleSheet("font-size: 12.5px; font-weight: 600; color: #58A6FF; padding: 6px 10px; background-color: #161B22; border-radius: 6px;");
     layout->addWidget(routeInfoLabel);
 
+    // Interactive Real OpenStreetMap Banner with direct 1-click launch
+    QFrame* realMapBanner = new QFrame(tab);
+    realMapBanner->setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1F6FEB, stop:1 #238636); border-radius: 8px; padding: 10px 14px;");
+    QHBoxLayout* rmbLayout = new QHBoxLayout(realMapBanner);
+    rmbLayout->setContentsMargins(10, 8, 10, 8);
+    QLabel* rmbIcon = new QLabel("🗺️", realMapBanner);
+    rmbIcon->setStyleSheet("font-size: 26px;");
+    QLabel* rmbText = new QLabel("<b>Real OpenStreetMap & OSRM Routing Active (Haldwani ➔ Bhimtal)</b><br><span style='font-size: 11.5px; color: #E6EDF3;'>Interactive Leaflet OpenStreetMap with real driving roads, live bus motion simulation, and elevation profile.</span>", realMapBanner);
+    rmbText->setStyleSheet("color: #FFFFFF; font-size: 12.5px;");
+    QPushButton* rmbBtn = new QPushButton("🚀 Launch Real OpenStreetMap in Browser", realMapBanner);
+    rmbBtn->setStyleSheet("background-color: #FFFFFF; color: #0D1117; font-weight: 800; font-size: 12px; padding: 8px 16px; border-radius: 6px;");
+    connect(rmbBtn, &QPushButton::clicked, this, &MainWindow::onOpenInteractiveOpenStreetMap);
+    rmbLayout->addWidget(rmbIcon);
+    rmbLayout->addWidget(rmbText, 1);
+    rmbLayout->addWidget(rmbBtn);
+    layout->addWidget(realMapBanner);
+
     // Full-Width Interactive Canvas
     graphScene = new QGraphicsScene(this);
     graphView = new QGraphicsView(graphScene, tab);
@@ -1690,19 +1707,19 @@ void MainWindow::onCalculateOptimalRoute() {
     QString startId = startStopCombo->currentData().toString();
     QString algo = algoCombo->currentText();
 
-    double dist = 31.0;
-    int duration = 49;
+    double dist = 28.2;
+    int duration = 48;
     int elevGain = 996;
     int stops = 5;
 
     if (startId == "ST102") {
-        dist = 27.3; duration = 49; elevGain = 866; stops = 4;
+        dist = 23.7; duration = 38; elevGain = 866; stops = 4;
     } else if (startId == "ST103") {
-        dist = 21.1; duration = 35; elevGain = 740; stops = 3;
+        dist = 19.7; duration = 32; elevGain = 800; stops = 3;
     } else if (startId == "ST104") {
-        dist = 8.8; duration = 17; elevGain = 470; stops = 2;
+        dist = 15.4; duration = 28; elevGain = 510; stops = 3;
     } else if (startId == "ST105") {
-        dist = 4.1; duration = 9; elevGain = 50; stops = 1;
+        dist = 4.2; duration = 10; elevGain = 50; stops = 2;
     }
 
     routeKpiDistance->setText(QString("Total Road Distance: <b>%1 KM</b>").arg(dist, 0, 'f', 1));
@@ -1711,12 +1728,8 @@ void MainWindow::onCalculateOptimalRoute() {
     routeKpiStops->setText(QString("Stops: <b>%1 Checkpoints</b>").arg(stops));
     routeKpiAlgo->setText(QString("Algorithm: <b>%1</b>").arg(algo.contains("A*") ? "A* Search" : "Dijkstra"));
 
-    routeInfoLabel->setText(QString("Calculated Optimal Route: <b>%1</b> -> <b>Graphic Era Hill University, Bhimtal Campus</b> | Real OSRM: <b>%2 KM (%3 Mins)</b>")
-                            .arg(startStopCombo->currentText().section(" - ", 1, 1).section(" [", 0, 0))
-                            .arg(dist, 0, 'f', 1).arg(duration));
-
-    // Automatically display real OpenStreetMap & OSRM routing in browser
-    onOpenInteractiveOpenStreetMap();
+    routeInfoLabel->setText(QString("Calculated Optimal Route: <b>%1</b> -> <b>Graphic Era Hill University, Bhimtal Campus</b> | Method: <b>%2</b>")
+                            .arg(startStopCombo->currentText().section(" - ", 1, 1).section(" [", 0, 0), algo));
 }
 
 void MainWindow::onStartLiveSim() {
@@ -1766,6 +1779,18 @@ void MainWindow::onSimStep() {
 }
 
 void MainWindow::onOpenInteractiveOpenStreetMap() {
-    QString htmlPath = QDir::current().filePath("web/index.html");
-    QDesktopServices::openUrl(QUrl::fromLocalFile(htmlPath));
+    QStringList candidates = {
+        QDir::current().filePath("web/index.html"),
+        QCoreApplication::applicationDirPath() + "/web/index.html",
+        QCoreApplication::applicationDirPath() + "/../web/index.html",
+        QCoreApplication::applicationDirPath() + "/../../web/index.html",
+        "/Users/tushartiwari565/Documents/project/web/index.html"
+    };
+    for (const QString& candidate : candidates) {
+        if (QFile::exists(candidate)) {
+            QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(candidate).absoluteFilePath()));
+            return;
+        }
+    }
+    QDesktopServices::openUrl(QUrl::fromLocalFile(candidates.first()));
 }
