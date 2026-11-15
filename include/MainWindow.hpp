@@ -12,6 +12,7 @@
  * - Advanced Complaint Management with Reporter/Accused Tracking & Student YES/NO Polls
  * - Real Haldwani to Graphic Era Hill University (Bhimtal Campus) Route Optimizer
  * - Fixed Destination (GEHU Bhimtal Campus) with A* and Dijkstra Algorithms
+ * - Native Embedded OpenStreetMap Widget (NO BROWSER, NO WEBSITE, NO POPUP)
  * - Multi-Role Authorization: Admin, Student, Driver, Parent Portals
  * ============================================================================
  */
@@ -25,12 +26,12 @@
 #include <QTableWidget>
 #include <QLabel>
 #include <QProgressBar>
-#include <QGraphicsView>
-#include <QGraphicsScene>
-#include <QGraphicsEllipseItem>
+#include <QListWidget>
 #include <QTimer>
 #include <QGroupBox>
 #include "SystemManager.hpp"
+#include "NativeOsmMapWidget.hpp"
+#include "RouteController.hpp"
 
 using namespace std;
 
@@ -147,10 +148,26 @@ private:
     QLineEdit* newCompBusEdit;
     QLineEdit* newCompDescEdit;
 
-    // Route Optimizer & Topographic Graph
+    // ========================================================================
+    // NATIVE TRACKING DASHBOARD & ROUTE OPTIMIZER
+    // ========================================================================
+    RouteController* routeController;
+
+    // Left Panel
     QComboBox* startStopCombo;
     QComboBox* destStopCombo; // FIXED: Graphic Era Hill University, Bhimtal Campus
     QComboBox* algoCombo;     // Dijkstra vs A*
+    QComboBox* busSelectCombo;
+    QListWidget* activeBusesList;
+    QPushButton* startSimBtn;
+    QPushButton* pauseSimBtn;
+    QPushButton* resetSimBtn;
+    QComboBox* simSpeedCombo;
+
+    // Center Map
+    NativeOsmMapWidget* osmMapWidget;
+
+    // Top / Status HUD
     QLabel* routeKpiDistance;
     QLabel* routeKpiDuration;
     QLabel* routeKpiElevation;
@@ -159,12 +176,24 @@ private:
     QLabel* routeKpiStatus;
     QLabel* routeInfoLabel;
 
-    QGraphicsView* graphView;
-    QGraphicsScene* graphScene;
-    QTimer* simTimer;
-    int simStep;
-    vector<string> currentSimStops;
-    QGraphicsEllipseItem* busMarker;
+    // Right Panel (Telemetry & Bus Info)
+    QLabel* rBusIdLabel;
+    QLabel* rBusRegLabel;
+    QLabel* rBusCapLabel;
+    QLabel* rDriverNameLabel;
+    QLabel* rDriverPhoneLabel;
+    QLabel* rCurrentLocLabel;
+    QLabel* rAltitudeLabel;
+    QLabel* rCurrentStopLabel;
+    QLabel* rNextStopLabel;
+    QLabel* rEtaLabel;
+    QLabel* rTripStatusLabel;
+    QProgressBar* tripProgressBar;
+
+    // Bottom Panel (Schedules, History, Delay info)
+    QTableWidget* trackingScheduleTable;
+    QTableWidget* trackingHistoryTable;
+    QLabel* corridorDelayLabel;
 
     // Initialization Helpers
     void setupUI();
@@ -186,6 +215,7 @@ private:
     void refreshAttendanceTable();
     void refreshComplaintTable();
     void displayComplaintDetails(const string& complaintId);
+    void refreshTrackingTables();
     void renderRouteGraph();
 
 private slots:
@@ -230,11 +260,19 @@ private slots:
     void onAdminRejectComplaint();
     void onSubmitNewComplaint();
 
-    // Route Optimizer Slots
+    // Route Optimizer & Tracking Slots (Native embedded map)
     void onCalculateOptimalRoute();
     void onStartLiveSim();
-    void onSimStep();
-    void onOpenInteractiveOpenStreetMap();
+    void onPauseLiveSim();
+    void onResetLiveSim();
+    void onSimSpeedChanged(int index);
+    void onSourceStopChanged(int index);
+    void onBusSelected(int index);
+    void onSimulationTelemetry(const QString& busId, const GPSLocation& loc, 
+                               int progress, const QString& curStop, 
+                               const QString& nextStop, int etaMins, double remainingKm);
+    void onSimulationCheckpoint(const QString& busId, const QString& stopName, const QString& arrivalTime);
+    void onSimulationCompleted(const QString& busId);
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);

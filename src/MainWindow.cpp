@@ -18,7 +18,6 @@
 #include <QBrush>
 #include <QPen>
 #include <QPalette>
-#include <QDesktopServices>
 #include <QUrl>
 #include <QDir>
 #include <QDateTime>
@@ -39,16 +38,17 @@ MainWindow::MainWindow(QWidget *parent)
       portalWidget(nullptr),
       isPasswordVisible(false),
       selectedComplaintId("CMP-102"),
-      simTimer(nullptr),
-      simStep(0),
-      busMarker(nullptr) {
+      routeController(nullptr),
+      osmMapWidget(nullptr) {
 
     setWindowTitle("Smart College Bus Management System • Graphic Era Hill University, Bhimtal");
-    resize(1280, 850);
+    resize(1380, 880);
     setMinimumSize(1100, 720);
 
-    simTimer = new QTimer(this);
-    connect(simTimer, &QTimer::timeout, this, &MainWindow::onSimStep);
+    routeController = new RouteController(this);
+    connect(routeController->getSimulation(), &BusSimulation::telemetryUpdated, this, &MainWindow::onSimulationTelemetry);
+    connect(routeController->getSimulation(), &BusSimulation::checkpointReached, this, &MainWindow::onSimulationCheckpoint);
+    connect(routeController->getSimulation(), &BusSimulation::simulationCompleted, this, &MainWindow::onSimulationCompleted);
 
     applyGitHubTheme();
     setupUI();
@@ -956,80 +956,31 @@ QWidget* MainWindow::createComplaintDeskTab() {
     return tab;
 }
 
-// 10. ROUTE MAP OPTIMIZER (MASTER REQUIREMENT 5)
+// 10. NATIVE OPENSTREETMAP TRACKING DASHBOARD & ROUTE OPTIMIZER
 QWidget* MainWindow::createRouteVisualizerTab() {
     QWidget* tab = new QWidget();
     QVBoxLayout* layout = new QVBoxLayout(tab);
-    layout->setSpacing(10);
+    layout->setSpacing(8);
+    layout->setContentsMargins(10, 10, 10, 10);
 
-    // Top Control Panel
-    QFrame* controlPanel = new QFrame(tab);
-    controlPanel->setStyleSheet("background-color: #161B22; border: 1px solid #30363D; border-radius: 8px; padding: 10px 14px;");
-    QHBoxLayout* ctrlLayout = new QHBoxLayout(controlPanel);
-    ctrlLayout->setContentsMargins(0, 0, 0, 0);
-    ctrlLayout->setSpacing(10);
-
-    // B. Selectable Source Location
-    startStopCombo = new QComboBox(controlPanel);
-    startStopCombo->addItem("ST101 - Haldwani Bus Terminal [424m ASL]", "ST101");
-    startStopCombo->addItem("ST102 - Kathgodam Railway Station [554m ASL]", "ST102");
-    startStopCombo->addItem("ST103 - Ranibagh Junction [620m ASL]", "ST103");
-    startStopCombo->addItem("ST104 - Bhujiaghat Bypass [910m ASL]", "ST104");
-    startStopCombo->addItem("ST105 - Bhimtal Lake Mall Road [1,370m ASL]", "ST105");
-
-    // A. Fixed Destination (Master Requirement 5.A: Destination is ALWAYS Graphic Era Bhimtal, LOCKED/NON-EDITABLE)
-    destStopCombo = new QComboBox(controlPanel);
-    destStopCombo->addItem("ST106 - Graphic Era Hill University, Bhimtal Campus [1,420m ASL] (FIXED)", "ST106");
-    destStopCombo->setEnabled(false); // FIXED and non-editable
-    destStopCombo->setStyleSheet("background-color: #1C2533; color: #58A6FF; font-weight: 700; border: 1px solid #30363D;");
-
-    // F. Route Algorithm
-    algoCombo = new QComboBox(controlPanel);
-    algoCombo->addItem("A* Heuristic Search (Topographic & Elevation)");
-    algoCombo->addItem("Dijkstra Shortest Path (Road Topology)");
-
-    QPushButton* optBtn = new QPushButton("Calculate Shortest Path", controlPanel);
-    optBtn->setStyleSheet("background-color: #1F6FEB; color: #FFFFFF; font-weight: 700; padding: 7px 14px; border-radius: 6px;");
-    connect(optBtn, &QPushButton::clicked, this, &MainWindow::onCalculateOptimalRoute);
-
-    QPushButton* simBtn = new QPushButton("Simulate Bus Motion", controlPanel);
-    simBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 700; padding: 7px 14px; border-radius: 6px;");
-    connect(simBtn, &QPushButton::clicked, this, &MainWindow::onStartLiveSim);
-
-    QPushButton* osmBtn = new QPushButton("Open Interactive OpenStreetMap (Leaflet & OSRM)", controlPanel);
-    osmBtn->setStyleSheet("background-color: #0969DA; color: #FFFFFF; font-weight: 700; padding: 7px 14px; border-radius: 6px;");
-    connect(osmBtn, &QPushButton::clicked, this, &MainWindow::onOpenInteractiveOpenStreetMap);
-
-    ctrlLayout->addWidget(new QLabel("Source:", controlPanel));
-    ctrlLayout->addWidget(startStopCombo);
-    ctrlLayout->addWidget(new QLabel("Destination (Fixed):", controlPanel));
-    ctrlLayout->addWidget(destStopCombo);
-    ctrlLayout->addWidget(new QLabel("Algorithm:", controlPanel));
-    ctrlLayout->addWidget(algoCombo);
-    ctrlLayout->addWidget(optBtn);
-    ctrlLayout->addWidget(simBtn);
-    ctrlLayout->addWidget(osmBtn);
-
-    layout->addWidget(controlPanel);
-
-    // Route Information Display HUD (Master Requirement 5.E)
+    // 1. Top Route Information Display HUD
     QFrame* kpiBar = new QFrame(tab);
-    kpiBar->setStyleSheet("background-color: #1C2533; border: 1px solid #30363D; border-radius: 8px; padding: 8px 12px;");
+    kpiBar->setStyleSheet("background-color: #1C2533; border: 1px solid #30363D; border-radius: 8px; padding: 6px 12px;");
     QHBoxLayout* kl = new QHBoxLayout(kpiBar);
     kl->setContentsMargins(4, 4, 4, 4);
 
     routeKpiDistance = new QLabel("Total Road Distance: <b>28.2 KM</b>", kpiBar);
-    routeKpiDistance->setStyleSheet("color: #E6EDF3; font-size: 12.5px;");
+    routeKpiDistance->setStyleSheet("color: #E6EDF3; font-size: 12px;");
     routeKpiDuration = new QLabel("Estimated Time: <b>48 Mins</b>", kpiBar);
-    routeKpiDuration->setStyleSheet("color: #3FB950; font-size: 12.5px;");
+    routeKpiDuration->setStyleSheet("color: #3FB950; font-size: 12px;");
     routeKpiElevation = new QLabel("Elevation Traversal: <b>+996m Ascent (424m -> 1,420m ASL)</b>", kpiBar);
-    routeKpiElevation->setStyleSheet("color: #D29922; font-size: 12.5px;");
-    routeKpiStops = new QLabel("Stops: <b>5 Checkpoints</b>", kpiBar);
-    routeKpiStops->setStyleSheet("color: #8B949E; font-size: 12.5px;");
+    routeKpiElevation->setStyleSheet("color: #D29922; font-size: 12px;");
+    routeKpiStops = new QLabel("Stops: <b>6 Checkpoints</b>", kpiBar);
+    routeKpiStops->setStyleSheet("color: #8B949E; font-size: 12px;");
     routeKpiAlgo = new QLabel("Algorithm: <b>A* Heuristic Search</b>", kpiBar);
-    routeKpiAlgo->setStyleSheet("color: #58A6FF; font-size: 12.5px;");
+    routeKpiAlgo->setStyleSheet("color: #58A6FF; font-size: 12px;");
     routeKpiStatus = new QLabel("Status: <font color='#3FB950'><b>CORRIDOR OPERATIONAL</b></font>", kpiBar);
-    routeKpiStatus->setStyleSheet("font-size: 12.5px;");
+    routeKpiStatus->setStyleSheet("font-size: 12px;");
 
     kl->addWidget(routeKpiDistance);
     kl->addWidget(routeKpiDuration);
@@ -1037,123 +988,245 @@ QWidget* MainWindow::createRouteVisualizerTab() {
     kl->addWidget(routeKpiStops);
     kl->addWidget(routeKpiAlgo);
     kl->addWidget(routeKpiStatus);
-
     layout->addWidget(kpiBar);
 
     routeInfoLabel = new QLabel("Selected Source: Haldwani Bus Terminal -> Destination: Graphic Era Hill University, Bhimtal Campus.", tab);
-    routeInfoLabel->setStyleSheet("font-size: 12.5px; font-weight: 600; color: #58A6FF; padding: 6px 10px; background-color: #161B22; border-radius: 6px;");
+    routeInfoLabel->setStyleSheet("font-size: 12px; font-weight: 600; color: #58A6FF; padding: 5px 10px; background-color: #161B22; border-radius: 6px;");
     layout->addWidget(routeInfoLabel);
 
-    // Interactive Real OpenStreetMap Banner with direct 1-click launch
-    QFrame* realMapBanner = new QFrame(tab);
-    realMapBanner->setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1F6FEB, stop:1 #238636); border-radius: 8px; padding: 10px 14px;");
-    QHBoxLayout* rmbLayout = new QHBoxLayout(realMapBanner);
-    rmbLayout->setContentsMargins(10, 8, 10, 8);
-    QLabel* rmbIcon = new QLabel("🗺️", realMapBanner);
-    rmbIcon->setStyleSheet("font-size: 26px;");
-    QLabel* rmbText = new QLabel("<b>Real OpenStreetMap & OSRM Routing Active (Haldwani ➔ Bhimtal)</b><br><span style='font-size: 11.5px; color: #E6EDF3;'>Interactive Leaflet OpenStreetMap with real driving roads, live bus motion simulation, and elevation profile.</span>", realMapBanner);
-    rmbText->setStyleSheet("color: #FFFFFF; font-size: 12.5px;");
-    QPushButton* rmbBtn = new QPushButton("🚀 Launch Real OpenStreetMap in Browser", realMapBanner);
-    rmbBtn->setStyleSheet("background-color: #FFFFFF; color: #0D1117; font-weight: 800; font-size: 12px; padding: 8px 16px; border-radius: 6px;");
-    connect(rmbBtn, &QPushButton::clicked, this, &MainWindow::onOpenInteractiveOpenStreetMap);
-    rmbLayout->addWidget(rmbIcon);
-    rmbLayout->addWidget(rmbText, 1);
-    rmbLayout->addWidget(rmbBtn);
-    layout->addWidget(realMapBanner);
+    // 2. Main Middle Area: 3-Column Layout (Left, Center Map, Right Telemetry)
+    QHBoxLayout* midLayout = new QHBoxLayout();
+    midLayout->setSpacing(10);
 
-    // Full-Width Interactive Canvas
-    graphScene = new QGraphicsScene(this);
-    graphView = new QGraphicsView(graphScene, tab);
-    graphView->setRenderHint(QPainter::Antialiasing);
-    graphView->setMinimumHeight(440);
-    graphView->setStyleSheet("background-color: #0D1117; border: 1px solid #30363D; border-radius: 8px;");
+    // ==========================================
+    // LEFT SIDE: Route & Simulation Controls
+    // ==========================================
+    QGroupBox* leftBox = new QGroupBox("🎛️ Route & Simulation Controls", tab);
+    leftBox->setFixedWidth(270);
+    QVBoxLayout* leftLayout = new QVBoxLayout(leftBox);
+    leftLayout->setSpacing(8);
+    leftLayout->setContentsMargins(10, 14, 10, 10);
 
-    layout->addWidget(graphView, 1);
+    leftLayout->addWidget(new QLabel("Source Location:", leftBox));
+    startStopCombo = new QComboBox(leftBox);
+    startStopCombo->addItem("ST101 - Haldwani Bus Terminal [424m]", "ST101");
+    startStopCombo->addItem("ST102 - Kathgodam Station [554m]", "ST102");
+    startStopCombo->addItem("ST103 - Ranibagh Junction [620m]", "ST103");
+    startStopCombo->addItem("ST104 - Bhujiaghat Pass [910m]", "ST104");
+    startStopCombo->addItem("ST105 - Bhimtal Lake [1,370m]", "ST105");
+    connect(startStopCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onSourceStopChanged);
+    leftLayout->addWidget(startStopCombo);
+
+    leftLayout->addWidget(new QLabel("Destination (Fixed):", leftBox));
+    destStopCombo = new QComboBox(leftBox);
+    destStopCombo->addItem("ST106 - Graphic Era Bhimtal (FIXED)", "ST106");
+    destStopCombo->setEnabled(false);
+    destStopCombo->setStyleSheet("background-color: #1C2533; color: #58A6FF; font-weight: 700;");
+    leftLayout->addWidget(destStopCombo);
+
+    leftLayout->addWidget(new QLabel("Path Algorithm:", leftBox));
+    algoCombo = new QComboBox(leftBox);
+    algoCombo->addItem("A* Search (Topographic & Elevation)");
+    algoCombo->addItem("Dijkstra Shortest Path");
+    leftLayout->addWidget(algoCombo);
+
+    QPushButton* optBtn = new QPushButton("Calculate Shortest Path", leftBox);
+    optBtn->setStyleSheet("background-color: #1F6FEB; color: #FFFFFF; font-weight: 700; padding: 7px; border-radius: 6px;");
+    connect(optBtn, &QPushButton::clicked, this, &MainWindow::onCalculateOptimalRoute);
+    leftLayout->addWidget(optBtn);
+
+    leftLayout->addSpacing(4);
+    leftLayout->addWidget(new QLabel("Select Fleet Bus:", leftBox));
+    busSelectCombo = new QComboBox(leftBox);
+    busSelectCombo->addItem("BUS101 (UK04-PA-1011)", "BUS101");
+    busSelectCombo->addItem("BUS102 (UK04-PA-2022)", "BUS102");
+    busSelectCombo->addItem("BUS103 (UK04-PA-3033)", "BUS103");
+    connect(busSelectCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onBusSelected);
+    leftLayout->addWidget(busSelectCombo);
+
+    leftLayout->addWidget(new QLabel("Active Buses Status:", leftBox));
+    activeBusesList = new QListWidget(leftBox);
+    activeBusesList->setMaximumHeight(85);
+    activeBusesList->setStyleSheet("background-color: #0D1117; border: 1px solid #30363D; border-radius: 6px; font-size: 11px;");
+    activeBusesList->addItem("🟢 BUS101: Haldwani ➔ Bhimtal (Operational)");
+    activeBusesList->addItem("🟡 BUS102: Kathgodam Standby (Ready)");
+    activeBusesList->addItem("🟢 BUS103: Bhimtal Campus Shuttling");
+    leftLayout->addWidget(activeBusesList);
+
+    leftLayout->addSpacing(4);
+    QLabel* demoTag = new QLabel("⚠️ <b>DEMO SIMULATION CONTROLS</b>", leftBox);
+    demoTag->setStyleSheet("color: #D29922; font-size: 11.5px;");
+    leftLayout->addWidget(demoTag);
+
+    QHBoxLayout* simBtnsLayout = new QHBoxLayout();
+    startSimBtn = new QPushButton("▶ Start", leftBox);
+    startSimBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 700; padding: 6px; border-radius: 6px;");
+    connect(startSimBtn, &QPushButton::clicked, this, &MainWindow::onStartLiveSim);
+
+    pauseSimBtn = new QPushButton("⏸ Pause", leftBox);
+    pauseSimBtn->setStyleSheet("background-color: #D29922; color: #0D1117; font-weight: 700; padding: 6px; border-radius: 6px;");
+    connect(pauseSimBtn, &QPushButton::clicked, this, &MainWindow::onPauseLiveSim);
+
+    resetSimBtn = new QPushButton("↺ Reset", leftBox);
+    resetSimBtn->setStyleSheet("background-color: #21262D; color: #E6EDF3; font-weight: 700; padding: 6px; border-radius: 6px;");
+    connect(resetSimBtn, &QPushButton::clicked, this, &MainWindow::onResetLiveSim);
+
+    simBtnsLayout->addWidget(startSimBtn);
+    simBtnsLayout->addWidget(pauseSimBtn);
+    simBtnsLayout->addWidget(resetSimBtn);
+    leftLayout->addLayout(simBtnsLayout);
+
+    QHBoxLayout* speedLayout = new QHBoxLayout();
+    speedLayout->addWidget(new QLabel("Speed:", leftBox));
+    simSpeedCombo = new QComboBox(leftBox);
+    simSpeedCombo->addItem("1x (Normal)");
+    simSpeedCombo->addItem("2x (Fast)");
+    simSpeedCombo->addItem("5x (Warp)");
+    connect(simSpeedCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onSimSpeedChanged);
+    speedLayout->addWidget(simSpeedCombo);
+    leftLayout->addLayout(speedLayout);
+
+    leftLayout->addStretch();
+    midLayout->addWidget(leftBox);
+
+    // ==========================================
+    // CENTER: Embedded Native OpenStreetMap
+    // ==========================================
+    osmMapWidget = new NativeOsmMapWidget(tab);
+    osmMapWidget->setMinimumHeight(420);
+    osmMapWidget->setStyleSheet("border: 1px solid #30363D; border-radius: 8px;");
+    midLayout->addWidget(osmMapWidget, 1); // Stretches to fill center
+
+    // ==========================================
+    // RIGHT SIDE: Bus Info & Live Telemetry
+    // ==========================================
+    QGroupBox* rightBox = new QGroupBox("📡 Vehicle & Telemetry HUD", tab);
+    rightBox->setFixedWidth(290);
+    QVBoxLayout* rightLayout = new QVBoxLayout(rightBox);
+    rightLayout->setSpacing(8);
+    rightLayout->setContentsMargins(10, 14, 10, 10);
+
+    QFrame* busInfoCard = new QFrame(rightBox);
+    busInfoCard->setStyleSheet("background-color: #0D1117; border: 1px solid #30363D; border-radius: 6px; padding: 8px;");
+    QVBoxLayout* bicLayout = new QVBoxLayout(busInfoCard);
+    bicLayout->setSpacing(4);
+    bicLayout->setContentsMargins(0, 0, 0, 0);
+
+    rBusIdLabel = new QLabel("<b>Bus ID:</b> BUS101 • <b>Model:</b> Tata Starbus", busInfoCard);
+    rBusRegLabel = new QLabel("<b>Plate:</b> UK04-PA-1011 (GPS Unit: #DEMO)", busInfoCard);
+    rBusCapLabel = new QLabel("<b>Capacity:</b> 42 Seats (Pass Holders: 38)", busInfoCard);
+    rDriverNameLabel = new QLabel("<b>Driver:</b> Ramesh Chandra Joshi", busInfoCard);
+    rDriverPhoneLabel = new QLabel("<b>Contact:</b> +91-9876543210 (Rating: 4.8★)", busInfoCard);
+
+    bicLayout->addWidget(rBusIdLabel);
+    bicLayout->addWidget(rBusRegLabel);
+    bicLayout->addWidget(rBusCapLabel);
+    bicLayout->addWidget(rDriverNameLabel);
+    bicLayout->addWidget(rDriverPhoneLabel);
+    rightLayout->addWidget(busInfoCard);
+
+    QFrame* telemCard = new QFrame(rightBox);
+    telemCard->setStyleSheet("background-color: #0D1117; border: 1px solid #30363D; border-radius: 6px; padding: 8px;");
+    QVBoxLayout* tcLayout = new QVBoxLayout(telemCard);
+    tcLayout->setSpacing(5);
+    tcLayout->setContentsMargins(0, 0, 0, 0);
+
+    rCurrentLocLabel = new QLabel("GPS: 29.21830° N, 79.51300° E", telemCard);
+    rAltitudeLabel = new QLabel("Altitude: 424.0 m ASL", telemCard);
+    rCurrentStopLabel = new QLabel("Current: Haldwani Bus Terminal", telemCard);
+    rCurrentStopLabel->setStyleSheet("color: #58A6FF; font-weight: 600;");
+    rNextStopLabel = new QLabel("Next: Kathgodam Railway Station", telemCard);
+    rNextStopLabel->setStyleSheet("color: #E6EDF3; font-weight: 600;");
+    rEtaLabel = new QLabel("ETA: 48 Mins (28.2 KM remaining)", telemCard);
+    rEtaLabel->setStyleSheet("color: #3FB950; font-weight: 700;");
+    rTripStatusLabel = new QLabel("Status: <font color='#8B949E'><b>STANDBY / READY</b></font>", telemCard);
+
+    tcLayout->addWidget(rCurrentLocLabel);
+    tcLayout->addWidget(rAltitudeLabel);
+    tcLayout->addWidget(rCurrentStopLabel);
+    tcLayout->addWidget(rNextStopLabel);
+    tcLayout->addWidget(rEtaLabel);
+    tcLayout->addWidget(rTripStatusLabel);
+
+    tcLayout->addSpacing(4);
+    tcLayout->addWidget(new QLabel("Trip Progress to Graphic Era Campus:", telemCard));
+    tripProgressBar = new QProgressBar(telemCard);
+    tripProgressBar->setRange(0, 100);
+    tripProgressBar->setValue(0);
+    tripProgressBar->setStyleSheet("QProgressBar { background-color: #161B22; border: 1px solid #30363D; border-radius: 4px; text-align: center; color: #FFFFFF; font-weight: 700; } QProgressBar::chunk { background-color: #238636; border-radius: 3px; }");
+    tcLayout->addWidget(tripProgressBar);
+
+    rightLayout->addWidget(telemCard);
+    rightLayout->addStretch();
+    midLayout->addWidget(rightBox);
+
+    layout->addLayout(midLayout, 1);
+
+    // ==========================================
+    // BOTTOM: Schedules, History & Delay Info
+    // ==========================================
+    QTabWidget* bottomTabs = new QTabWidget(tab);
+    bottomTabs->setMaximumHeight(180);
+    bottomTabs->setStyleSheet("QTabBar::tab { font-size: 11px; padding: 4px 10px; }");
+
+    // Tab 1: Schedule Table
+    trackingScheduleTable = new QTableWidget(bottomTabs);
+    trackingScheduleTable->setColumnCount(5);
+    trackingScheduleTable->setHorizontalHeaderLabels({"Stop ID", "Checkpoint Stop Name", "Scheduled Time", "Estimated Time", "Status"});
+    trackingScheduleTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    trackingScheduleTable->setStyleSheet("background-color: #161B22; border: 1px solid #30363D; color: #E6EDF3; font-size: 11px;");
+    bottomTabs->addTab(trackingScheduleTable, "⏱️ Bus Arrival Schedule");
+
+    // Tab 2: Trip History Table (CSV)
+    trackingHistoryTable = new QTableWidget(bottomTabs);
+    trackingHistoryTable->setColumnCount(5);
+    trackingHistoryTable->setHorizontalHeaderLabels({"Timestamp", "Bus ID", "Event", "Location", "Mode"});
+    trackingHistoryTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    trackingHistoryTable->setStyleSheet("background-color: #161B22; border: 1px solid #30363D; color: #E6EDF3; font-size: 11px;");
+    bottomTabs->addTab(trackingHistoryTable, "📜 Real-Time Trip History (data/tracking_history.csv)");
+
+    // Tab 3: Mountain Corridor Alert
+    QWidget* alertTab = new QWidget(bottomTabs);
+    QVBoxLayout* atLayout = new QVBoxLayout(alertTab);
+    corridorDelayLabel = new QLabel(
+        "<b>Route NH109 Topographic Clearance:</b> Kathgodam ➔ Ranibagh ➔ Bhujiaghat ➔ Bhimtal Lake ➔ Graphic Era Campus.<br>"
+        "<b>Gradient:</b> +996m Elevation Gain over 28.2 KM | <b>Average Mountain Transit Speed:</b> 32-38 KM/H.<br>"
+        "<b>Current Mountain Weather:</b> Clear (Surface Dry, Visibility > 5 KM) | <b>Delay Offset:</b> +0 mins (Operating On-Time).",
+        alertTab);
+    corridorDelayLabel->setStyleSheet("color: #E6EDF3; font-size: 12px; background-color: #161B22; padding: 10px; border-radius: 6px;");
+    atLayout->addWidget(corridorDelayLabel);
+    bottomTabs->addTab(alertTab, "⚠️ Mountain Corridor Delays & Road Advisory");
+
+    layout->addWidget(bottomTabs);
     return tab;
 }
 
-// 11. TOPOGRAPHIC GRAPH RENDERING
+// 11. TOPOGRAPHIC GRAPH & NATIVE MAP INITIALIZATION
 void MainWindow::renderRouteGraph() {
-    if (!graphScene) return;
-    graphScene->clear();
+    if (!osmMapWidget || !routeController) return;
 
-    // Map Coordinates along Haldwani -> Kathgodam -> Ranibagh -> Bhimtal -> Graphic Era Campus
-    int x1 = 90,  y1 = 340; // ST101: Haldwani Tikonia (424m)
-    int x2 = 260, y2 = 280; // ST102: Kathgodam Station (554m)
-    int x3 = 450, y3 = 230; // ST103: Ranibagh Junction (620m)
-    int x4 = 620, y4 = 310; // ST104: Bhujiaghat Bypass (910m)
-    int x5 = 800, y5 = 160; // ST105: Bhimtal Lake Mall Road (1,370m)
-    int x6 = 1040, y6 = 90; // ST106: Graphic Era Hill University Bhimtal Campus (1,420m) - FIXED DESTINATION
+    osmMapWidget->clearMarkers();
+    osmMapWidget->clearRoute();
 
-    // Subtle Hill Elevation Contours (Topography)
-    QPen contourPen(QColor("#21262D"), 1.5, Qt::DashLine);
-    graphScene->addLine(50, 380, 1150, 380, contourPen);
-    graphScene->addLine(50, 260, 1150, 260, contourPen);
-    graphScene->addLine(50, 140, 1150, 140, contourPen);
+    // Add Checkpoint Markers along Haldwani -> Kathgodam -> Ranibagh -> Bhujiaghat -> Bhimtal -> Graphic Era Campus
+    osmMapWidget->addMarker(29.2183, 79.5130, "Haldwani Bus Terminal", "Alt: 424m ASL", QColor("#238636"), "1");
+    osmMapWidget->addMarker(29.2715, 79.5312, "Kathgodam Rail Station", "Alt: 554m ASL", QColor("#238636"), "2");
+    osmMapWidget->addMarker(29.2974, 79.5447, "Ranibagh Junction", "Alt: 620m ASL", QColor("#238636"), "3");
+    osmMapWidget->addMarker(29.3210, 79.5510, "Bhujiaghat Mountain Pass", "Alt: 910m ASL", QColor("#06b6d4"), "4");
+    osmMapWidget->addMarker(29.3500, 79.5530, "Bhimtal Lake Mall Road", "Alt: 1,370m ASL", QColor("#238636"), "5");
+    osmMapWidget->addMarker(29.3600, 79.5580, "Graphic Era Campus [FIXED DESTINATION]", "Alt: 1,420m ASL", QColor("#DA3633"), "★");
 
-    // Route R1: Express Hill Corridor (Haldwani -> Kathgodam -> Ranibagh -> Bhimtal Lake -> Graphic Era Campus)
-    QPen r1Pen(QColor("#238636"), 5); // Bright Green line for optimal route
-    graphScene->addLine(x1, y1, x2, y2, r1Pen);
-    graphScene->addLine(x2, y2, x3, y3, r1Pen);
-    graphScene->addLine(x3, y3, x5, y5, r1Pen);
-    graphScene->addLine(x5, y5, x6, y6, r1Pen);
+    // Populate route coordinates
+    auto roadCoords = routeController->getActiveRoadCoordinates();
+    QVector<QPointF> pathPoints;
+    for (const auto& loc : roadCoords) {
+        pathPoints.append(QPointF(loc.getLatitude(), loc.getLongitude()));
+    }
+    osmMapWidget->setRouteCoordinates(pathPoints);
+    osmMapWidget->setBusPosition(29.2183, 79.5130);
+    osmMapWidget->fitRouteBounds();
 
-    // Route R2: Valley Bypass Corridor via Bhujiaghat
-    QPen r2Pen(QColor("#8B949E"), 3, Qt::DashLine); // Dashed gray for alternative bypass
-    graphScene->addLine(x3, y3, x4, y4, r2Pen);
-    graphScene->addLine(x4, y4, x5, y5, r2Pen);
-
-    // Corridor Legend
-    auto addLegendText = [&](const QString& text, const QColor& col, int x, int y) {
-        QGraphicsTextItem* item = graphScene->addText(text);
-        item->setDefaultTextColor(col);
-        QFont f = item->font();
-        f.setBold(true);
-        f.setPixelSize(12);
-        item->setFont(f);
-        item->setPos(x, y);
-    };
-
-    addLegendText("Solid Green Line: Optimal Mountain Route (R1 Express Corridor to Graphic Era Campus)", QColor("#3FB950"), 70, 20);
-    addLegendText("Dashed Gray Line: Alternative Route (R2 Valley Bypass via Bhujiaghat)", QColor("#8B949E"), 70, 40);
-
-    auto drawStopPin = [&](int x, int y, const QString& name, const QString& id, const QString& elev, const QColor& pinColor, bool isFixedDest = false) {
-        graphScene->addEllipse(x - 13, y - 13, 26, 26, QPen(Qt::white, 2), QBrush(pinColor));
-        if (isFixedDest) {
-            // Glowing border for Graphic Era Fixed Destination
-            graphScene->addEllipse(x - 18, y - 18, 36, 36, QPen(QColor("#58A6FF"), 2, Qt::DotLine), QBrush(Qt::NoBrush));
-        }
-
-        QGraphicsTextItem* text = graphScene->addText(name + (isFixedDest ? " [CAMPUS DESTINATION]" : " [" + id + "]"));
-        text->setDefaultTextColor(isFixedDest ? QColor("#58A6FF") : QColor("#E6EDF3"));
-        QFont f = text->font();
-        f.setBold(true);
-        f.setPixelSize(12);
-        text->setFont(f);
-        text->setPos(x - 55, y + 16);
-
-        QGraphicsTextItem* elevText = graphScene->addText(elev);
-        elevText->setDefaultTextColor(QColor("#8B949E"));
-        QFont ef = elevText->font();
-        ef.setPixelSize(11);
-        elevText->setFont(ef);
-        elevText->setPos(x - 30, y + 34);
-    };
-
-    // Draw Stop Nodes matching user colors:
-    // Green: Start Location (#238636)
-    // Red: Destination (#DA3633)
-    // Intermediate: Green (#238636)
-    // Explored: Cyan (#06b6d4)
-    drawStopPin(x1, y1, "Haldwani Bus Terminal", "ST101", "Alt: 424m ASL", QColor("#238636"));
-    drawStopPin(x2, y2, "Kathgodam Rail Station", "ST102", "Alt: 554m ASL", QColor("#238636"));
-    drawStopPin(x3, y3, "Ranibagh Junction", "ST103", "Alt: 620m ASL", QColor("#238636"));
-    drawStopPin(x4, y4, "Bhujiaghat Bypass", "ST104", "Alt: 910m ASL", QColor("#06b6d4")); // Explored node
-    drawStopPin(x5, y5, "Bhimtal Lake Mall Road", "ST105", "Alt: 1,370m ASL", QColor("#238636"));
-    drawStopPin(x6, y6, "Graphic Era Hill University", "ST106", "Alt: 1,420m ASL", QColor("#DA3633"), true);
-
-    // Initial Bus Marker at Haldwani
-    busMarker = graphScene->addEllipse(x1 - 9, y1 - 9, 18, 18, QPen(Qt::white, 2), QBrush(QColor("#DA3633")));
+    refreshTrackingTables();
 }
 
 // 12. DATA REFRESH HELPERS
@@ -1702,10 +1775,25 @@ void MainWindow::onSubmitNewComplaint() {
     displayComplaintDetails(newId);
 }
 
-// 19. ROUTE OPTIMIZER SLOTS
+// 19. NATIVE ROUTE OPTIMIZER & VEHICLE TELEMETRY SLOTS
 void MainWindow::onCalculateOptimalRoute() {
+    if (!routeController || !osmMapWidget) return;
     QString startId = startStopCombo->currentData().toString();
     QString algo = algoCombo->currentText();
+
+    routeController->setSource(startId);
+
+    // Populate route coordinates
+    auto roadCoords = routeController->getActiveRoadCoordinates();
+    QVector<QPointF> pathPoints;
+    for (const auto& loc : roadCoords) {
+        pathPoints.append(QPointF(loc.getLatitude(), loc.getLongitude()));
+    }
+    osmMapWidget->setRouteCoordinates(pathPoints);
+    if (!pathPoints.isEmpty()) {
+        osmMapWidget->setBusPosition(pathPoints.first().x(), pathPoints.first().y());
+    }
+    osmMapWidget->fitRouteBounds();
 
     double dist = 28.2;
     int duration = 48;
@@ -1733,64 +1821,134 @@ void MainWindow::onCalculateOptimalRoute() {
 }
 
 void MainWindow::onStartLiveSim() {
-    simStep = 0;
-    QString startId = startStopCombo->currentData().toString();
-    if (startId == "ST101") currentSimStops = {"Haldwani", "Kathgodam", "Ranibagh", "Bhimtal Lake", "Graphic Era Campus"};
-    else if (startId == "ST102") currentSimStops = {"Kathgodam", "Ranibagh", "Bhimtal Lake", "Graphic Era Campus"};
-    else if (startId == "ST103") currentSimStops = {"Ranibagh", "Bhimtal Lake", "Graphic Era Campus"};
-    else if (startId == "ST104") currentSimStops = {"Bhujiaghat Bypass", "Bhimtal Lake", "Graphic Era Campus"};
-    else currentSimStops = {"Bhimtal Lake", "Graphic Era Campus"};
-
-    simTimer->start(1200);
+    if (!routeController) return;
+    routeController->getSimulation()->startSimulation();
+    if (rTripStatusLabel) {
+        rTripStatusLabel->setText("Status: <font color='#3FB950'><b>EN ROUTE (SIMULATING)</b></font>");
+    }
 }
 
-void MainWindow::onSimStep() {
-    if (simStep >= (int)currentSimStops.size()) {
-        simTimer->stop();
-        routeInfoLabel->setText("✅ Arrival Confirmed: Bus arrived safely at Graphic Era Hill University, Bhimtal Campus!");
-        return;
+void MainWindow::onPauseLiveSim() {
+    if (!routeController) return;
+    routeController->getSimulation()->pauseSimulation();
+    if (rTripStatusLabel) {
+        rTripStatusLabel->setText("Status: <font color='#D29922'><b>PAUSED</b></font>");
     }
-
-    int coords[6][2] = {
-        {90, 340},   // Haldwani
-        {260, 280},  // Kathgodam
-        {450, 230},  // Ranibagh
-        {620, 310},  // Bhujiaghat
-        {800, 160},  // Bhimtal Lake
-        {1040, 90}   // Graphic Era Campus
-    };
-
-    int ptIdx = 0;
-    string cur = currentSimStops[simStep];
-    if (cur == "Haldwani") ptIdx = 0;
-    else if (cur == "Kathgodam") ptIdx = 1;
-    else if (cur == "Ranibagh") ptIdx = 2;
-    else if (cur == "Bhujiaghat Bypass") ptIdx = 3;
-    else if (cur == "Bhimtal Lake") ptIdx = 4;
-    else if (cur == "Graphic Era Campus") ptIdx = 5;
-
-    if (busMarker) {
-        busMarker->setPos(coords[ptIdx][0] - 90, coords[ptIdx][1] - 340);
-    }
-
-    routeInfoLabel->setText(QString("⏱️ Live Vehicle Telemetry: Bus traversing Checkpoint %1/%2 [%3] en route to Graphic Era Campus")
-                            .arg(simStep + 1).arg(currentSimStops.size()).arg(QString::fromStdString(cur)));
-    simStep++;
 }
 
-void MainWindow::onOpenInteractiveOpenStreetMap() {
-    QStringList candidates = {
-        QDir::current().filePath("web/index.html"),
-        QCoreApplication::applicationDirPath() + "/web/index.html",
-        QCoreApplication::applicationDirPath() + "/../web/index.html",
-        QCoreApplication::applicationDirPath() + "/../../web/index.html",
-        "/Users/tushartiwari565/Documents/project/web/index.html"
-    };
-    for (const QString& candidate : candidates) {
-        if (QFile::exists(candidate)) {
-            QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(candidate).absoluteFilePath()));
-            return;
+void MainWindow::onResetLiveSim() {
+    if (!routeController) return;
+    routeController->getSimulation()->resetSimulation();
+    if (osmMapWidget) {
+        auto coords = routeController->getActiveRoadCoordinates();
+        if (!coords.isEmpty()) {
+            osmMapWidget->setBusPosition(coords.first().getLatitude(), coords.first().getLongitude());
         }
     }
-    QDesktopServices::openUrl(QUrl::fromLocalFile(candidates.first()));
+    if (tripProgressBar) tripProgressBar->setValue(0);
+    if (rTripStatusLabel) {
+        rTripStatusLabel->setText("Status: <font color='#8B949E'><b>STANDBY / READY</b></font>");
+    }
+    if (routeInfoLabel) {
+        routeInfoLabel->setText("Simulation Reset. Ready to start vehicle tracking along corridor.");
+    }
+}
+
+void MainWindow::onSimSpeedChanged(int index) {
+    if (!routeController) return;
+    int mult = 1;
+    if (index == 1) mult = 2;
+    else if (index == 2) mult = 5;
+    routeController->getSimulation()->setSpeedMultiplier(mult);
+}
+
+void MainWindow::onSourceStopChanged(int index) {
+    Q_UNUSED(index);
+    onCalculateOptimalRoute();
+}
+
+void MainWindow::onBusSelected(int index) {
+    Q_UNUSED(index);
+    if (!busSelectCombo || !routeController) return;
+    QString busId = busSelectCombo->currentData().toString();
+    routeController->setBus(busId);
+    auto info = routeController->getTrackingService().getBusInfo(busId);
+    if (rBusIdLabel) rBusIdLabel->setText(QString("<b>Bus ID:</b> %1 • <b>Model:</b> Tata Starbus").arg(info.busId));
+    if (rBusRegLabel) rBusRegLabel->setText(QString("<b>Plate:</b> %1 (GPS Unit: #DEMO)").arg(info.regNo));
+    if (rBusCapLabel) rBusCapLabel->setText(QString("<b>Capacity:</b> %1 Seats").arg(info.capacity));
+    if (rDriverNameLabel) rDriverNameLabel->setText(QString("<b>Driver:</b> %1").arg(info.driverName));
+    if (rDriverPhoneLabel) rDriverPhoneLabel->setText(QString("<b>Contact:</b> %1").arg(info.driverPhone));
+}
+
+void MainWindow::onSimulationTelemetry(const QString& busId, const GPSLocation& loc, 
+                                       int progress, const QString& curStop, 
+                                       const QString& nextStop, int etaMins, double remainingKm) {
+    if (osmMapWidget) {
+        osmMapWidget->setBusPosition(loc.getLatitude(), loc.getLongitude());
+    }
+    if (rCurrentLocLabel) rCurrentLocLabel->setText(QString("GPS: %1").arg(loc.toString()));
+    if (rAltitudeLabel) rAltitudeLabel->setText(QString("Altitude: %1 m ASL").arg(loc.getAltitude(), 0, 'f', 1));
+    if (rCurrentStopLabel) rCurrentStopLabel->setText(QString("Current: %1").arg(curStop));
+    if (rNextStopLabel) rNextStopLabel->setText(QString("Next: %1").arg(nextStop));
+    if (rEtaLabel) rEtaLabel->setText(QString("ETA: %1 Mins (%2 KM remaining)").arg(etaMins).arg(remainingKm, 0, 'f', 1));
+    if (tripProgressBar) tripProgressBar->setValue(progress);
+
+    if (routeInfoLabel) {
+        routeInfoLabel->setText(QString("⏱️ [DEMO GPS] Bus %1 at %2 | Approaching: %3 | ETA: %4 mins")
+                                .arg(busId, curStop, nextStop).arg(etaMins));
+    }
+
+    routeController->getTrackingService().appendGpsRecord(busId, loc);
+}
+
+void MainWindow::onSimulationCheckpoint(const QString& busId, const QString& stopName, const QString& arrivalTime) {
+    routeController->getTrackingService().recordStopArrival(busId, stopName, arrivalTime);
+    routeController->getTrackingService().logTrackingEvent(busId, "CHECKPOINT_REACHED", stopName, "IN_TRANSIT");
+    refreshTrackingTables();
+}
+
+void MainWindow::onSimulationCompleted(const QString& busId) {
+    if (rTripStatusLabel) {
+        rTripStatusLabel->setText("Status: <font color='#3FB950'><b>DESTINATION REACHED</b></font>");
+    }
+    if (routeInfoLabel) {
+        routeInfoLabel->setText("✅ Arrival Confirmed: Bus arrived safely at Graphic Era Hill University, Bhimtal Campus!");
+    }
+    routeController->getTrackingService().logTrackingEvent(busId, "TRIP_COMPLETED", "Graphic Era Bhimtal Campus", "COMPLETED");
+    refreshTrackingTables();
+}
+
+void MainWindow::refreshTrackingTables() {
+    if (!trackingScheduleTable || !trackingHistoryTable || !routeController) return;
+
+    // Schedule Table
+    auto schedule = routeController->getTrackingService().getScheduleTable("BUS101");
+    trackingScheduleTable->setRowCount(schedule.size());
+    for (int r = 0; r < schedule.size(); ++r) {
+        for (int c = 0; c < schedule[r].size(); ++c) {
+            QTableWidgetItem* item = new QTableWidgetItem(schedule[r][c]);
+            item->setTextAlignment(Qt::AlignCenter);
+            if (c == 4) {
+                if (schedule[r][c] == "COMPLETED") item->setForeground(QColor("#3FB950"));
+                else if (schedule[r][c] == "DEPARTED") item->setForeground(QColor("#58A6FF"));
+                else if (schedule[r][c] == "IN TRANSIT") item->setForeground(QColor("#D29922"));
+                else if (schedule[r][c] == "DESTINATION") item->setForeground(QColor("#DA3633"));
+            }
+            trackingScheduleTable->setItem(r, c, item);
+        }
+    }
+
+    // Trip History Table (from CSV)
+    auto history = routeController->getTrackingService().readTrackingHistory(30);
+    trackingHistoryTable->setRowCount(history.size());
+    for (int r = 0; r < history.size(); ++r) {
+        trackingHistoryTable->setItem(r, 0, new QTableWidgetItem(history[r].timestamp));
+        trackingHistoryTable->setItem(r, 1, new QTableWidgetItem(history[r].busId));
+        trackingHistoryTable->setItem(r, 2, new QTableWidgetItem(history[r].event));
+        trackingHistoryTable->setItem(r, 3, new QTableWidgetItem(history[r].location));
+        QTableWidgetItem* stItem = new QTableWidgetItem(history[r].status);
+        if (history[r].status == "COMPLETED") stItem->setForeground(QColor("#3FB950"));
+        else stItem->setForeground(QColor("#58A6FF"));
+        trackingHistoryTable->setItem(r, 4, stItem);
+    }
 }

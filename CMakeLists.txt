@@ -34,6 +34,12 @@ set(SOURCES
     src/NotificationCenter.cpp
     src/FileHandler.cpp
     src/SystemManager.cpp
+    src/GPSLocation.cpp
+    src/ETAService.cpp
+    src/BusSimulation.cpp
+    src/BusTrackingService.cpp
+    src/RouteController.cpp
+    src/NativeOsmMapWidget.cpp
     src/MainWindow.cpp
     src/qt_main.cpp
 )
@@ -63,6 +69,12 @@ set(HEADERS
     include/Exceptions.hpp
     include/FileHandler.hpp
     include/SystemManager.hpp
+    include/GPSLocation.hpp
+    include/ETAService.hpp
+    include/BusSimulation.hpp
+    include/BusTrackingService.hpp
+    include/RouteController.hpp
+    include/NativeOsmMapWidget.hpp
     include/MainWindow.hpp
 )
 
