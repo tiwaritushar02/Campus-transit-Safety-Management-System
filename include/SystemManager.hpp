@@ -73,8 +73,20 @@ public:
     bool adminUpdateBus(const string& busId, const string& newNumber, int newCapacity, const string& newRouteId);
     bool adminUpdateStopTiming(const string& stopId, const string& busId, ScheduleType schedule, const string& newTime);
     bool adminAddNewBus(const string& busId, const string& busNumber, int capacity, const string& routeId);
+    bool adminRegisterNewStudent(const string& name, const string& roll, const string& phone, const string& email, const string& routeId, const string& stopId, bool feePaid);
     void adminBroadcastNotice(TargetAudience audience, const string& title, const string& msg);
     void displayAnalyticsDashboard() const;
+
+    // Complaint & Student Poll Operations
+    bool castStudentPollVote(const string& complaintId, const string& studentRoll, bool voteYes, string& outMsg);
+    void adminInvestigateComplaint(const string& complaintId);
+    void adminResolveComplaint(const string& complaintId, const string& note);
+    void adminRejectComplaint(const string& complaintId, const string& reason);
+    string submitComprehensiveComplaint(
+        const string& category, const string& description,
+        const string& repName, const string& repRole,
+        const string& accName, const string& accRole,
+        const string& busId, const string& cRoll = "", const string& aRoll = "");
 
     // Driver Operations (Role 2: Driver)
     void driverStartTrip(const string& busId);
@@ -86,8 +98,7 @@ public:
     // Student Operations (Role 3: Student)
     DigitalPass getStudentPass(const string& rollNumber);
     void studentRateDriver(const string& studentRoll, const string& driverId, int stars, const string& feedback);
-    Complaint studentReportDriver(const string& studentRoll, const string& busId, const string& issueCategory, const string& details);
-    bool voteOnDriverComplaint(const string& complaintId, const string& studentRoll, bool isRight, string& outMsg);
+    void studentReportDriver(const string& studentRoll, const string& busId, const string& issueCategory, const string& details);
     void triggerStudentSOS(const string& studentRoll, const string& busId, const string& stopId);
 
     // Parent Operations (Role 4: Parent)

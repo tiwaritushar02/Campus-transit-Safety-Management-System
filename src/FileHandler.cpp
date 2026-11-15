@@ -14,24 +14,17 @@
 
 using namespace std;
 
-static string resolvePath(const string& filename) {
-    if (filesystem::exists(filename)) return filename;
-    if (filesystem::exists("../../" + filename)) return "../../" + filename;
-    if (filesystem::exists("../" + filename)) return "../" + filename;
-    return filename;
-}
-
 void FileHandler::saveStudents(const vector<Student>& students, const string& filename) {
-    string targetPath = resolvePath(filename);
     try {
-        filesystem::path filePath(targetPath);
+        filesystem::path filePath(filename);
         if (filePath.has_parent_path()) {
             filesystem::create_directories(filePath.parent_path());
         }
     } catch (...) {}
 
-    ofstream outFile(targetPath, ios::trunc);
+    ofstream outFile(filename, ios::trunc);
     if (!outFile.is_open()) {
+        cerr << "Warning: Could not open file " << filename << " for writing. Continuing in-memory.\n";
         return;
     }
 
@@ -49,7 +42,7 @@ void FileHandler::saveStudents(const vector<Student>& students, const string& fi
 
 vector<Student> FileHandler::loadStudents(const string& filename) {
     vector<Student> students;
-    ifstream inFile(resolvePath(filename));
+    ifstream inFile(filename);
     if (!inFile.is_open()) {
         return students; // Return empty if file does not exist yet
     }

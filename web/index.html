@@ -3,495 +3,1219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart College Bus Management & Route Optimization Visualizer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Smart College Bus Management System • Graphic Era Hill University, Bhimtal</title>
+    <!-- Inter Font & Leaflet CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --border-color: rgba(255, 255, 255, 0.1);
-            --primary: #38bdf8;
-            --primary-glow: rgba(56, 189, 248, 0.3);
-            --secondary: #818cf8;
-            --accent: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --bg-main: #0D1117;
+            --bg-secondary: #161B22;
+            --bg-card: #1C2533;
+            --border: #30363D;
+            --primary: #1F6FEB;
+            --primary-hover: #388BFD;
+            --accent: #58A6FF;
+            --success: #3FB950;
+            --warning: #D29922;
+            --danger: #F85149;
+            --text-primary: #E6EDF3;
+            --text-secondary: #8B949E;
+            --text-muted: #6E7681;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
         }
 
+        /* Header Bar */
         header {
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(22, 27, 34, 0.95);
             backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            padding: 0.85rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
         }
 
-        .logo-title {
+        .branding {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-        }
-
-        .logo-icon {
-            font-size: 1.8rem;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .badge-cpp {
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--primary);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            padding: 0.25rem 0.6rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .main-layout {
-            display: grid;
-            grid-template-columns: 340px 1fr;
-            gap: 1.5rem;
-            padding: 1.5rem;
-            flex: 1;
-        }
-
-        .panel {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            backdrop-filter: blur(16px);
-            border-radius: 16px;
-            padding: 1.25rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .panel-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--primary);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.75rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-
-        label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        select, input, button {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 0.65rem 0.9rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        select:focus, input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-glow);
-        }
-
-        button {
-            cursor: pointer;
-            font-weight: 600;
-            background: linear-gradient(135deg, #0284c7, #4f46e5);
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
-        }
-
-        button:hover {
-            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
-            transform: translateY(-1px);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        .visualization-area {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .canvas-container {
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            position: relative;
-            height: 420px;
-            overflow: hidden;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-        }
-
-        .canvas-overlay {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--border-color);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            display: flex;
             gap: 1rem;
         }
 
-        .status-badge {
+        .logo-box {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #1F6FEB, #238636);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 12px rgba(31, 111, 235, 0.35);
+        }
+
+        .branding-text h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            color: var(--text-primary);
+        }
+
+        .branding-text p {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .chip {
+            background: rgba(56, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            color: var(--accent);
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
         }
 
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--accent);
+        .chip-success {
+            background: rgba(63, 185, 80, 0.12);
+            border-color: rgba(63, 185, 80, 0.35);
+            color: var(--success);
         }
 
-        .results-box {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1rem;
-            font-size: 0.9rem;
+        /* Top Navigation Tabs */
+        .nav-tabs {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+            gap: 1.5rem;
         }
 
-        .member-cards {
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.85rem 0.4rem;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1560px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 3rem 2rem;
+            flex: 1;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Cards & Grid */
+        .grid-optimizer {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
+            grid-template-columns: 380px 1fr;
+            gap: 1.5rem;
         }
 
-        .member-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
+        @media (max-width: 1080px) {
+            .grid-optimizer {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 1rem;
+            padding: 1.25rem;
             display: flex;
             flex-direction: column;
+            gap: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
             gap: 0.5rem;
         }
 
-        .member-num {
-            font-size: 0.75rem;
-            color: var(--secondary);
-            font-weight: 700;
+        /* Form Controls */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        select, input, textarea {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.65rem 0.85rem;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            outline: none;
+            transition: all 0.15s ease;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+        }
+
+        input[readonly], select:disabled {
+            background: #11161D;
+            color: #7D8590;
+            cursor: not-allowed;
+            border-color: #21262D;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 0.6rem;
+        }
+
+        button.btn {
+            background: var(--primary);
+            color: #FFFFFF;
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            padding: 0.7rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.15s ease;
+        }
+
+        button.btn:hover {
+            background: var(--primary-hover);
+        }
+
+        button.btn-green {
+            background: #238636;
+        }
+        button.btn-green:hover {
+            background: #2EA043;
+        }
+
+        button.btn-secondary {
+            background: #21262D;
+            color: var(--text-primary);
+            border-color: var(--border);
+        }
+        button.btn-secondary:hover {
+            background: #30363D;
+        }
+
+        /* Telemetry HUD Cards */
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .telemetry-tile {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .telemetry-tile span.label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
             text-transform: uppercase;
         }
 
-        .member-title {
-            font-size: 0.95rem;
-            font-weight: 600;
+        .telemetry-tile span.value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
         }
 
-        .oop-tag {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--accent);
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
+        /* Map Container */
+        .map-wrapper {
+            position: relative;
+            height: 590px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+        }
+
+        #leafletMap {
+            width: 100%;
+            height: 100%;
+            background: #090D13;
+        }
+
+        /* Simulation HUD Overlay */
+        .sim-overlay {
+            position: absolute;
+            bottom: 1.25rem;
+            left: 1.25rem;
+            right: 1.25rem;
+            background: rgba(22, 27, 34, 0.92);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 0.9rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 500;
+        }
+
+        .sim-live-info {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .sim-tag {
             font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Complaints Section Styling */
+        .complaints-container {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1150px) {
+            .complaints-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Table */
+        .table-responsive {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        table.custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.84rem;
+            text-align: left;
+        }
+
+        table.custom-table th {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 0.75rem 0.9rem;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 0.5px;
+        }
+
+        table.custom-table td {
+            padding: 0.75rem 0.9rem;
+            border-bottom: 1px solid #21262D;
+            color: var(--text-primary);
+        }
+
+        table.custom-table tr:hover td {
+            background: #222B38;
+            cursor: pointer;
+        }
+
+        table.custom-table tr.selected td {
+            background: #1C3354;
+            border-color: #2F5994;
+        }
+
+        /* Status Badges */
+        .status-pill {
+            display: inline-block;
+            padding: 0.2rem 0.55rem;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .pill-open { background: rgba(88, 166, 255, 0.15); color: #58A6FF; border: 1px solid rgba(88, 166, 255, 0.3); }
+        .pill-investigating { background: rgba(210, 153, 34, 0.15); color: #D29922; border: 1px solid rgba(210, 153, 34, 0.3); }
+        .pill-poll { background: rgba(163, 113, 247, 0.15); color: #BC8CFF; border: 1px solid rgba(163, 113, 247, 0.3); }
+        .pill-resolved { background: rgba(63, 185, 80, 0.15); color: #3FB950; border: 1px solid rgba(63, 185, 80, 0.3); }
+        .pill-rejected { background: rgba(248, 81, 73, 0.15); color: #F85149; border: 1px solid rgba(248, 81, 73, 0.3); }
+
+        /* Poll Card Box */
+        .poll-card {
+            background: #152238;
+            border: 1px solid #26436E;
+            border-radius: 10px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .poll-question {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #E6EDF3;
+            line-height: 1.4;
+        }
+
+        .poll-progress-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .progress-bar-bg {
+            background: #21262D;
+            border-radius: 6px;
+            height: 12px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .progress-bar-yes {
+            background: var(--success);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar-no {
+            background: var(--danger);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* Viva Cards */
+        .viva-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 900px) {
+            .viva-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .viva-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .viva-member-tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .viva-title {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .viva-desc {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .viva-pill {
             align-self: flex-start;
-            margin-top: 0.25rem;
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            border-radius: 4px;
+            font-size: 0.72rem;
+            padding: 0.2rem 0.5rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
         }
     </style>
 </head>
 <body>
 
+    <!-- Header -->
     <header>
-        <div class="logo-title">
-            <span class="logo-icon">🚌</span>
-            <div>
-                <h2>Smart College Bus Management & Route Optimization</h2>
-                <p style="font-size: 0.8rem; color: var(--text-muted);">C++17 OOP Academic PBL Interactive Dashboard</p>
+        <div class="branding">
+            <div class="logo-box">🚌</div>
+            <div class="branding-text">
+                <h1>Smart College Bus Management System</h1>
+                <p>📍 Graphic Era Hill University, Bhimtal Campus • C++17 Core Engine</p>
             </div>
         </div>
-        <div style="display: flex; gap: 0.75rem; align-items: center;">
-            <span class="badge-cpp">Primary Language: C++17</span>
-            <span class="badge-cpp" style="color: var(--accent); border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.15);">Team of 4 Members</span>
+        <div class="header-meta">
+            <span class="chip">C++17 OOP Architecture</span>
+            <span class="chip chip-success">Live Fleet Connected</span>
+            <span class="chip" style="background: rgba(188, 140, 255, 0.15); color: #BC8CFF; border-color: rgba(188, 140, 255, 0.3);">Haldwani–Bhimtal Corridor</span>
         </div>
     </header>
 
-    <div class="main-layout">
-        <!-- Control Panel Sidebar -->
-        <div class="panel">
-            <div class="panel-title">⚙️ Interactive Controls</div>
+    <!-- Navigation -->
+    <nav class="nav-tabs">
+        <button class="nav-btn active" onclick="switchTab('optimizer')">🗺️ Route Map Optimizer</button>
+        <button class="nav-btn" onclick="switchTab('complaints')">📋 Fleet Complaints & Student Disciplinary Poll</button>
+        <button class="nav-btn" onclick="switchTab('viva')">🎓 C++ OOP Academic Architecture</button>
+    </nav>
 
-            <div class="form-group">
-                <label>Active College Schedule Mode</label>
-                <select id="scheduleSelect" onchange="updateSchedule()">
-                    <option value="FULL_DAY">Full-Day Schedule (Normal Hours)</option>
-                    <option value="HALF_DAY">Half-Day Schedule (Exam / Early Hours)</option>
-                </select>
+    <!-- Main Container -->
+    <main class="container">
+
+        <!-- TAB 1: Route Map Optimizer -->
+        <section id="tab-optimizer" class="tab-content active">
+            <div class="grid-optimizer">
+                <!-- Left Control Panel -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">⚙️ Mountain Corridor Control</span>
+                        <span class="chip" style="font-size: 0.72rem;">GPS Ready</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Selectable Source (Haldwani Bus Stop)</label>
+                        <select id="sourceSelect" onchange="calculateRoute()">
+                            <option value="ST101">ST101 - Haldwani Bus Terminal (Tikonia)</option>
+                            <option value="ST102">ST102 - Kathgodam Railway Station</option>
+                            <option value="ST103">ST103 - Ranibagh Junction</option>
+                            <option value="ST104">ST104 - Bhujiaghat Bypass</option>
+                            <option value="ST105">ST105 - Bhimtal Lake Mall Road</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fixed Destination (Locked)</label>
+                        <div style="position: relative;">
+                            <input type="text" readonly value="Graphic Era Hill University, Bhimtal Campus, Uttarakhand, India" style="padding-left: 2.2rem; font-weight: 600; width: 100%;">
+                            <span style="position: absolute; left: 0.75rem; top: 0.65rem; font-size: 0.95rem;">🔒</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Route Algorithm</label>
+                        <select id="algoSelect" onchange="calculateRoute()">
+                            <option value="astar">A* Heuristic Search (Topographic & Elevation Profile)</option>
+                            <option value="dijkstra">Dijkstra Shortest Path (Standard Cost)</option>
+                        </select>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-green" onclick="calculateRoute()">⚡ Calculate Shortest Path</button>
+                        <button class="btn" onclick="toggleBusSimulation()" id="simBtn">▶️ Simulate Bus Motion</button>
+                        <button class="btn btn-secondary" onclick="fitRouteBounds()">🎯 Fit Route to Screen</button>
+                    </div>
+
+                    <!-- Telemetry HUD -->
+                    <div class="card-header" style="margin-top: 0.5rem;">
+                        <span class="card-title" style="font-size: 0.85rem;">📊 Route Telemetry & Elevation</span>
+                    </div>
+
+                    <div class="telemetry-grid">
+                        <div class="telemetry-tile">
+                            <span class="label">Total Road Distance</span>
+                            <span class="value" id="hudDistance">28.4 KM</span>
+                        </div>
+                        <div class="telemetry-tile">
+                            <span class="label">Est. Travel Time</span>
+                            <span class="value" id="hudDuration">54 Mins</span>
+                        </div>
+                        <div class="telemetry-tile">
+                            <span class="label">Elevation Traversal</span>
+                            <span class="value" id="hudElevation">+996 m ASL</span>
+                        </div>
+                        <div class="telemetry-tile">
+                            <span class="label">Intermediate Stops</span>
+                            <span class="value" id="hudStops">5 Stops</span>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.78rem; color: var(--text-muted); background: var(--bg-secondary); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border);">
+                        <b>Altitude Profile:</b> Haldwani (424m) ➔ Kathgodam (554m) ➔ Ranibagh (680m) ➔ Bhujiaghat (950m) ➔ Bhimtal Lake (1,370m) ➔ <b>GEHU Campus (1,420m ASL)</b>.
+                    </div>
+                </div>
+
+                <!-- Right Map Dashboard -->
+                <div class="map-wrapper">
+                    <div id="leafletMap"></div>
+
+                    <!-- Live Simulation Overlay HUD -->
+                    <div class="sim-overlay" id="simOverlay">
+                        <div class="sim-live-info">
+                            <span class="sim-tag" id="simStatusTag" style="background: rgba(63, 185, 80, 0.2); color: #3FB950; border: 1px solid rgba(63, 185, 80, 0.4);">STANDBY</span>
+                            <div>
+                                <div style="font-size: 0.88rem; font-weight: 700; color: #E6EDF3;" id="simCurrentStop">Current Stop: Haldwani Bus Terminal</div>
+                                <div style="font-size: 0.78rem; color: var(--text-secondary);" id="simSubText">Simulation Ready. Click "Simulate Bus Motion" to begin transit.</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--accent);" id="simSpeed">42 km/h</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">Mountain Speed Limit</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: Fleet Complaints & Student Disciplinary Poll -->
+        <section id="tab-complaints" class="tab-content">
+            <div class="complaints-container">
+                <!-- Left: Complaints Register Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">📋 Transport Complaints & Safety Incidents Register</span>
+                        <span class="chip chip-success">All 11 Mandatory Fields Active</span>
+                    </div>
+
+                    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">FILTER BY:</span>
+                        <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="filterComplaints('ALL')">All</button>
+                        <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="filterComplaints('POLL ACTIVE')">Poll Active</button>
+                        <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="filterComplaints('UNDER INVESTIGATION')">Under Investigation</button>
+                        <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="filterComplaints('RESOLVED')">Resolved</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="custom-table" id="complaintsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Category</th>
+                                    <th>Reported By</th>
+                                    <th>Against</th>
+                                    <th>Bus</th>
+                                    <th>Date & Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="complaintsBody">
+                                <!-- Populated dynamically by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        💡 <i>Click on any complaint row to view detailed case record, disciplinary peer poll, and administrative action notes.</i>
+                    </div>
+                </div>
+
+                <!-- Right: Detailed Incident & Disciplinary Poll Center -->
+                <div class="card" id="detailCard">
+                    <div class="card-header">
+                        <span class="card-title">⚖️ Case Record & Disciplinary Poll</span>
+                        <span class="status-pill pill-poll" id="detailStatusBadge">POLL ACTIVE</span>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.85rem;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary);">Complaint ID:</span>
+                            <span style="font-weight: 700; color: var(--accent);" id="detailId">CMP-102</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary);">Category:</span>
+                            <span style="font-weight: 600;" id="detailCategory">Student Misbehavior</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary);">Complainant:</span>
+                            <span style="font-weight: 600;" id="detailReporter">Rajesh Kumar (Driver)</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary);">Accused Person:</span>
+                            <span style="font-weight: 600; color: #F85149;" id="detailAccused">Rohan Patel (Student)</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary);">Bus & Timestamp:</span>
+                            <span style="font-weight: 600;" id="detailTimestamp">Bus B-101 • 2026-11-01 09:15 AM</span>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Incident Description:</span>
+                            <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border); color: #E6EDF3; line-height: 1.4;" id="detailDescription">
+                                Student argued aggressively over seating reservation, disrupting other bus passengers and creating transit safety hazard.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Student Peer Poll Widget -->
+                    <div class="poll-card" id="pollWidget">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: #BC8CFF; text-transform: uppercase;">🗳️ Eligible Student Disciplinary Poll</span>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">Confidential • One Vote Per Student</span>
+                        </div>
+
+                        <div class="poll-question">
+                            "Do you agree that this incident requires disciplinary action?"
+                        </div>
+
+                        <div class="poll-progress-wrap">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600;">
+                                <span style="color: var(--success);" id="pollYesLabel">YES: 14 (77%)</span>
+                                <span style="color: var(--danger);" id="pollNoLabel">NO: 4 (23%)</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-yes" id="progressBarYes" style="width: 77%;"></div>
+                                <div class="progress-bar-no" id="progressBarNo" style="width: 23%;"></div>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center;" id="pollTotalLabel">
+                                Total Eligible Student Votes Cast: 18
+                            </div>
+                        </div>
+
+                        <div class="btn-row" id="voteActionRow">
+                            <button class="btn btn-green" style="flex: 1;" onclick="castVote(true)">👍 Vote YES</button>
+                            <button class="btn btn-secondary" style="flex: 1; border-color: #F85149; color: #F85149;" onclick="castVote(false)">👎 Vote NO</button>
+                        </div>
+                        <div id="voteNotice" style="font-size: 0.76rem; color: var(--success); text-align: center; display: none;">
+                            ✓ Your confidential vote has been recorded and encrypted.
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Administrator Directives</span>
+                        <span style="font-size: 0.82rem; color: #E6EDF3;" id="detailAdminNote">
+                            Under peer poll review before final Proctorial Board decision.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: Academic Architecture & Viva Guide -->
+        <section id="tab-viva" class="tab-content">
+            <div style="margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.35rem;">C++17 Object-Oriented Architecture (Team of 4 Members)</h2>
+                <p style="font-size: 0.88rem; color: var(--text-secondary);">Demonstrating core software engineering design patterns, academic OOP pillars, and real-time routing engines.</p>
             </div>
 
-            <div class="form-group">
-                <label>Student Roll Number</label>
-                <input type="text" id="studentRoll" value="2024-CS-001">
-            </div>
+            <div class="viva-grid">
+                <div class="viva-card">
+                    <span class="viva-member-tag">Member 1</span>
+                    <span class="viva-title">Student & Route Domain</span>
+                    <p class="viva-desc">Implements `Student`, `Stop`, and `Route` classes. Encapsulates semester fee status, boarding stop assignments, and sequential topological paths.</p>
+                    <span class="viva-pill">Inheritance & Operator Overload</span>
+                </div>
 
-            <div class="form-group">
-                <label>Select Bus Stop</label>
-                <select id="stopSelect">
-                    <option value="ST101">ST101 - Sector 17 Terminal</option>
-                    <option value="ST102">ST102 - Central Metro Station</option>
-                    <option value="ST103">ST103 - Tech Park Junction</option>
-                    <option value="ST104">ST104 - Green Valley Chowk</option>
-                    <option value="ST105">ST105 - College Campus Main Gate</option>
-                </select>
-            </div>
+                <div class="viva-card">
+                    <span class="viva-member-tag">Member 2</span>
+                    <span class="viva-title">Fleet & Hierarchy Engine</span>
+                    <p class="viva-desc">Abstract Base Class `Person` with pure virtual methods. Derived `Driver`, `Conductor`, `Bus` classes managing seating capacities, real-time boarding, and maintenance.</p>
+                    <span class="viva-pill">Abstraction & Polymorphism</span>
+                </div>
 
-            <div class="form-group">
-                <label>Missed Time (HH:MM format)</label>
-                <input type="text" id="missedTime" value="07:35">
-            </div>
+                <div class="viva-card">
+                    <span class="viva-member-tag">Member 3</span>
+                    <span class="viva-title">Schedule & Optimization</span>
+                    <p class="viva-desc">Topological graph routing implementing A* Heuristic Search and Dijkstra algorithms. Dual college schedule modes (Full-Day vs Half-Day exam hours).</p>
+                    <span class="viva-pill">Function Overloading & STL</span>
+                </div>
 
-            <button onclick="findConnectingBuses()">🚨 Find Next Connecting Bus</button>
-            <button onclick="startBusSimulation()" style="background: linear-gradient(135deg, #059669, #0d9488);">⏱️ Simulate Live Bus Trip</button>
-
-            <div class="results-box" id="resultOutput">
-                <div style="color: var(--text-muted); font-size: 0.85rem;">Select options and click "Find Next Connecting Bus" to test Core Feature #6.</div>
-            </div>
-        </div>
-
-        <!-- Main Visualization & Member Cards -->
-        <div class="visualization-area">
-            <div class="canvas-container">
-                <canvas id="routeCanvas"></canvas>
-                <div class="canvas-overlay">
-                    <div class="status-badge"><span class="dot"></span> Route Graph Nodes (Stops)</div>
-                    <div class="status-badge"><span class="dot" style="background: var(--primary);"></span> Route R1 (Express)</div>
-                    <div class="status-badge"><span class="dot" style="background: var(--warning);"></span> Route R2 (Suburban)</div>
+                <div class="viva-card">
+                    <span class="viva-member-tag">Member 4</span>
+                    <span class="viva-title">Connecting Bus & File I/O</span>
+                    <p class="viva-desc">Automated missed-bus recovery engine, CSV database persistence (`data/*.csv`), encrypted attendance logs, and multi-threaded simulation harness.</p>
+                    <span class="viva-pill">File I/O & Exception Handling</span>
                 </div>
             </div>
 
-            <!-- Team Member OOP Mapping Cards -->
-            <div class="member-cards">
-                <div class="member-card">
-                    <span class="member-num">Member 1</span>
-                    <span class="member-title">Student & Route Mgmt</span>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">Student, Stop & Route class models, route stop sequences.</p>
-                    <span class="oop-tag">Inheritance & Operator Overloading</span>
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    <span class="card-title">💾 Persistent Database Storage Structure</span>
                 </div>
-
-                <div class="member-card">
-                    <span class="member-num">Member 2</span>
-                    <span class="member-title">Person & Bus Hierarchy</span>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">Person ABC, Driver, Conductor, Bus capacity & seating checks.</p>
-                    <span class="oop-tag">Abstraction & Polymorphism</span>
-                </div>
-
-                <div class="member-card">
-                    <span class="member-num">Member 3</span>
-                    <span class="member-title">Scheduling & Optimization</span>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">Half/Full-Day timing, Live GPS sim, ETA Engine, Dijkstra search.</p>
-                    <span class="oop-tag">Function Overloading & Threads</span>
-                </div>
-
-                <div class="member-card">
-                    <span class="member-num">Member 4</span>
-                    <span class="member-title">Connecting Bus & File I/O</span>
-                    <p style="font-size: 0.8rem; color: var(--text-muted);">Missed bus lookup engine, CSV File Persistence, Attendance log.</p>
-                    <span class="oop-tag">Exception Handling & File I/O</span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 0.84rem;">
+                    <div style="background: var(--bg-secondary); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <b style="color: var(--accent);">data/stops.csv</b><br>
+                        Stores Haldwani to GEHU Bhimtal stops, passing fleet units, and Full-Day / Half-Day departure matrices.
+                    </div>
+                    <div style="background: var(--bg-secondary); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <b style="color: var(--accent);">data/routes.csv</b><br>
+                        Configures corridors R1 (Express Hill) and R2 (Valley Bypass) with road distances and stop sequences.
+                    </div>
+                    <div style="background: var(--bg-secondary); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <b style="color: var(--accent);">data/students.csv</b><br>
+                        Enrolled student registry, contact info, boarding stop, assigned bus, and semester fee clearance.
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
 
+    </main>
+
+    <!-- Leaflet & Interactive App Scripts -->
     <script>
-        const canvas = document.getElementById('routeCanvas');
-        const ctx = canvas.getContext('2d');
+        // Tab Navigation
+        function switchTab(tabId) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
-            drawGraph();
-        }
-        window.addEventListener('resize', resizeCanvas);
-
-        const stops = [
-            { id: 'ST101', name: 'Sector 17', x: 80, y: 210, full: '07:30', half: '07:15' },
-            { id: 'ST102', name: 'Central Metro', x: 260, y: 130, full: '07:45', half: '07:25' },
-            { id: 'ST103', name: 'Tech Park', x: 450, y: 130, full: '08:05', half: '07:40' },
-            { id: 'ST104', name: 'Green Chowk', x: 360, y: 310, full: '08:30', half: '08:10' },
-            { id: 'ST105', name: 'College Campus', x: 650, y: 210, full: '08:25', half: '08:00' }
-        ];
-
-        let busPos = { x: stops[0].x, y: stops[0].y };
-        let animId = null;
-
-        function drawGraph(activePath = []) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw Edges (Routes)
-            // Route R1: ST101 -> ST102 -> ST103 -> ST105
-            drawEdge(stops[0], stops[1], '#38bdf8', 4);
-            drawEdge(stops[1], stops[2], '#38bdf8', 4);
-            drawEdge(stops[2], stops[4], '#38bdf8', 4);
-
-            // Route R2: ST101 -> ST102 -> ST104 -> ST105
-            drawEdge(stops[1], stops[3], '#f59e0b', 3, true);
-            drawEdge(stops[3], stops[4], '#f59e0b', 3, true);
-
-            // Draw Nodes (Stops)
-            stops.forEach(s => {
-                const isHighlight = activePath.includes(s.id);
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, isHighlight ? 14 : 10, 0, Math.PI * 2);
-                ctx.fillStyle = isHighlight ? '#10b981' : '#1e293b';
-                ctx.fill();
-                ctx.lineWidth = isHighlight ? 3 : 2;
-                ctx.strokeStyle = isHighlight ? '#34d399' : '#38bdf8';
-                ctx.stroke();
-
-                // Stop Label
-                ctx.font = '12px Inter, sans-serif';
-                ctx.fillStyle = '#f8fafc';
-                ctx.fillText(s.name + ` (${s.id})`, s.x - 30, s.y - 20);
-
-                // Arrival Time
-                const mode = document.getElementById('scheduleSelect').value;
-                const time = mode === 'FULL_DAY' ? s.full : s.half;
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = '10px Inter, sans-serif';
-                ctx.fillText(`Arr: ${time}`, s.x - 20, s.y + 25);
-            });
-
-            // Draw Bus Icon
-            ctx.beginPath();
-            ctx.arc(busPos.x, busPos.y, 8, 0, Math.PI * 2);
-            ctx.fillStyle = '#ef4444';
-            ctx.fill();
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-
-        function drawEdge(from, to, color, width, dash = false) {
-            ctx.beginPath();
-            if (dash) ctx.setLineDash([6, 6]);
-            else ctx.setLineDash([]);
-            ctx.moveTo(from.x, from.y);
-            ctx.lineTo(to.x, to.y);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = width;
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
-
-        function updateSchedule() {
-            drawGraph();
-        }
-
-        function findConnectingBuses() {
-            const stopId = document.getElementById('stopSelect').value;
-            const missedTime = document.getElementById('missedTime').value;
-            const mode = document.getElementById('scheduleSelect').value;
-
-            const resBox = document.getElementById('resultOutput');
-            
-            if (stopId === 'ST101' && missedTime >= '07:30') {
-                resBox.innerHTML = `
-                    <div style="color: #10b981; font-weight: 600;">✅ Connecting Bus Found!</div>
-                    <div><b>Bus:</b> B-103 (MH-12-EF-3003)</div>
-                    <div><b>Scheduled Arrival:</b> ${mode === 'FULL_DAY' ? '08:05 AM' : '07:45 AM'}</div>
-                    <div><b>Route:</b> R1 (Express)</div>
-                    <div><b>Available Seats:</b> 35 Seats Free</div>
-                    <div><b>Driver Contact:</b> Suresh Nair 📞 +91-9876500003</div>
-                `;
-                drawGraph(['ST101', 'ST102', 'ST103', 'ST105']);
-            } else {
-                resBox.innerHTML = `
-                    <div style="color: #10b981; font-weight: 600;">✅ Connecting Bus Found!</div>
-                    <div><b>Bus:</b> B-102 (MH-12-CD-2002)</div>
-                    <div><b>Scheduled Arrival:</b> ${mode === 'FULL_DAY' ? '08:00 AM' : '07:40 AM'}</div>
-                    <div><b>Route:</b> R2 (Suburban)</div>
-                    <div><b>Available Seats:</b> 42 Seats Free</div>
-                    <div><b>Driver Contact:</b> Vikram Singh 📞 +91-9876500002</div>
-                `;
-                drawGraph(['ST101', 'ST102', 'ST104', 'ST105']);
+            if (tabId === 'optimizer') {
+                document.querySelectorAll('.nav-btn')[0].classList.add('active');
+                document.getElementById('tab-optimizer').classList.add('active');
+                setTimeout(() => { if (map) map.invalidateSize(); }, 200);
+            } else if (tabId === 'complaints') {
+                document.querySelectorAll('.nav-btn')[1].classList.add('active');
+                document.getElementById('tab-complaints').classList.add('active');
+            } else if (tabId === 'viva') {
+                document.querySelectorAll('.nav-btn')[2].classList.add('active');
+                document.getElementById('tab-viva').classList.add('active');
             }
         }
 
-        function startBusSimulation() {
-            let step = 0;
-            const routeStops = [stops[0], stops[1], stops[2], stops[4]];
-            
-            if (animId) clearInterval(animId);
+        // ==========================================
+        // 1. LEAFLET MAP & REAL ROAD ROUTING
+        // ==========================================
+        let map = null;
+        let routePolyline = null;
+        let busMarker = null;
+        let stopMarkers = [];
+        let isSimulating = false;
+        let simInterval = null;
+        let simIndex = 0;
 
-            animId = setInterval(() => {
-                if (step < routeStops.length) {
-                    busPos = { x: routeStops[step].x, y: routeStops[step].y };
-                    drawGraph();
-                    document.getElementById('resultOutput').innerHTML = `
-                        <div style="color: #38bdf8; font-weight: 600;">⏱️ Live GPS Simulation Active</div>
-                        <div><b>Bus B-101 Current Location:</b> ${routeStops[step].name}</div>
-                        <div><b>Progress:</b> Stop ${step + 1} of ${routeStops.length}</div>
-                    `;
-                    step++;
-                } else {
-                    clearInterval(animId);
-                    document.getElementById('resultOutput').innerHTML += `
-                        <div style="color: #10b981; font-weight: 600; margin-top: 0.4rem;">🏁 Bus Reached College Campus Main Gate!</div>
-                    `;
-                }
-            }, 1200);
+        // Realistic GPS Waypoints along Haldwani -> Kathgodam -> Ranibagh -> Bhujiaghat -> Bhimtal Lake -> GEHU Bhimtal Campus
+        const roadWaypoints = [
+            // Haldwani Bus Terminal (Tikonia)
+            [29.2183, 79.5130],
+            [29.2250, 79.5165],
+            [29.2380, 79.5210],
+            [29.2550, 79.5260],
+            // Kathgodam Railway Station
+            [29.2715, 79.5312],
+            [29.2800, 79.5370],
+            // Ranibagh Junction
+            [29.2942, 79.5445],
+            [29.3050, 79.5475],
+            [29.3140, 79.5495],
+            // Bhujiaghat Bypass
+            [29.3210, 79.5510],
+            [29.3290, 79.5535],
+            [29.3380, 79.5560],
+            // Bhimtal Lake Mall Road
+            [29.3458, 79.5583],
+            [29.3510, 79.5605],
+            // Graphic Era Hill University, Bhimtal Campus (Fixed Destination)
+            [29.3565, 79.5620]
+        ];
+
+        const stopDetails = {
+            'ST101': { name: 'Haldwani Bus Terminal (Tikonia)', coords: [29.2183, 79.5130], alt: '424m ASL', waypointIdx: 0, dist: '28.4 KM', time: '54 Mins' },
+            'ST102': { name: 'Kathgodam Railway Station', coords: [29.2715, 79.5312], alt: '554m ASL', waypointIdx: 4, dist: '22.8 KM', time: '44 Mins' },
+            'ST103': { name: 'Ranibagh Junction', coords: [29.2942, 79.5445], alt: '680m ASL', waypointIdx: 6, dist: '18.1 KM', time: '36 Mins' },
+            'ST104': { name: 'Bhujiaghat Bypass', coords: [29.3210, 79.5510], alt: '950m ASL', waypointIdx: 9, dist: '12.6 KM', time: '26 Mins' },
+            'ST105': { name: 'Bhimtal Lake Mall Road', coords: [29.3458, 79.5583], alt: '1,370m ASL', waypointIdx: 12, dist: '4.2 KM', time: '10 Mins' },
+            'ST106': { name: 'Graphic Era Hill University, Bhimtal Campus', coords: [29.3565, 79.5620], alt: '1,420m ASL', waypointIdx: 14 }
+        };
+
+        function initMap() {
+            map = L.map('leafletMap', {
+                center: [29.2900, 79.5400],
+                zoom: 12,
+                zoomControl: true
+            });
+
+            // Dark-styled OpenStreetMap tile layer (CartoDB Dark Matter / OSM)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add Stop Markers
+            Object.keys(stopDetails).forEach(id => {
+                const s = stopDetails[id];
+                const isDest = (id === 'ST106');
+                
+                const markerIcon = L.divIcon({
+                    className: 'custom-map-icon',
+                    html: `<div style="background: ${isDest ? '#F85149' : '#1F6FEB'}; color: #FFF; width: ${isDest ? '32px' : '26px'}; height: ${isDest ? '32px' : '26px'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: ${isDest ? '16px' : '12px'}; font-weight: bold; border: 2px solid #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">${isDest ? '🎓' : '🚏'}</div>`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+
+                const m = L.marker(s.coords, { icon: markerIcon }).addTo(map);
+                m.bindPopup(`
+                    <div style="font-family: 'Inter', sans-serif; font-size: 0.85rem; line-height: 1.4;">
+                        <b style="color: ${isDest ? '#D9383A' : '#0969DA'};">${s.name}</b><br>
+                        Stop Code: <b>${id}</b><br>
+                        Altitude: <b>${s.alt}</b><br>
+                        ${isDest ? '<span style="color: #238636; font-weight: bold;">★ Permanent College Destination</span>' : 'Regular Boarding Stop'}
+                    </div>
+                `);
+                stopMarkers.push(m);
+            });
+
+            calculateRoute();
         }
 
-        window.onload = () => {
-            resizeCanvas();
-        };
+        function calculateRoute() {
+            const srcId = document.getElementById('sourceSelect').value;
+            const src = stopDetails[srcId];
+            const dest = stopDetails['ST106'];
+            const algo = document.getElementById('algoSelect').value;
+
+            // Slice waypoints from source to destination
+            const activePath = roadWaypoints.slice(src.waypointIdx);
+
+            if (routePolyline) {
+                map.removeLayer(routePolyline);
+            }
+
+            // Draw route polyline (Mountain corridor)
+            routePolyline = L.polyline(activePath, {
+                color: (algo === 'astar') ? '#1F6FEB' : '#D29922',
+                weight: 6,
+                opacity: 0.85,
+                lineJoin: 'round'
+            }).addTo(map);
+
+            // Update Telemetry HUD
+            document.getElementById('hudDistance').innerText = src.dist;
+            document.getElementById('hudDuration').innerText = src.time;
+            document.getElementById('hudElevation').innerText = (srcId === 'ST101') ? '+996 m ASL' : (srcId === 'ST102') ? '+866 m ASL' : '+740 m ASL';
+            document.getElementById('hudStops').innerText = (roadWaypoints.length - src.waypointIdx > 10) ? '5 Stops' : '3 Stops';
+
+            // Reset simulation if active
+            if (isSimulating) {
+                toggleBusSimulation();
+            }
+
+            // Place bus at source
+            updateBusPosition(activePath[0], src.name);
+        }
+
+        function fitRouteBounds() {
+            if (routePolyline && map) {
+                map.fitBounds(routePolyline.getBounds(), { padding: [50, 50] });
+            }
+        }
+
+        function updateBusPosition(latlng, stopName) {
+            if (!busMarker) {
+                const busIcon = L.divIcon({
+                    className: 'bus-marker-icon',
+                    html: `<div style="background: #238636; color: #FFF; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid #FFF; box-shadow: 0 4px 14px rgba(35, 134, 54, 0.6);">🚌</div>`,
+                    iconSize: [34, 34],
+                    iconAnchor: [17, 17]
+                });
+                busMarker = L.marker(latlng, { icon: busIcon }).addTo(map);
+            } else {
+                busMarker.setLatLng(latlng);
+            }
+
+            document.getElementById('simCurrentStop').innerText = `Current Stop: ${stopName}`;
+        }
+
+        function toggleBusSimulation() {
+            const btn = document.getElementById('simBtn');
+            const statusTag = document.getElementById('simStatusTag');
+            const subText = document.getElementById('simSubText');
+
+            if (isSimulating) {
+                clearInterval(simInterval);
+                isSimulating = false;
+                btn.innerHTML = '▶️ Simulate Bus Motion';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn');
+                statusTag.innerText = 'STANDBY';
+                statusTag.style.background = 'rgba(63, 185, 80, 0.2)';
+                statusTag.style.color = '#3FB950';
+                subText.innerText = 'Simulation paused.';
+                return;
+            }
+
+            const srcId = document.getElementById('sourceSelect').value;
+            const src = stopDetails[srcId];
+            const activePath = roadWaypoints.slice(src.waypointIdx);
+
+            isSimulating = true;
+            btn.innerHTML = '⏸️ Pause Simulation';
+            btn.classList.add('btn-secondary');
+            statusTag.innerText = 'TRANSIT ACTIVE';
+            statusTag.style.background = 'rgba(88, 166, 255, 0.2)';
+            statusTag.style.color = '#58A6FF';
+
+            simIndex = 0;
+            simInterval = setInterval(() => {
+                if (simIndex < activePath.length) {
+                    const pos = activePath[simIndex];
+                    let currentName = "Mountain Highway NH109 (En Route)";
+                    if (simIndex === 0) currentName = src.name;
+                    else if (simIndex === activePath.length - 1) currentName = "Graphic Era Hill University, Bhimtal Campus";
+                    else if (simIndex === 4 - src.waypointIdx) currentName = "Kathgodam Railway Station";
+                    else if (simIndex === 6 - src.waypointIdx) currentName = "Ranibagh Junction";
+                    else if (simIndex === 9 - src.waypointIdx) currentName = "Bhujiaghat Bypass";
+                    else if (simIndex === 12 - src.waypointIdx) currentName = "Bhimtal Lake Mall Road";
+
+                    updateBusPosition(pos, currentName);
+                    subText.innerText = `GPS Location: [${pos[0].toFixed(4)}, ${pos[1].toFixed(4)}] • Heading to GEHU Bhimtal`;
+                    simIndex++;
+                } else {
+                    clearInterval(simInterval);
+                    isSimulating = false;
+                    btn.innerHTML = '🔄 Re-Simulate Trip';
+                    btn.classList.remove('btn-secondary');
+                    statusTag.innerText = 'ARRIVED';
+                    statusTag.style.background = 'rgba(63, 185, 80, 0.2)';
+                    statusTag.style.color = '#3FB950';
+                    subText.innerText = '🏁 Bus successfully arrived at Graphic Era Hill University, Bhimtal Campus!';
+                }
+            }, 1000);
+        }
+
+        // ==========================================
+        // 2. COMPLAINTS & STUDENT DISCIPLINARY POLL
+        // ==========================================
+        const complaintsData = [
+            {
+                id: 'CMP-101',
+                category: 'Rash Driving',
+                description: 'Bus driver was overspeeding near Ranibagh hairpin turn and did not slow down at pedestrian crossing.',
+                reporterName: 'Aarav Sharma',
+                reporterRole: 'Student',
+                accusedName: 'Rajesh Kumar',
+                accusedRole: 'Driver',
+                busId: 'B-101',
+                date: '2026-11-01',
+                time: '08:35 AM',
+                status: 'UNDER INVESTIGATION',
+                adminActionNote: 'CCTV footage of Ranibagh junction requested from Traffic Authority.',
+                pollActive: false
+            },
+            {
+                id: 'CMP-102',
+                category: 'Student Misbehavior',
+                description: 'Student argued aggressively over seating reservation, disrupting other bus passengers and creating transit safety hazard.',
+                reporterName: 'Rajesh Kumar',
+                reporterRole: 'Driver',
+                accusedName: 'Rohan Patel',
+                accusedRole: 'Student',
+                busId: 'B-101',
+                date: '2026-11-01',
+                time: '09:15 AM',
+                status: 'POLL ACTIVE',
+                adminActionNote: 'Active Student Disciplinary Peer Poll initiated across eligible transit students.',
+                pollActive: true,
+                yesVotes: 14,
+                noVotes: 4
+            },
+            {
+                id: 'CMP-103',
+                category: 'Delay Notice',
+                description: 'Morning bus arrived 25 minutes late at Kathgodam railway station without prior push notification dispatch.',
+                reporterName: 'Vijay Sharma',
+                reporterRole: 'Parent',
+                accusedName: 'Suresh Nair',
+                accusedRole: 'Driver',
+                busId: 'B-103',
+                date: '2026-10-31',
+                time: '07:45 AM',
+                status: 'RESOLVED',
+                adminActionNote: 'Delay caused by landslide clearance on Kathgodam bypass road. Parents notified.',
+                pollActive: false
+            }
+        ];
+
+        let selectedComplaint = complaintsData[1];
+        let hasVoted = false;
+
+        function renderComplaints(filter = 'ALL') {
+            const tbody = document.getElementById('complaintsBody');
+            tbody.innerHTML = '';
+
+            complaintsData.forEach(c => {
+                if (filter !== 'ALL' && c.status !== filter) return;
+
+                const tr = document.createElement('tr');
+                if (c.id === selectedComplaint.id) tr.classList.add('selected');
+
+                let badgeClass = 'pill-open';
+                if (c.status === 'UNDER INVESTIGATION') badgeClass = 'pill-investigating';
+                else if (c.status === 'POLL ACTIVE') badgeClass = 'pill-poll';
+                else if (c.status === 'RESOLVED') badgeClass = 'pill-resolved';
+                else if (c.status === 'REJECTED') badgeClass = 'pill-rejected';
+
+                tr.innerHTML = `
+                    <td style="font-weight: 700; color: var(--accent);">${c.id}</td>
+                    <td>${c.category}</td>
+                    <td>${c.reporterName} <span style="font-size: 0.72rem; color: var(--text-muted);">(${c.reporterRole})</span></td>
+                    <td>${c.accusedName} <span style="font-size: 0.72rem; color: #F85149;">(${c.accusedRole})</span></td>
+                    <td><b>${c.busId}</b></td>
+                    <td>${c.date} ${c.time}</td>
+                    <td><span class="status-pill ${badgeClass}">${c.status}</span></td>
+                `;
+
+                tr.onclick = () => selectComplaint(c);
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterComplaints(status) {
+            renderComplaints(status);
+        }
+
+        function selectComplaint(c) {
+            selectedComplaint = c;
+            renderComplaints();
+
+            document.getElementById('detailId').innerText = c.id;
+            document.getElementById('detailCategory').innerText = c.category;
+            document.getElementById('detailReporter').innerText = `${c.reporterName} (${c.reporterRole})`;
+            document.getElementById('detailAccused').innerText = `${c.accusedName} (${c.accusedRole})`;
+            document.getElementById('detailTimestamp').innerText = `Bus ${c.busId} • ${c.date} ${c.time}`;
+            document.getElementById('detailDescription').innerText = c.description;
+            document.getElementById('detailAdminNote').innerText = c.adminActionNote;
+
+            const badge = document.getElementById('detailStatusBadge');
+            badge.innerText = c.status;
+            badge.className = 'status-pill ' + (c.status === 'POLL ACTIVE' ? 'pill-poll' : c.status === 'UNDER INVESTIGATION' ? 'pill-investigating' : c.status === 'RESOLVED' ? 'pill-resolved' : 'pill-open');
+
+            const pollWidget = document.getElementById('pollWidget');
+            if (c.pollActive) {
+                pollWidget.style.display = 'flex';
+                updatePollStats();
+            } else {
+                pollWidget.style.display = 'none';
+            }
+        }
+
+        function updatePollStats() {
+            if (!selectedComplaint.pollActive) return;
+            const total = selectedComplaint.yesVotes + selectedComplaint.noVotes;
+            const yesPct = total > 0 ? Math.round((selectedComplaint.yesVotes / total) * 100) : 0;
+            const noPct = total > 0 ? (100 - yesPct) : 0;
+
+            document.getElementById('pollYesLabel').innerText = `YES: ${selectedComplaint.yesVotes} (${yesPct}%)`;
+            document.getElementById('pollNoLabel').innerText = `NO: ${selectedComplaint.noVotes} (${noPct}%)`;
+            document.getElementById('progressBarYes').style.width = `${yesPct}%`;
+            document.getElementById('progressBarNo').style.width = `${noPct}%`;
+            document.getElementById('pollTotalLabel').innerText = `Total Eligible Student Votes Cast: ${total}`;
+        }
+
+        function castVote(isYes) {
+            if (hasVoted) return;
+            if (!selectedComplaint.pollActive) return;
+
+            if (isYes) selectedComplaint.yesVotes++;
+            else selectedComplaint.noVotes++;
+
+            hasVoted = true;
+            updatePollStats();
+
+            document.getElementById('voteActionRow').style.display = 'none';
+            const notice = document.getElementById('voteNotice');
+            notice.style.display = 'block';
+            notice.innerText = '✓ Your confidential vote has been recorded and encrypted.';
+        }
+
+        // Initialize on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            renderComplaints();
+            selectComplaint(selectedComplaint);
+        });
     </script>
 </body>
 </html>

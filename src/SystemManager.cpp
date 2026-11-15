@@ -62,51 +62,60 @@ void SystemManager::initializeSystemData() {
         authManager.registerAccount(UserAccount(parents[i].getId(), "parent123", UserRole::PARENT, pPtr));
     }
 
-    // 4. Initialize Stops
-    Stop st101("ST101", "Sector 17 Terminal");
-    st101.addPassingBus("B-101", "07:30", "07:15");
-    st101.addPassingBus("B-102", "07:45", "07:30");
-    st101.addPassingBus("B-103", "08:05", "07:45");
+    // 4. Initialize Stops (Haldwani to Graphic Era Hill University, Bhimtal Campus)
+    Stop st101("ST101", "Haldwani Bus Terminal (Tikonia)");
+    st101.addPassingBus("B-101", "07:00", "06:45");
+    st101.addPassingBus("B-102", "07:15", "07:00");
+    st101.addPassingBus("B-103", "07:30", "07:15");
 
-    Stop st102("ST102", "Central Metro Station");
-    st102.addPassingBus("B-101", "07:45", "07:25");
-    st102.addPassingBus("B-102", "08:00", "07:40");
-    st102.addPassingBus("B-103", "08:20", "08:00");
+    Stop st102("ST102", "Kathgodam Railway Station");
+    st102.addPassingBus("B-101", "07:15", "07:00");
+    st102.addPassingBus("B-102", "07:30", "07:15");
+    st102.addPassingBus("B-103", "07:45", "07:30");
 
-    Stop st103("ST103", "Tech Park Junction");
-    st103.addPassingBus("B-101", "08:05", "07:40");
-    st103.addPassingBus("B-102", "08:15", "07:55");
+    Stop st103("ST103", "Ranibagh Junction");
+    st103.addPassingBus("B-101", "07:30", "07:12");
+    st103.addPassingBus("B-102", "07:45", "07:30");
+    st103.addPassingBus("B-103", "08:00", "07:45");
 
-    Stop st104("ST104", "Green Valley Chowk");
-    st104.addPassingBus("B-102", "08:30", "08:10");
-    st104.addPassingBus("B-103", "08:35", "08:15");
+    Stop st104("ST104", "Bhujiaghat Bypass");
+    st104.addPassingBus("B-102", "07:55", "07:35");
+    st104.addPassingBus("B-103", "08:15", "08:00");
 
-    Stop st105("ST105", "College Campus Main Gate");
-    st105.addPassingBus("B-101", "08:25", "08:00");
-    st105.addPassingBus("B-102", "08:45", "08:25");
-    st105.addPassingBus("B-103", "08:55", "08:30");
+    Stop st105("ST105", "Bhimtal Lake Mall Road");
+    st105.addPassingBus("B-101", "08:10", "07:55");
+    st105.addPassingBus("B-102", "08:30", "08:15");
+    st105.addPassingBus("B-103", "08:45", "08:30");
 
-    stops = {st101, st102, st103, st104, st105};
+    Stop st106("ST106", "Graphic Era Hill University, Bhimtal Campus");
+    st106.addPassingBus("B-101", "08:25", "08:10");
+    st106.addPassingBus("B-102", "08:45", "08:30");
+    st106.addPassingBus("B-103", "09:00", "08:45");
 
-    // 5. Initialize Routes
-    Route r1("R1", "Express Route: Sector 17 -> Metro -> Campus");
-    r1.addStop(st101); r1.addStop(st102); r1.addStop(st103); r1.addStop(st105);
+    stops = {st101, st102, st103, st104, st105, st106};
+
+    // 5. Initialize Routes (Terminating at Graphic Era Hill University, Bhimtal Campus)
+    Route r1("R1", "Express Hill Corridor: Haldwani -> Kathgodam -> Ranibagh -> Bhimtal Lake -> Graphic Era Campus");
+    r1.addStop(st101); r1.addStop(st102); r1.addStop(st103); r1.addStop(st105); r1.addStop(st106);
     r1.setSegmentDistance("ST101", "ST102", 4.5);
-    r1.setSegmentDistance("ST102", "ST103", 5.0);
-    r1.setSegmentDistance("ST103", "ST105", 6.2);
+    r1.setSegmentDistance("ST102", "ST103", 4.0);
+    r1.setSegmentDistance("ST103", "ST105", 15.5);
+    r1.setSegmentDistance("ST105", "ST106", 4.2);
 
-    Route r2("R2", "Suburban Route: Sector 17 -> Green Chowk -> Campus");
-    r2.addStop(st101); r2.addStop(st102); r2.addStop(st104); r2.addStop(st105);
+    Route r2("R2", "Valley Bypass Corridor: Haldwani -> Kathgodam -> Ranibagh -> Bhujiaghat -> Bhimtal Lake -> Graphic Era Campus");
+    r2.addStop(st101); r2.addStop(st102); r2.addStop(st103); r2.addStop(st104); r2.addStop(st105); r2.addStop(st106);
     r2.setSegmentDistance("ST101", "ST102", 4.5);
-    r2.setSegmentDistance("ST102", "ST104", 7.0);
-    r2.setSegmentDistance("ST104", "ST105", 5.8);
+    r2.setSegmentDistance("ST102", "ST103", 4.0);
+    r2.setSegmentDistance("ST103", "ST104", 6.5);
+    r2.setSegmentDistance("ST104", "ST105", 11.2);
+    r2.setSegmentDistance("ST105", "ST106", 4.2);
 
     routes = {r1, r2};
 
-    // 6. Initialize Buses
-    Bus b1("B-101", "MH-12-AB-1001", 45, "R1", &drivers[0], &conductors[0]);
-    Bus b2("B-102", "MH-12-CD-2002", 50, "R2", &drivers[1], &conductors[1]);
-    Bus b3("B-103", "MH-12-EF-3003", 35, "R1", &drivers[2], &conductors[2]);
+    // 6. Initialize Buses (UK-04 Uttarakhand Registrations)
+    Bus b1("B-101", "UK-04-PA-1001", 45, "R1", &drivers[0], &conductors[0]);
+    Bus b2("B-102", "UK-04-TA-2002", 50, "R2", &drivers[1], &conductors[1]);
+    Bus b3("B-103", "UK-04-PA-3003", 35, "R1", &drivers[2], &conductors[2]);
 
     buses = {b1, b2, b3};
 
@@ -216,8 +225,14 @@ void SystemManager::driverReportMisbehavior(const string& driverName, const stri
     c.busId = "B-101";
     c.category = "STUDENT_MISBEHAVIOR";
     c.description = issue;
-    c.timestamp = ComplaintEngine::getCurrentTimestamp();
-    c.status = ComplaintStatus::OPEN;
+    c.timestamp = "2026-08-02 08:15";
+    c.status = "OPEN";
+    c.reporterRole = "Driver";
+    c.accusedName = studentRoll;
+    c.accusedRole = "Student";
+    c.accusedRoll = studentRoll;
+    c.submissionDate = "2026-08-02";
+    c.submissionTime = "08:15 AM";
     
     complaintEngine.logComplaint(c);
 }
@@ -240,31 +255,25 @@ void SystemManager::studentRateDriver(const string& studentRoll, const string& d
     complaintEngine.submitDriverRating(driverId, studentRoll, stars, feedback);
 }
 
-Complaint SystemManager::studentReportDriver(const string& studentRoll, const string& busId, const string& issueCategory, const string& details) {
+void SystemManager::studentReportDriver(const string& studentRoll, const string& busId, const string& issueCategory, const string& details) {
     Complaint c;
-    c.complaintId = "CMP-" + to_string(rand() % 9000 + 1000);
+    c.complaintId = "REP-" + to_string(rand() % 900 + 100);
     c.type = ComplaintType::STUDENT_TO_DRIVER;
     c.reporterName = studentRoll;
-    
-    Bus* b = findBusById(busId);
-    if (b && b->getDriver()) {
-        c.targetName = b->getDriver()->getName() + " (" + b->getDriver()->getId() + ")";
-    } else {
-        c.targetName = "Driver of " + busId;
-    }
-    
+    c.targetName = "Driver of " + busId;
     c.busId = busId;
     c.category = issueCategory;
     c.description = details;
-    c.timestamp = ComplaintEngine::getCurrentTimestamp();
-    c.status = ComplaintStatus::OPEN;
+    c.timestamp = "2026-08-02 08:30";
+    c.status = "OPEN";
+    c.reporterRole = "Student";
+    c.complainantRoll = studentRoll;
+    c.accusedName = "Driver of " + busId;
+    c.accusedRole = "Driver";
+    c.submissionDate = "2026-08-02";
+    c.submissionTime = "08:30 AM";
 
     complaintEngine.logComplaint(c);
-    return c;
-}
-
-bool SystemManager::voteOnDriverComplaint(const string& complaintId, const string& studentRoll, bool isRight, string& outMsg) {
-    return complaintEngine.voteOnComplaint(complaintId, studentRoll, isRight, outMsg);
 }
 
 void SystemManager::triggerStudentSOS(const string& studentRoll, const string& busId, const string& stopId) {
@@ -491,3 +500,53 @@ void SystemManager::runAcademicSelfTest() {
     cout << "   🎉 ALL AUTHENTICATION SELF-TESTS COMPLETED!            \n";
     cout << "===========================================================\n\n";
 }
+
+bool SystemManager::adminRegisterNewStudent(
+    const string& name, const string& roll, const string& phone,
+    const string& email, const string& routeId, const string& stopId, bool feePaid
+) {
+    for (const auto& s : students) {
+        if (s.getRollNumber() == roll) return false;
+    }
+
+    string newId = "S" + to_string(students.size() + 101);
+    Student newS(newId, name, phone, email, roll, routeId, stopId, feePaid);
+    students.push_back(newS);
+
+    auto sPtr = make_shared<Student>(newS);
+    people.push_back(sPtr);
+    authManager.registerAccount(UserAccount(roll, "student123", UserRole::STUDENT, sPtr));
+
+    FileHandler::saveStudents(students, "data/students.csv");
+    return true;
+}
+
+bool SystemManager::castStudentPollVote(
+    const string& complaintId, const string& studentRoll, bool voteYes, string& outMsg
+) {
+    return complaintEngine.castStudentPollVote(complaintId, studentRoll, voteYes, outMsg);
+}
+
+void SystemManager::adminInvestigateComplaint(const string& complaintId) {
+    complaintEngine.investigateComplaint(complaintId);
+}
+
+void SystemManager::adminResolveComplaint(const string& complaintId, const string& note) {
+    complaintEngine.resolveComplaint(complaintId, note);
+}
+
+void SystemManager::adminRejectComplaint(const string& complaintId, const string& reason) {
+    complaintEngine.rejectComplaint(complaintId, reason);
+}
+
+string SystemManager::submitComprehensiveComplaint(
+    const string& category, const string& description,
+    const string& repName, const string& repRole,
+    const string& accName, const string& accRole,
+    const string& busId, const string& cRoll, const string& aRoll
+) {
+    return complaintEngine.submitComprehensiveComplaint(
+        category, description, repName, repRole, accName, accRole, busId, cRoll, aRoll
+    );
+}
+

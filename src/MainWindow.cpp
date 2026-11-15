@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * QT GUI MODULE: MainWindow Implementation (Role-Based Visibility Filtering)
+ * QT GUI MODULE: Smart College Bus Management System (Master Redesign)
  * FILE: MainWindow.cpp
  * ============================================================================
  */
@@ -8,524 +8,519 @@
 #include "MainWindow.hpp"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QGridLayout>
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QHeaderView>
 #include <QMessageBox>
+#include <QInputDialog>
 #include <QGraphicsTextItem>
 #include <QBrush>
 #include <QPen>
+#include <QPalette>
+#include <QDesktopServices>
+#include <QUrl>
+#include <QDir>
 #include <QDateTime>
-#include <QInputDialog>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QScrollArea>
+#include <QApplication>
+#include <algorithm>
 
 using namespace std;
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), simTimer(nullptr), simStep(0), busMarker(nullptr) {
-    setWindowTitle("Campus Transit & Safety Management System");
-    resize(1240, 860);
+    : QMainWindow(parent),
+      activeUsername("admin"),
+      activeRole(UserRole::ADMIN),
+      stackedWidget(nullptr),
+      loginWidget(nullptr),
+      portalWidget(nullptr),
+      isPasswordVisible(false),
+      selectedComplaintId("CMP-102"),
+      simTimer(nullptr),
+      simStep(0),
+      busMarker(nullptr) {
 
-    // Global Modern Application Stylesheet
-    setStyleSheet(
-        "QMainWindow { background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }"
-        "QGroupBox { font-size: 14px; font-weight: bold; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 14px; padding: 16px; background-color: #ffffff; }"
-        "QGroupBox::title { subcontrol-origin: margin; left: 14px; padding: 0 6px; color: #0284c7; }"
-        "QLineEdit, QComboBox { padding: 8px 10px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #0f172a; }"
-        "QLineEdit:focus, QComboBox:focus { border: 1.5px solid #0284c7; background: #ffffff; }"
-        "QTableWidget { background-color: #ffffff; alternate-background-color: #f8fafc; gridline-color: #e2e8f0; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; selection-background-color: #e0f2fe; selection-color: #0369a1; }"
-        "QHeaderView::section { background-color: #0f172a; color: #ffffff; font-weight: bold; font-size: 12px; padding: 6px; border: none; }"
-        "QTabBar::tab { font-size: 13px; font-weight: 600; padding: 10px 18px; background: #e2e8f0; color: #475569; border-top-left-radius: 8px; border-top-right-radius: 8px; margin-right: 4px; }"
-        "QTabBar::tab:selected { background: #0284c7; color: #ffffff; }"
-        "QTabBar::tab:hover:!selected { background: #cbd5e1; color: #0f172a; }"
-    );
+    setWindowTitle("Smart College Bus Management System • Graphic Era Hill University, Bhimtal");
+    resize(1280, 850);
+    setMinimumSize(1100, 720);
 
     simTimer = new QTimer(this);
     connect(simTimer, &QTimer::timeout, this, &MainWindow::onSimStep);
 
+    applyGitHubTheme();
     setupUI();
-    renderRouteGraph();
-    refreshFleetTable();
+    refreshAllDataViews();
+}
+
+// 1. GITHUB-INSPIRED DARK THEME PALETTE
+void MainWindow::applyGitHubTheme() {
+    QString qss = R"(
+        QMainWindow, QWidget#centralWidget, QWidget#portalPage {
+            background-color: #0D1117;
+            color: #E6EDF3;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        }
+
+        /* Group Boxes / Cards */
+        QGroupBox {
+            background-color: #161B22;
+            border: 1px solid #30363D;
+            border-radius: 8px;
+            margin-top: 14px;
+            padding: 14px;
+            font-weight: 600;
+            color: #58A6FF;
+            font-size: 13px;
+        }
+        QGroupBox::title {
+            subcontrol-origin: margin;
+            left: 14px;
+            padding: 0 6px;
+            color: #58A6FF;
+        }
+
+        /* Inputs & Combos */
+        QLineEdit, QComboBox {
+            background-color: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 6px;
+            color: #E6EDF3;
+            padding: 7px 11px;
+            font-size: 13px;
+        }
+        QLineEdit:focus, QComboBox:focus {
+            border: 1px solid #58A6FF;
+            background-color: #0D1117;
+        }
+        QComboBox::drop-down {
+            border: none;
+            width: 20px;
+        }
+        QComboBox QAbstractItemView {
+            background-color: #161B22;
+            border: 1px solid #30363D;
+            selection-background-color: #1F6FEB;
+            selection-color: #FFFFFF;
+            color: #E6EDF3;
+            padding: 4px;
+        }
+
+        /* Buttons */
+        QPushButton {
+            background-color: #21262D;
+            border: 1px solid #30363D;
+            border-radius: 6px;
+            color: #E6EDF3;
+            padding: 7px 14px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        QPushButton:hover {
+            background-color: #30363D;
+            border-color: #8B949E;
+        }
+        QPushButton:pressed {
+            background-color: #161B22;
+        }
+
+        /* Tables */
+        QTableWidget {
+            background-color: #161B22;
+            alternate-background-color: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 6px;
+            gridline-color: #21262D;
+            color: #E6EDF3;
+            selection-background-color: #1F6FEB;
+            selection-color: #FFFFFF;
+            font-size: 12.5px;
+        }
+        QHeaderView::section {
+            background-color: #161B22;
+            color: #8B949E;
+            border: none;
+            border-bottom: 1px solid #30363D;
+            padding: 7px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        /* Tab Navigation */
+        QTabBar::tab {
+            background-color: transparent;
+            color: #8B949E;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 9px 18px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        QTabBar::tab:selected {
+            color: #E6EDF3;
+            border-bottom: 2px solid #58A6FF;
+        }
+        QTabBar::tab:hover:!selected {
+            color: #E6EDF3;
+        }
+        QTabWidget::pane {
+            border: 1px solid #30363D;
+            border-radius: 8px;
+            background-color: #161B22;
+            top: -1px;
+        }
+
+        /* Progress Bar */
+        QProgressBar {
+            background-color: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 5px;
+            text-align: center;
+            color: #FFFFFF;
+            font-weight: bold;
+            font-size: 11px;
+            height: 18px;
+        }
+        QProgressBar::chunk {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #238636, stop:1 #3FB950);
+            border-radius: 4px;
+        }
+
+        QScrollBar:vertical {
+            background: #0D1117;
+            width: 10px;
+            margin: 0px;
+        }
+        QScrollBar::handle:vertical {
+            background: #30363D;
+            min-height: 20px;
+            border-radius: 5px;
+        }
+    )";
+    qApp->setStyleSheet(qss);
 }
 
 void MainWindow::setupUI() {
     stackedWidget = new QStackedWidget(this);
+    stackedWidget->setObjectName("centralWidget");
 
     loginWidget = createLoginScreen();
     portalWidget = createPortalScreen();
 
-    stackedWidget->addWidget(loginWidget);  // Index 0: Login View
-    stackedWidget->addWidget(portalWidget); // Index 1: Authorized Portal View
+    stackedWidget->addWidget(loginWidget);  // Index 0 = Login View
+    stackedWidget->addWidget(portalWidget); // Index 1 = Main Portal View
 
     setCentralWidget(stackedWidget);
-    stackedWidget->setCurrentIndex(0); // Start at Login Screen
+    stackedWidget->setCurrentIndex(0); // Start at Login View
 }
 
-// TOP APPLICATION HEADER BANNER (Consistent Application Title on TOP)
-QWidget* MainWindow::createTopHeader(bool isLoggedIn) {
-    QWidget* header = new QWidget(this);
-    header->setStyleSheet("background: #0f172a; border-bottom: 2.5px solid #0284c7; padding: 12px 20px;");
-    QHBoxLayout* layout = new QHBoxLayout(header);
-    layout->setContentsMargins(10, 8, 10, 8);
-
-    // Application Title on the very TOP (Clean & Professional Branding)
-    QVBoxLayout* titleBox = new QVBoxLayout();
-    QLabel* appTitle = new QLabel("🚌 Campus Transit & Safety Management System", header);
-    appTitle->setStyleSheet("font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;");
-    
-    QLabel* appSubtitle = new QLabel("Real-Time Fleet Telemetry, Multi-Role Portals & Student Safety Verification", header);
-    appSubtitle->setStyleSheet("font-size: 11.5px; color: #38bdf8; font-weight: 500;");
-    
-    titleBox->addWidget(appTitle);
-    titleBox->addWidget(appSubtitle);
-    layout->addLayout(titleBox);
-
-    layout->addStretch();
-
-    if (isLoggedIn) {
-        // User Info & Badges
-        loggedUserLabel = new QLabel("Welcome, User", header);
-        loggedUserLabel->setStyleSheet("font-size: 13.5px; font-weight: 600; color: #f8fafc;");
-
-        loggedRoleBadge = new QLabel(" ROLE ", header);
-        loggedRoleBadge->setStyleSheet("font-size: 12px; font-weight: bold; background: #0284c7; color: white; padding: 4px 10px; border-radius: 12px;");
-
-        QLabel* scheduleLabel = new QLabel("Schedule Mode:", header);
-        scheduleLabel->setStyleSheet("font-size: 12.5px; font-weight: 600; color: #cbd5e1; margin-left: 10px;");
-
-        scheduleComboBox = new QComboBox(header);
-        scheduleComboBox->addItem("Full-Day Schedule (Normal Hours)");
-        scheduleComboBox->addItem("Half-Day Schedule (Exam / Early Hours)");
-        scheduleComboBox->setStyleSheet("padding: 5px 8px; font-size: 12.5px; background: #1e293b; color: #ffffff; border: 1px solid #38bdf8; border-radius: 6px;");
-        connect(scheduleComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-                this, &MainWindow::onScheduleChanged);
-
-        QPushButton* logoutBtn = new QPushButton("🚪 Sign Out", header);
-        logoutBtn->setStyleSheet("background-color: #dc2626; color: white; font-weight: bold; font-size: 12.5px; padding: 6px 14px; border-radius: 6px; border: none; margin-left: 10px;");
-        connect(logoutBtn, &QPushButton::clicked, this, &MainWindow::onPerformLogout);
-
-        layout->addWidget(loggedUserLabel);
-        layout->addWidget(loggedRoleBadge);
-        layout->addWidget(scheduleLabel);
-        layout->addWidget(scheduleComboBox);
-        layout->addWidget(logoutBtn);
-    } else {
-        QLabel* statusBadge = new QLabel("🟢 Platform Active | v2.4 C++17 Enterprise Edition", header);
-        statusBadge->setStyleSheet("font-size: 12px; font-weight: 600; color: #34d399; background: #1e293b; padding: 5px 12px; border-radius: 12px; border: 1px solid #059669;");
-        layout->addWidget(statusBadge);
-    }
-
-    return header;
-}
-
-// LOGIN SCREEN (INDEX 0)
+// 2. LOGIN PAGE REDESIGN
 QWidget* MainWindow::createLoginScreen() {
     QWidget* screen = new QWidget();
+    screen->setObjectName("loginScreen");
+
+    // Set campus bus background image if available
+    QString bgPath = QDir::current().filePath("assets/campus_bus_bg.jpg");
+    if (QFile::exists(bgPath)) {
+        screen->setStyleSheet(QString(
+            "QWidget#loginScreen { "
+            "  background-image: url('%1'); "
+            "  background-position: center; "
+            "  background-repeat: no-repeat; "
+            "}"
+        ).arg(bgPath));
+    } else {
+        screen->setStyleSheet("QWidget#loginScreen { background-color: #0D1117; }");
+    }
+
     QVBoxLayout* rootLayout = new QVBoxLayout(screen);
-    rootLayout->setContentsMargins(0, 0, 0, 0);
-    rootLayout->setSpacing(0);
+    rootLayout->setAlignment(Qt::AlignCenter);
 
-    // 1. Application Name on Top (NOT inside the card box!)
-    QWidget* topHeader = createTopHeader(false);
-    rootLayout->addWidget(topHeader);
-
-    // 2. Centered Login Card Area
-    QWidget* centerContainer = new QWidget(screen);
-    QVBoxLayout* centerLayout = new QVBoxLayout(centerContainer);
-    centerLayout->setAlignment(Qt::AlignCenter);
-
-    QGroupBox* loginCard = new QGroupBox("🔐 Authorized Multi-Role Portal Login", centerContainer);
-    loginCard->setFixedWidth(480);
+    // Glass/Dark Login Card
+    QFrame* loginCard = new QFrame(screen);
+    loginCard->setFixedWidth(460);
     loginCard->setStyleSheet(
-        "QGroupBox { font-size: 16px; font-weight: bold; color: #0284c7; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 24px; background-color: #ffffff; }"
-        "QGroupBox::title { subcontrol-origin: margin; left: 16px; padding: 0 8px; color: #0284c7; }"
+        "QFrame { "
+        "  background-color: rgba(22, 27, 34, 0.94); "
+        "  border: 1px solid #30363D; "
+        "  border-radius: 12px; "
+        "  padding: 24px; "
+        "}"
     );
 
     QVBoxLayout* cardLayout = new QVBoxLayout(loginCard);
-    cardLayout->setSpacing(14);
+    cardLayout->setSpacing(12);
 
-    QLabel* infoNotice = new QLabel("Select your authorized access tier to enter the transit dashboard:", loginCard);
-    infoNotice->setStyleSheet("font-size: 13px; color: #64748b; margin-bottom: 4px;");
+    // System Branding Header
+    QLabel* brandIcon = new QLabel("🚌", loginCard);
+    brandIcon->setStyleSheet("font-size: 32px; background: transparent;");
+    brandIcon->setAlignment(Qt::AlignCenter);
 
+    QLabel* brandTitle = new QLabel("Welcome to Smart College Bus Management System", loginCard);
+    brandTitle->setStyleSheet("font-size: 17px; font-weight: 700; color: #E6EDF3; background: transparent;");
+    brandTitle->setAlignment(Qt::AlignCenter);
+    brandTitle->setWordWrap(true);
+
+    QLabel* brandSubtitle = new QLabel("Secure Multi-Role Transportation Portal • Graphic Era Hill University", loginCard);
+    brandSubtitle->setStyleSheet("font-size: 12px; color: #8B949E; margin-bottom: 10px; background: transparent;");
+    brandSubtitle->setAlignment(Qt::AlignCenter);
+
+    // Form
     QFormLayout* form = new QFormLayout();
-    form->setSpacing(12);
+    form->setSpacing(10);
+    form->setLabelAlignment(Qt::AlignLeft);
 
     loginRoleCombo = new QComboBox(loginCard);
-    loginRoleCombo->addItem("🔴 System Administrator", "ADMIN");
-    loginRoleCombo->addItem("🟡 Bus Operator / Driver", "DRIVER");
-    loginRoleCombo->addItem("🟢 Student / Passenger", "STUDENT");
-    loginRoleCombo->addItem("🔵 Parent / Guardian", "PARENT");
+    loginRoleCombo->addItem("🔴 Admin Portal", "ADMIN");
+    loginRoleCombo->addItem("🟡 Driver Portal", "DRIVER");
+    loginRoleCombo->addItem("🟢 Student / Commuter Portal", "STUDENT");
+    loginRoleCombo->addItem("🔵 Parent / Guardian Portal", "PARENT");
 
     loginUserEdit = new QLineEdit("admin", loginCard);
-    loginUserEdit->setPlaceholderText("Enter Username / Roll Number / Staff ID");
+    loginUserEdit->setPlaceholderText("Enter Username, Driver ID, or Roll Number");
+
+    // Password Field with Show/Hide Toggle
+    QHBoxLayout* passLayout = new QHBoxLayout();
+    passLayout->setContentsMargins(0, 0, 0, 0);
+    passLayout->setSpacing(6);
 
     loginPassEdit = new QLineEdit("admin123", loginCard);
     loginPassEdit->setEchoMode(QLineEdit::Password);
-    loginPassEdit->setPlaceholderText("Enter Password");
+    loginPassEdit->setPlaceholderText("Enter Account Password");
 
-    form->addRow("Access Tier:", loginRoleCombo);
-    form->addRow("User Identifier:", loginUserEdit);
-    form->addRow("Security Password:", loginPassEdit);
+    showPassBtn = new QPushButton("👁️ Show", loginCard);
+    showPassBtn->setFixedWidth(75);
+    showPassBtn->setStyleSheet("padding: 6px 10px; font-size: 11px;");
+    connect(showPassBtn, &QPushButton::clicked, this, &MainWindow::onTogglePasswordVisibility);
 
-    QPushButton* signInBtn = new QPushButton("🔑 Sign In to Portal", loginCard);
-    signInBtn->setStyleSheet("background-color: #0284c7; color: white; font-weight: bold; font-size: 14.5px; padding: 10px; border-radius: 6px; border: none;");
+    passLayout->addWidget(loginPassEdit);
+    passLayout->addWidget(showPassBtn);
+
+    QLabel* roleLabel = new QLabel("Authorized Role:", loginCard);
+    roleLabel->setStyleSheet("color: #8B949E; font-weight: 600; font-size: 12px;");
+    QLabel* userLabel = new QLabel("Account Username / ID:", loginCard);
+    userLabel->setStyleSheet("color: #8B949E; font-weight: 600; font-size: 12px;");
+    QLabel* passLabel = new QLabel("Security Password:", loginCard);
+    passLabel->setStyleSheet("color: #8B949E; font-weight: 600; font-size: 12px;");
+
+    form->addRow(roleLabel, loginRoleCombo);
+    form->addRow(userLabel, loginUserEdit);
+    form->addRow(passLabel, passLayout);
+
+    // Sign In Button (GitHub Green)
+    QPushButton* signInBtn = new QPushButton("Sign In to Portal", loginCard);
+    signInBtn->setStyleSheet(
+        "background-color: #238636; border: 1px solid rgba(240, 246, 252, 0.1); "
+        "color: #FFFFFF; font-weight: 700; font-size: 14px; padding: 10px; border-radius: 6px; margin-top: 8px;"
+    );
     connect(signInBtn, &QPushButton::clicked, this, &MainWindow::onPerformLogin);
 
     loginStatusLabel = new QLabel("", loginCard);
-    loginStatusLabel->setStyleSheet("font-size: 13px; font-weight: bold; color: #dc2626; margin-top: 4px;");
+    loginStatusLabel->setStyleSheet("font-size: 12px; font-weight: 600; color: #F85149; background: transparent;");
     loginStatusLabel->setAlignment(Qt::AlignCenter);
 
-    // Default Credentials Cheat Sheet Card
-    QLabel* cheatSheet = new QLabel(
-        "<b>Pre-Configured Demo Credentials:</b><br>"
-        "🔴 <b>Admin:</b> admin / admin123<br>"
-        "🟡 <b>Driver:</b> D-01 / driver123<br>"
-        "🟢 <b>Student:</b> 2024-CS-001 / student123<br>"
-        "🔵 <b>Parent:</b> P-101 / parent123", loginCard);
-    cheatSheet->setStyleSheet("font-size: 12px; color: #334155; background: #f1f5f9; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;");
+    // Controlled Development / Demo Mode Helper
+    QHBoxLayout* demoLayout = new QHBoxLayout();
+    QPushButton* demoBtn = new QPushButton("⚡ Quick Demo Auto-Fill (Dev Mode)", loginCard);
+    demoBtn->setStyleSheet("background: transparent; border: none; color: #58A6FF; font-size: 11.5px; text-decoration: underline;");
+    connect(demoBtn, &QPushButton::clicked, this, &MainWindow::onQuickDemoLogin);
+    demoLayout->addWidget(demoBtn, 0, Qt::AlignCenter);
 
-    cardLayout->addWidget(infoNotice);
+    cardLayout->addWidget(brandIcon);
+    cardLayout->addWidget(brandTitle);
+    cardLayout->addWidget(brandSubtitle);
     cardLayout->addLayout(form);
     cardLayout->addWidget(signInBtn);
     cardLayout->addWidget(loginStatusLabel);
-    cardLayout->addWidget(cheatSheet);
+    cardLayout->addLayout(demoLayout);
 
-    centerLayout->addWidget(loginCard);
-    rootLayout->addWidget(centerContainer, 1);
-
+    rootLayout->addWidget(loginCard);
     return screen;
 }
 
-// PORTAL SCREEN (INDEX 1)
+// 3. AUTHENTICATED PORTAL SCREEN
 QWidget* MainWindow::createPortalScreen() {
     QWidget* screen = new QWidget();
+    screen->setObjectName("portalPage");
     QVBoxLayout* mainLayout = new QVBoxLayout(screen);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setSpacing(0);
+    mainLayout->setContentsMargins(14, 12, 14, 14);
+    mainLayout->setSpacing(10);
 
-    // Top Header Banner
-    QWidget* headerWidget = createTopHeader(true);
-    mainLayout->addWidget(headerWidget);
+    // Header Bar
+    QFrame* headerCard = new QFrame(screen);
+    headerCard->setStyleSheet("background-color: #161B22; border: 1px solid #30363D; border-radius: 8px; padding: 8px 14px;");
+    QHBoxLayout* headerLayout = new QHBoxLayout(headerCard);
+    headerLayout->setContentsMargins(4, 4, 4, 4);
 
-    QWidget* bodyWidget = new QWidget(screen);
-    QVBoxLayout* bodyLayout = new QVBoxLayout(bodyWidget);
-    bodyLayout->setContentsMargins(16, 12, 16, 16);
+    QLabel* titleLabel = new QLabel("🚌 Smart College Bus Management System • Graphic Era Bhimtal Campus", headerCard);
+    titleLabel->setStyleSheet("font-size: 15px; font-weight: 700; color: #58A6FF;");
 
-    // Pre-create all Portal Tab Widgets
+    loggedUserLabel = new QLabel("User: admin", headerCard);
+    loggedUserLabel->setStyleSheet("font-size: 13px; font-weight: 600; color: #E6EDF3; margin-left: 14px;");
+
+    loggedRoleBadge = new QLabel(" ADMINISTRATOR ", headerCard);
+    loggedRoleBadge->setStyleSheet("font-size: 11px; font-weight: 700; background-color: #238636; color: #FFFFFF; padding: 3px 8px; border-radius: 10px;");
+
+    QLabel* scheduleLabel = new QLabel("Schedule Mode:", headerCard);
+    scheduleLabel->setStyleSheet("font-size: 12px; color: #8B949E; margin-left: 12px;");
+
+    scheduleComboBox = new QComboBox(headerCard);
+    scheduleComboBox->addItem("Full-Day Schedule (Normal Hours)");
+    scheduleComboBox->addItem("Half-Day Schedule (Exam Hours)");
+    scheduleComboBox->setStyleSheet("font-size: 12px; padding: 4px 8px;");
+    connect(scheduleComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onScheduleChanged);
+
+    QPushButton* logoutBtn = new QPushButton("Sign Out", headerCard);
+    logoutBtn->setStyleSheet("background-color: #21262D; border: 1px solid #30363D; color: #F85149; font-weight: 600; padding: 5px 12px; border-radius: 6px;");
+    connect(logoutBtn, &QPushButton::clicked, this, &MainWindow::onPerformLogout);
+
+    headerLayout->addWidget(titleLabel);
+    headerLayout->addWidget(loggedUserLabel);
+    headerLayout->addWidget(loggedRoleBadge);
+    headerLayout->addStretch();
+    headerLayout->addWidget(scheduleLabel);
+    headerLayout->addWidget(scheduleComboBox);
+    headerLayout->addWidget(logoutBtn);
+
+    mainLayout->addWidget(headerCard);
+
+    // Tabbed Navigation
+    tabWidget = new QTabWidget(screen);
+
+    adminTabWidget = createAdminTab();
     studentTabWidget = createStudentTab();
     driverTabWidget = createDriverTab();
-    adminTabWidget = createAdminTab();
     parentTabWidget = createParentTab();
     routeVisualizerTabWidget = createRouteVisualizerTab();
-    fleetAndComplaintsTabWidget = createFleetAndComplaintsTab();
+    complaintDeskTabWidget = createComplaintDeskTab();
 
-    // Tabbed Navigation Widget
-    tabWidget = new QTabWidget(bodyWidget);
-    bodyLayout->addWidget(tabWidget);
-
-    mainLayout->addWidget(bodyWidget, 1);
-
+    mainLayout->addWidget(tabWidget, 1);
     return screen;
 }
 
-// SETUP TABS BASED ON AUTHORIZED ROLE
+// 4. ROLE-BASED TAB CONFIGURATION
 void MainWindow::setupTabsForRole(UserRole role, const string& username) {
     tabWidget->clear();
 
     if (role == UserRole::ADMIN) {
-        tabWidget->addTab(adminTabWidget, "🔴 Admin Control Center");
-        tabWidget->addTab(studentTabWidget, "🟢 Student Portal");
-        tabWidget->addTab(driverTabWidget, "🟡 Driver Portal");
-        tabWidget->addTab(parentTabWidget, "🔵 Parent Portal");
-        tabWidget->addTab(routeVisualizerTabWidget, "🗺️ Route Map & Optimizer");
-        tabWidget->addTab(fleetAndComplaintsTabWidget, "📋 Fleet & Complaints");
+        tabWidget->addTab(adminTabWidget, "Admin Control Center");
+        tabWidget->addTab(studentTabWidget, "Student Portal");
+        tabWidget->addTab(driverTabWidget, "Driver Portal");
+        tabWidget->addTab(parentTabWidget, "Parent Portal");
+        tabWidget->addTab(routeVisualizerTabWidget, "Route Map Optimizer");
+        tabWidget->addTab(complaintDeskTabWidget, "Fleet & Complaints");
     } else if (role == UserRole::STUDENT) {
-        tabWidget->addTab(studentTabWidget, "🟢 Student Portal");
-        tabWidget->addTab(routeVisualizerTabWidget, "🗺️ Route Map & Optimizer");
+        tabWidget->addTab(studentTabWidget, "Student Portal");
+        tabWidget->addTab(routeVisualizerTabWidget, "Route Map Optimizer");
+        tabWidget->addTab(complaintDeskTabWidget, "Disciplinary Polls & Complaints");
         studentRollInput->setText(QString::fromStdString(username));
         onSearchStudentSchedule();
     } else if (role == UserRole::DRIVER) {
-        tabWidget->addTab(driverTabWidget, "🟡 Driver Portal");
-        tabWidget->addTab(fleetAndComplaintsTabWidget, "📋 Fleet & Complaints");
-        tabWidget->addTab(routeVisualizerTabWidget, "🗺️ Route Map & Optimizer");
+        tabWidget->addTab(driverTabWidget, "Driver Portal");
+        tabWidget->addTab(complaintDeskTabWidget, "Complaints & Incidents");
+        tabWidget->addTab(routeVisualizerTabWidget, "Route Map Optimizer");
     } else if (role == UserRole::PARENT) {
-        tabWidget->addTab(parentTabWidget, "🔵 Parent Portal");
-        tabWidget->addTab(routeVisualizerTabWidget, "🗺️ Route Map & Optimizer");
+        tabWidget->addTab(parentTabWidget, "Parent Portal");
+        tabWidget->addTab(routeVisualizerTabWidget, "Route Map Optimizer");
+        tabWidget->addTab(complaintDeskTabWidget, "Complaints Status");
         parentPhoneInput->setText(QString::fromStdString(username));
         onParentTrackChild();
     }
-
-    refreshComplaintsTable();
-    refreshDriverPollsTable();
 }
 
-// LOGIN SLOT
-void MainWindow::onPerformLogin() {
-    QString username = loginUserEdit->text().trimmed();
-    QString password = loginPassEdit->text().trimmed();
-
-    UserSession session = sysManager.login(username.toStdString(), password.toStdString());
-
-    if (!session.isAuthenticated || !session.activeAccount) {
-        loginStatusLabel->setText("❌ Invalid Username or Password. Please try again.");
-        return;
-    }
-
-    UserAccount* acc = session.activeAccount;
-    loginStatusLabel->setText("");
-
-    // Set Header Banner Info
-    loggedUserLabel->setText(QString("Logged in as: <b>%1</b>").arg(QString::fromStdString(acc->getUsername())));
-    loggedRoleBadge->setText(QString(" %1 ").arg(QString::fromStdString(acc->getRoleString()).toUpper()));
-
-    // Filter Visible Tabs based on Role
-    setupTabsForRole(acc->getRole(), acc->getUsername());
-
-    // Switch View to Authorized Portal
-    stackedWidget->setCurrentIndex(1);
-}
-
-void MainWindow::onPerformLogout() {
-    sysManager.logout();
-    tabWidget->clear();
-    stackedWidget->setCurrentIndex(0);
-}
-
-// TAB 1: 🟢 STUDENT PORTAL
-QWidget* MainWindow::createStudentTab() {
-    QWidget* tab = new QWidget();
-    QVBoxLayout* layout = new QVBoxLayout(tab);
-
-    QScrollArea* scrollArea = new QScrollArea(tab);
-    scrollArea->setWidgetResizable(true);
-    QWidget* scrollContent = new QWidget();
-    QVBoxLayout* scrollLayout = new QVBoxLayout(scrollContent);
-
-    QHBoxLayout* topLayout = new QHBoxLayout();
-
-    // 1. Student Lookup & Actions Box
-    QGroupBox* box = new QGroupBox("🚏 Student Schedule & Digital Pass", scrollContent);
-    QFormLayout* formLayout = new QFormLayout(box);
-
-    studentRollInput = new QLineEdit("2024-CS-001", box);
-    QPushButton* searchBtn = new QPushButton("🔍 Search Schedule", box);
-    searchBtn->setStyleSheet("background-color: #0284c7; color: white; font-weight: bold;");
-    connect(searchBtn, &QPushButton::clicked, this, &MainWindow::onSearchStudentSchedule);
-
-    QPushButton* connectBusBtn = new QPushButton("🔄 Find Alternative Bus", box);
-    connectBusBtn->setStyleSheet("background-color: #0d9488; color: white; font-weight: bold;");
-    connect(connectBusBtn, &QPushButton::clicked, this, &MainWindow::onFindConnectingBuses);
-
-    QPushButton* qrPassBtn = new QPushButton("🎫 Show Digital QR Pass", box);
-    qrPassBtn->setStyleSheet("background-color: #059669; color: white; font-weight: bold;");
-    connect(qrPassBtn, &QPushButton::clicked, this, &MainWindow::onShowDigitalQRPass);
-
-    QPushButton* sosBtn = new QPushButton("🚨 SOS EMERGENCY BUTTON", box);
-    sosBtn->setStyleSheet("background-color: #dc2626; color: white; font-weight: bold;");
-    connect(sosBtn, &QPushButton::clicked, this, &MainWindow::onTriggerStudentSOS);
-
-    formLayout->addRow("Roll Number:", studentRollInput);
-    QHBoxLayout* btnRow1 = new QHBoxLayout();
-    btnRow1->addWidget(searchBtn);
-    btnRow1->addWidget(connectBusBtn);
-    formLayout->addRow(btnRow1);
-    
-    QHBoxLayout* btnRow2 = new QHBoxLayout();
-    btnRow2->addWidget(qrPassBtn);
-    btnRow2->addWidget(sosBtn);
-    formLayout->addRow(btnRow2);
-
-    // 2. Driver Rating Box
-    QGroupBox* rateBox = new QGroupBox("⭐ Rate Driver & Ride Experience", scrollContent);
-    QFormLayout* rateLayout = new QFormLayout(rateBox);
-
-    ratingDriverIdInput = new QLineEdit("D-01", rateBox);
-    ratingStarCombo = new QComboBox(rateBox);
-    ratingStarCombo->addItem("5 ★★★★★ (Exceptional & Safe)");
-    ratingStarCombo->addItem("4 ★★★★☆ (Good & Punctual)");
-    ratingStarCombo->addItem("3 ★★★☆☆ (Average)");
-    ratingStarCombo->addItem("2 ★★☆☆☆ (Poor / Late)");
-    ratingStarCombo->addItem("1 ★☆☆☆☆ (Unsafe / Reckless)");
-
-    ratingFeedbackInput = new QLineEdit("Smooth driving and punctual!", rateBox);
-    QPushButton* submitRateBtn = new QPushButton("Submit Driver Rating", rateBox);
-    submitRateBtn->setStyleSheet("background-color: #d97706; color: white; font-weight: bold;");
-    connect(submitRateBtn, &QPushButton::clicked, this, &MainWindow::onSubmitDriverRating);
-
-    rateLayout->addRow("Driver Identifier:", ratingDriverIdInput);
-    rateLayout->addRow("Rating Score:", ratingStarCombo);
-    rateLayout->addRow("Trip Feedback:", ratingFeedbackInput);
-    rateLayout->addRow("", submitRateBtn);
-
-    topLayout->addWidget(box, 3);
-    topLayout->addWidget(rateBox, 2);
-    scrollLayout->addLayout(topLayout);
-
-    // Student Information Banner
-    studentInfoLabel = new QLabel("Enter Roll Number above and click Search Schedule to view personalized departure telemetry.", scrollContent);
-    studentInfoLabel->setStyleSheet("font-size: 13px; color: #1e293b; padding: 10px; background: #e0f2fe; border-radius: 6px; border: 1px solid #bae6fd;");
-    scrollLayout->addWidget(studentInfoLabel);
-
-    // Schedule Table
-    scheduleTable = new QTableWidget(0, 5, scrollContent);
-    scheduleTable->setHorizontalHeaderLabels({"Bus ID", "Assigned Route", "Morning Departure", "Campus Arrival ETA", "Available Capacity"});
-    scheduleTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    scheduleTable->setMinimumHeight(130);
-    scrollLayout->addWidget(scheduleTable);
-
-    // 3. Lodge Driver / Transit Complaint Section (Auto-Timestamped)
-    QGroupBox* complaintBox = new QGroupBox("📢 Report Driver Misconduct or Safety Violation", scrollContent);
-    QVBoxLayout* compBoxOuter = new QVBoxLayout(complaintBox);
-
-    QFormLayout* compForm = new QFormLayout();
-    complaintDriverCombo = new QComboBox(complaintBox);
-    complaintDriverCombo->addItem("B-101 (Driver: Rajesh Kumar [D-01])", "B-101");
-    complaintDriverCombo->addItem("B-102 (Driver: Vikram Singh [D-02])", "B-102");
-    complaintDriverCombo->addItem("B-103 (Driver: Suresh Nair [D-03])", "B-103");
-
-    complaintCategoryCombo = new QComboBox(complaintBox);
-    complaintCategoryCombo->addItem("Over-Speeding / Rash & Dangerous Driving");
-    complaintCategoryCombo->addItem("Severe Unannounced Delay / Skipped Bus Stop");
-    complaintCategoryCombo->addItem("Rude / Unprofessional Conductor or Driver Behavior");
-    complaintCategoryCombo->addItem("Dangerous Overcrowding & Standing Hazard");
-    complaintCategoryCombo->addItem("Unauthorized Route Deviation");
-    complaintCategoryCombo->addItem("Vehicle Malfunction / Defective AC / Mechanical Issue");
-
-    complaintDescInput = new QLineEdit(complaintBox);
-    complaintDescInput->setPlaceholderText("Describe the incident in detail (location, time, severity)...");
-
-    QPushButton* lodgeCompBtn = new QPushButton("🚨 Lodge Complaint & Request Peer Verification", complaintBox);
-    lodgeCompBtn->setStyleSheet("background-color: #dc2626; color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px;");
-    connect(lodgeCompBtn, &QPushButton::clicked, this, &MainWindow::onStudentFileComplaint);
-
-    compForm->addRow("Select Target Bus / Operator:", complaintDriverCombo);
-    compForm->addRow("Incident Category:", complaintCategoryCombo);
-    compForm->addRow("Specific Observations:", complaintDescInput);
-    compForm->addRow("", lodgeCompBtn);
-    compBoxOuter->addLayout(compForm);
-
-    scrollLayout->addWidget(complaintBox);
-
-    // 4. Student Community Peer Verification Polls (Vote Right vs Wrong on Driver Complaints)
-    QGroupBox* pollsBox = new QGroupBox("🗳️ Community Peer Verification on Reported Driver Incidents", scrollContent);
-    QVBoxLayout* pollsLayout = new QVBoxLayout(pollsBox);
-
-    QLabel* pollNotice = new QLabel("When fellow students report driver misconduct, you can review and vote whether the incident report is RIGHT (Valid) or WRONG (Disputed):", pollsBox);
-    pollNotice->setStyleSheet("font-size: 12.5px; color: #475569; margin-bottom: 6px;");
-    pollsLayout->addWidget(pollNotice);
-
-    driverPollsTable = new QTableWidget(0, 7, pollsBox);
-    driverPollsTable->setHorizontalHeaderLabels({"Report ID", "Time of Complaint", "Reported Operator", "Category", "Incident Description", "Community Consensus", "Cast Verification"});
-    driverPollsTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    driverPollsTable->horizontalHeader()->setStretchLastSection(true);
-    driverPollsTable->setMinimumHeight(160);
-    pollsLayout->addWidget(driverPollsTable);
-
-    scrollLayout->addWidget(pollsBox);
-
-    scrollArea->setWidget(scrollContent);
-    layout->addWidget(scrollArea);
-
-    return tab;
-}
-
-// TAB 2: 🟡 DRIVER PORTAL
-QWidget* MainWindow::createDriverTab() {
-    QWidget* tab = new QWidget();
-    QHBoxLayout* layout = new QHBoxLayout(tab);
-
-    QGroupBox* tripBox = new QGroupBox("🟡 Driver Trip & Telemetry Operations", tab);
-    QFormLayout* tripForm = new QFormLayout(tripBox);
-
-    driverBusCombo = new QComboBox(tripBox);
-    driverBusCombo->addItem("B-101 (Express Route R1)");
-    driverBusCombo->addItem("B-102 (Suburban Route R2)");
-    driverBusCombo->addItem("B-103 (Special Route R1)");
-
-    QPushButton* startBtn = new QPushButton("🚀 Start Morning Service", tripBox);
-    startBtn->setStyleSheet("background-color: #059669; color: white; font-weight: bold;");
-    connect(startBtn, &QPushButton::clicked, this, &MainWindow::onDriverStartTrip);
-
-    QPushButton* endBtn = new QPushButton("🏁 End Service / Park Depot", tripBox);
-    endBtn->setStyleSheet("background-color: #64748b; color: white; font-weight: bold;");
-    connect(endBtn, &QPushButton::clicked, this, &MainWindow::onDriverEndTrip);
-
-    driverDelayReasonInput = new QLineEdit("Heavy Traffic at Central Metro Junction", tripBox);
-    driverDelayMinsInput = new QLineEdit("15", tripBox);
-    QPushButton* delayBtn = new QPushButton("⚠️ Broadcast Delay Alert to Commuters", tripBox);
-    delayBtn->setStyleSheet("background-color: #d97706; color: white; font-weight: bold;");
-    connect(delayBtn, &QPushButton::clicked, this, &MainWindow::onDriverReportDelay);
-
-    tripForm->addRow("Active Bus Unit:", driverBusCombo);
-    QHBoxLayout* tripBtns = new QHBoxLayout();
-    tripBtns->addWidget(startBtn);
-    tripBtns->addWidget(endBtn);
-    tripForm->addRow(tripBtns);
-    tripForm->addRow("Delay Cause:", driverDelayReasonInput);
-    tripForm->addRow("Estimated Minutes:", driverDelayMinsInput);
-    tripForm->addRow("", delayBtn);
-
-    QGroupBox* misbehaviorBox = new QGroupBox("🛑 Report Student Misbehavior & Bus Condition", tab);
-    QFormLayout* misForm = new QFormLayout(misbehaviorBox);
-
-    misbehaviorRollInput = new QLineEdit("2024-CS-089", misbehaviorBox);
-    misbehaviorDescInput = new QLineEdit("Smoking / Vandalism at Seat 12", misbehaviorBox);
-    QPushButton* reportMisBtn = new QPushButton("Submit Disciplinary Report", misbehaviorBox);
-    reportMisBtn->setStyleSheet("background-color: #dc2626; color: white; font-weight: bold;");
-    connect(reportMisBtn, &QPushButton::clicked, this, &MainWindow::onDriverReportMisbehavior);
-
-    QPushButton* condBtn = new QPushButton("🛠️ Report Mechanical / Bus Defect", misbehaviorBox);
-    condBtn->setStyleSheet("background-color: #0284c7; color: white; font-weight: bold;");
-    connect(condBtn, &QPushButton::clicked, this, [this]() {
-        sysManager.driverReportBusCondition("B-101", "Brake Pad Inspection & Cabin Sanitization Required");
-        QMessageBox::information(this, "Maintenance Request Logged", "🛠️ Mechanical defect report submitted to Fleet Maintenance Depot.");
-    });
-
-    misForm->addRow("Student Roll Number:", misbehaviorRollInput);
-    misForm->addRow("Infraction Details:", misbehaviorDescInput);
-    misForm->addRow("", reportMisBtn);
-    misForm->addRow("", condBtn);
-
-    layout->addWidget(tripBox);
-    layout->addWidget(misbehaviorBox);
-
-    return tab;
-}
-
-// TAB 3: 🔴 ADMIN CONTROL CENTER
+// 5. ADMIN CONTROL CENTER (MASTER REDESIGN)
 QWidget* MainWindow::createAdminTab() {
     QWidget* tab = new QWidget();
-    QHBoxLayout* mainAdminLayout = new QHBoxLayout(tab);
+    QVBoxLayout* layout = new QVBoxLayout(tab);
+    layout->setSpacing(12);
 
-    QGroupBox* busBox = new QGroupBox("🔴 Fleet Registry Configuration", tab);
-    QFormLayout* busForm = new QFormLayout(busBox);
+    // Summary Metric KPI Cards
+    QHBoxLayout* kpiLayout = new QHBoxLayout();
+    kpiLayout->setSpacing(10);
 
-    adminBusCombo = new QComboBox(busBox);
-    adminBusCombo->addItem("B-101"); adminBusCombo->addItem("B-102"); adminBusCombo->addItem("B-103");
-    adminRegInput = new QLineEdit("MH-12-AB-1001", busBox);
-    adminCapInput = new QLineEdit("55", busBox);
-    adminRouteCombo = new QComboBox(busBox);
-    adminRouteCombo->addItem("R1"); adminRouteCombo->addItem("R2");
+    auto makeKpiCard = [](const QString& title, const QString& val, const QString& accentColor) -> QFrame* {
+        QFrame* card = new QFrame();
+        card->setStyleSheet(QString(
+            "QFrame { background-color: #1C2533; border: 1px solid #30363D; border-radius: 8px; padding: 10px; }"
+        ));
+        QVBoxLayout* cl = new QVBoxLayout(card);
+        cl->setContentsMargins(4, 4, 4, 4);
+        cl->setSpacing(2);
+        QLabel* t = new QLabel(title, card);
+        t->setStyleSheet("font-size: 11px; font-weight: 600; color: #8B949E; text-transform: uppercase;");
+        QLabel* v = new QLabel(val, card);
+        v->setStyleSheet(QString("font-size: 16px; font-weight: 700; color: %1;").arg(accentColor));
+        cl->addWidget(t);
+        cl->addWidget(v);
+        return card;
+    };
 
-    QPushButton* updateBusBtn = new QPushButton("Update Bus Fleet Parameters", busBox);
-    updateBusBtn->setStyleSheet("background-color: #dc2626; color: white; font-weight: bold;");
-    connect(updateBusBtn, &QPushButton::clicked, this, &MainWindow::onAdminUpdateBus);
+    QFrame* c1 = makeKpiCard("Total Fleet Units", "3 Active Buses", "#58A6FF");
+    kpiTotalBusesLabel = c1->findChild<QLabel*>();
+    QFrame* c2 = makeKpiCard("Total Available Seats", "130 Seats", "#3FB950");
+    kpiTotalSeatsLabel = c2->findChild<QLabel*>();
+    QFrame* c3 = makeKpiCard("Operating Corridors", "2 Mountain Routes", "#D29922");
+    kpiCorridorsLabel = c3->findChild<QLabel*>();
+    QFrame* c4 = makeKpiCard("Campus Schedule", "Full-Day Mode", "#58A6FF");
+    kpiScheduleLabel = c4->findChild<QLabel*>();
+    QFrame* c5 = makeKpiCard("Student Attendance", "94% Boarded", "#3FB950");
+    kpiAttendanceLabel = c5->findChild<QLabel*>();
+    QFrame* c6 = makeKpiCard("Active Complaints", "2 Open / 1 Poll", "#F85149");
+    kpiComplaintsLabel = c6->findChild<QLabel*>();
 
-    busForm->addRow("Target Bus Identifier:", adminBusCombo);
-    busForm->addRow("Registration Plate:", adminRegInput);
-    busForm->addRow("Max Passenger Seating:", adminCapInput);
-    busForm->addRow("Assigned Corridor Route:", adminRouteCombo);
-    busForm->addRow("", updateBusBtn);
+    kpiLayout->addWidget(c1);
+    kpiLayout->addWidget(c2);
+    kpiLayout->addWidget(c3);
+    kpiLayout->addWidget(c4);
+    kpiLayout->addWidget(c5);
+    kpiLayout->addWidget(c6);
 
-    QGroupBox* timingBox = new QGroupBox("🔴 Timetable Management & Campus Broadcast", tab);
+    layout->addLayout(kpiLayout);
+
+    // Section A & B: Bus Configuration & Stop Timings
+    QHBoxLayout* midLayout = new QHBoxLayout();
+    midLayout->setSpacing(12);
+
+    // Section A: Bus Fleet Configuration
+    QGroupBox* busConfigBox = new QGroupBox("A. Bus Fleet Configuration", tab);
+    QFormLayout* busForm = new QFormLayout(busConfigBox);
+    busForm->setSpacing(8);
+
+    adminBusCombo = new QComboBox(busConfigBox);
+    adminBusCombo->addItem("B-101 (UK-04-PA-1001)");
+    adminBusCombo->addItem("B-102 (UK-04-TA-2002)");
+    adminBusCombo->addItem("B-103 (UK-04-PA-3003)");
+
+    adminRegInput = new QLineEdit("UK-04-PA-1001", busConfigBox);
+    adminCapInput = new QLineEdit("45", busConfigBox);
+    adminRouteCombo = new QComboBox(busConfigBox);
+    adminRouteCombo->addItem("R1 - Express Hill Corridor");
+    adminRouteCombo->addItem("R2 - Valley Bypass Corridor");
+
+    QPushButton* saveBusBtn = new QPushButton("Save Bus Configuration", busConfigBox);
+    saveBusBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 600; padding: 7px;");
+    connect(saveBusBtn, &QPushButton::clicked, this, &MainWindow::onAdminUpdateBus);
+
+    busForm->addRow("Select Bus Unit:", adminBusCombo);
+    busForm->addRow("Registration Number:", adminRegInput);
+    busForm->addRow("Seating Capacity:", adminCapInput);
+    busForm->addRow("Assigned Corridor:", adminRouteCombo);
+    busForm->addRow("", saveBusBtn);
+
+    // Section B: Campus Stop Timings & Broadcast Dispatch
+    QGroupBox* timingBox = new QGroupBox("B. Campus Stop Timings & Broadcast Dispatch", tab);
     QFormLayout* timingForm = new QFormLayout(timingBox);
+    timingForm->setSpacing(8);
 
     adminTimingStopCombo = new QComboBox(timingBox);
-    adminTimingStopCombo->addItem("ST101 - Sector 17 Terminal", "ST101");
-    adminTimingStopCombo->addItem("ST102 - Central Metro Station", "ST102");
-    adminTimingStopCombo->addItem("ST103 - Tech Park Junction", "ST103");
-    adminTimingStopCombo->addItem("ST104 - Green Valley Chowk", "ST104");
-    adminTimingStopCombo->addItem("ST105 - College Campus Main Gate", "ST105");
+    adminTimingStopCombo->addItem("ST101 - Haldwani Bus Terminal (424m)", "ST101");
+    adminTimingStopCombo->addItem("ST102 - Kathgodam Railway Station (554m)", "ST102");
+    adminTimingStopCombo->addItem("ST103 - Ranibagh Junction (620m)", "ST103");
+    adminTimingStopCombo->addItem("ST104 - Bhujiaghat Bypass (910m)", "ST104");
+    adminTimingStopCombo->addItem("ST105 - Bhimtal Lake Mall Road (1,370m)", "ST105");
+    adminTimingStopCombo->addItem("ST106 - Graphic Era Hill University (1,420m)", "ST106");
 
     adminTimingBusCombo = new QComboBox(timingBox);
     adminTimingBusCombo->addItem("B-101"); adminTimingBusCombo->addItem("B-102"); adminTimingBusCombo->addItem("B-103");
@@ -534,669 +529,942 @@ QWidget* MainWindow::createAdminTab() {
     adminTimingScheduleCombo->addItem("Full-Day Schedule");
     adminTimingScheduleCombo->addItem("Half-Day Schedule");
 
-    adminNewTimeInput = new QLineEdit("07:35", timingBox);
+    adminNewTimeInput = new QLineEdit("07:15", timingBox);
 
-    QPushButton* updateTimingBtn = new QPushButton("Update Departure Schedule", timingBox);
-    updateTimingBtn->setStyleSheet("background-color: #d97706; color: white; font-weight: bold;");
+    QPushButton* updateTimingBtn = new QPushButton("Update Timing", timingBox);
+    updateTimingBtn->setStyleSheet("background-color: #1F6FEB; color: #FFFFFF; font-weight: 600; padding: 7px;");
     connect(updateTimingBtn, &QPushButton::clicked, this, &MainWindow::onAdminUpdateTiming);
 
-    QPushButton* noticeBtn = new QPushButton("📢 Broadcast Transit Notice to All", timingBox);
-    noticeBtn->setStyleSheet("background-color: #0284c7; color: white; font-weight: bold;");
+    QPushButton* noticeBtn = new QPushButton("📢 Dispatch Broadcast Notice", timingBox);
+    noticeBtn->setStyleSheet("background-color: #21262D; border: 1px solid #30363D; color: #E6EDF3; font-weight: 600; padding: 7px;");
     connect(noticeBtn, &QPushButton::clicked, this, &MainWindow::onAdminBroadcastNotice);
 
-    timingForm->addRow("Transit Checkpoint:", adminTimingStopCombo);
-    timingForm->addRow("Transit Bus ID:", adminTimingBusCombo);
-    timingForm->addRow("Timetable Tier:", adminTimingScheduleCombo);
-    timingForm->addRow("Adjusted Arrival Time:", adminNewTimeInput);
-    timingForm->addRow("", updateTimingBtn);
-    timingForm->addRow("", noticeBtn);
+    timingForm->addRow("Select Bus Stop:", adminTimingStopCombo);
+    timingForm->addRow("Select Transit Bus:", adminTimingBusCombo);
+    timingForm->addRow("Schedule Mode:", adminTimingScheduleCombo);
+    timingForm->addRow("Departure Time:", adminNewTimeInput);
+    QHBoxLayout* timingBtns = new QHBoxLayout();
+    timingBtns->addWidget(updateTimingBtn);
+    timingBtns->addWidget(noticeBtn);
+    timingForm->addRow("", timingBtns);
 
-    mainAdminLayout->addWidget(busBox);
-    mainAdminLayout->addWidget(timingBox);
+    midLayout->addWidget(busConfigBox);
+    midLayout->addWidget(timingBox);
+    layout->addLayout(midLayout);
+
+    // Section C & D: Student Transport Directory & Attendance Table
+    QHBoxLayout* lowerLayout = new QHBoxLayout();
+    lowerLayout->setSpacing(12);
+
+    // Section C: Student Transport Directory
+    QGroupBox* studentDirBox = new QGroupBox("C. Student Transport Directory", tab);
+    QVBoxLayout* dirLayout = new QVBoxLayout(studentDirBox);
+
+    studentDirTable = new QTableWidget(0, 6, studentDirBox);
+    studentDirTable->setHorizontalHeaderLabels({"Full Name", "Roll Number", "Phone Number", "Boarding Stop", "Bus", "Fee Status"});
+    studentDirTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    registerStudentBtn = new QPushButton("+ Register New Student", studentDirBox);
+    registerStudentBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 600; padding: 6px 12px;");
+    connect(registerStudentBtn, &QPushButton::clicked, this, &MainWindow::onAdminRegisterStudentDialog);
+
+    dirLayout->addWidget(studentDirTable);
+    dirLayout->addWidget(registerStudentBtn, 0, Qt::AlignRight);
+
+    // Section D: Student Attendance & Boarding Management
+    QGroupBox* attendBox = new QGroupBox("D. Student Attendance & Boarding Verification", tab);
+    QVBoxLayout* attLayout = new QVBoxLayout(attendBox);
+
+    QHBoxLayout* attControlLayout = new QHBoxLayout();
+    boardRollInput = new QLineEdit("2024-CS-001", attendBox);
+    boardRollInput->setPlaceholderText("Student Roll Number");
+    boardBusCombo = new QComboBox(attendBox);
+    boardBusCombo->addItem("B-101"); boardBusCombo->addItem("B-102"); boardBusCombo->addItem("B-103");
+
+    QPushButton* boardBtn = new QPushButton("Mark Attendance / Board", attendBox);
+    boardBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 600;");
+    connect(boardBtn, &QPushButton::clicked, this, &MainWindow::onBoardStudent);
+
+    QPushButton* qrVerifyBtn = new QPushButton("Verify QR Pass", attendBox);
+    qrVerifyBtn->setStyleSheet("background-color: #1F6FEB; color: #FFFFFF; font-weight: 600;");
+    connect(qrVerifyBtn, &QPushButton::clicked, this, &MainWindow::onVerifyQRPass);
+
+    QPushButton* refreshAttBtn = new QPushButton("Refresh Log", attendBox);
+    connect(refreshAttBtn, &QPushButton::clicked, this, &MainWindow::refreshAttendanceTable);
+
+    attControlLayout->addWidget(new QLabel("Roll No:", attendBox));
+    attControlLayout->addWidget(boardRollInput);
+    attControlLayout->addWidget(new QLabel("Bus:", attendBox));
+    attControlLayout->addWidget(boardBusCombo);
+    attControlLayout->addWidget(boardBtn);
+    attControlLayout->addWidget(qrVerifyBtn);
+    attControlLayout->addWidget(refreshAttBtn);
+
+    attendanceTable = new QTableWidget(0, 7, attendBox);
+    attendanceTable->setHorizontalHeaderLabels({"Timestamp", "Roll Number", "Student Name", "Bus ID", "Pickup Stop", "Fee Status", "Boarding Status"});
+    attendanceTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    attLayout->addLayout(attControlLayout);
+    attLayout->addWidget(attendanceTable);
+
+    lowerLayout->addWidget(studentDirBox, 4);
+    lowerLayout->addWidget(attendBox, 5);
+    layout->addLayout(lowerLayout, 1);
 
     return tab;
 }
 
-// TAB 4: 🔵 PARENT PORTAL
+// 6. STUDENT PORTAL
+QWidget* MainWindow::createStudentTab() {
+    QWidget* tab = new QWidget();
+    QVBoxLayout* layout = new QVBoxLayout(tab);
+    layout->setSpacing(12);
+
+    QHBoxLayout* topLayout = new QHBoxLayout();
+    topLayout->setSpacing(12);
+
+    // Schedule & QR Lookup
+    QGroupBox* box = new QGroupBox("Student Morning Departure & Digital Pass Lookup", tab);
+    QFormLayout* formLayout = new QFormLayout(box);
+    formLayout->setSpacing(10);
+
+    studentRollInput = new QLineEdit("2024-CS-001", box);
+    QPushButton* searchBtn = new QPushButton("Lookup Departure Schedule", box);
+    searchBtn->setStyleSheet("background-color: #1F6FEB; color: #FFFFFF; font-weight: 600;");
+    connect(searchBtn, &QPushButton::clicked, this, &MainWindow::onSearchStudentSchedule);
+
+    QPushButton* qrPassBtn = new QPushButton("Show Digital QR Bus Pass", box);
+    qrPassBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 600;");
+    connect(qrPassBtn, &QPushButton::clicked, this, &MainWindow::onShowDigitalQRPass);
+
+    QPushButton* sosBtn = new QPushButton("🚨 EMERGENCY SOS BROADCAST", box);
+    sosBtn->setStyleSheet("background-color: #DA3633; color: #FFFFFF; font-weight: 700; padding: 9px;");
+    connect(sosBtn, &QPushButton::clicked, this, &MainWindow::onTriggerStudentSOS);
+
+    formLayout->addRow("Registered Roll Number:", studentRollInput);
+    QHBoxLayout* btnRow = new QHBoxLayout();
+    btnRow->addWidget(searchBtn);
+    btnRow->addWidget(qrPassBtn);
+    formLayout->addRow("", btnRow);
+    formLayout->addRow("", sosBtn);
+
+    // Driver Rating Box
+    QGroupBox* rateBox = new QGroupBox("Driver Rating & Journey Quality Feedback", tab);
+    QFormLayout* rateLayout = new QFormLayout(rateBox);
+    rateLayout->setSpacing(8);
+
+    ratingDriverIdInput = new QLineEdit("D-01", rateBox);
+    ratingStarCombo = new QComboBox(rateBox);
+    ratingStarCombo->addItem("★★★★★ - 5 Stars (Punctual & Safe Mountain Driving)");
+    ratingStarCombo->addItem("★★★★☆ - 4 Stars (Good Driving)");
+    ratingStarCombo->addItem("★★★☆☆ - 3 Stars (Average Speed)");
+    ratingStarCombo->addItem("★★☆☆☆ - 2 Stars (Delayed Arrival)");
+    ratingStarCombo->addItem("★☆☆☆☆ - 1 Star (Unsafe Driving / Violations)");
+
+    ratingFeedbackInput = new QLineEdit("Very punctual and smooth driving across Kathgodam hill turns.", rateBox);
+    QPushButton* submitRateBtn = new QPushButton("Submit Driver Rating", rateBox);
+    submitRateBtn->setStyleSheet("background-color: #D29922; color: #0D1117; font-weight: 700;");
+    connect(submitRateBtn, &QPushButton::clicked, this, &MainWindow::onSubmitDriverRating);
+
+    rateLayout->addRow("Driver Identifier:", ratingDriverIdInput);
+    rateLayout->addRow("Rating Grade:", ratingStarCombo);
+    rateLayout->addRow("Feedback Notes:", ratingFeedbackInput);
+    rateLayout->addRow("", submitRateBtn);
+
+    topLayout->addWidget(box, 3);
+    topLayout->addWidget(rateBox, 2);
+    layout->addLayout(topLayout);
+
+    studentInfoLabel = new QLabel("Enter Roll Number above to inspect assigned bus, boarding schedule, and QR pass status.", tab);
+    studentInfoLabel->setStyleSheet("font-size: 13px; color: #8B949E; padding: 10px; background-color: #161B22; border: 1px solid #30363D; border-radius: 6px;");
+
+    studentScheduleTable = new QTableWidget(0, 4, tab);
+    studentScheduleTable->setHorizontalHeaderLabels({"Assigned Bus", "Corridor Route", "Boarding Stop", "Morning Departure Time"});
+    studentScheduleTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    layout->addWidget(studentInfoLabel);
+    layout->addWidget(studentScheduleTable, 1);
+
+    return tab;
+}
+
+// 7. DRIVER PORTAL
+QWidget* MainWindow::createDriverTab() {
+    QWidget* tab = new QWidget();
+    QHBoxLayout* layout = new QHBoxLayout(tab);
+    layout->setSpacing(14);
+
+    QGroupBox* tripBox = new QGroupBox("Driver Trip Telemetry & Delay Dispatch", tab);
+    QFormLayout* tripForm = new QFormLayout(tripBox);
+    tripForm->setSpacing(10);
+
+    driverBusCombo = new QComboBox(tripBox);
+    driverBusCombo->addItem("B-101 (UK-04-PA-1001)");
+    driverBusCombo->addItem("B-102 (UK-04-TA-2002)");
+    driverBusCombo->addItem("B-103 (UK-04-PA-3003)");
+
+    QPushButton* startBtn = new QPushButton("Start Mountain Trip", tripBox);
+    startBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 700; padding: 8px;");
+    connect(startBtn, &QPushButton::clicked, this, &MainWindow::onDriverStartTrip);
+
+    QPushButton* endBtn = new QPushButton("Conclude Trip (Campus Terminal)", tripBox);
+    endBtn->setStyleSheet("background-color: #21262D; border: 1px solid #30363D; color: #8B949E; font-weight: 600; padding: 8px;");
+    connect(endBtn, &QPushButton::clicked, this, &MainWindow::onDriverEndTrip);
+
+    driverDelayReasonInput = new QLineEdit("Kathgodam Highway Landslide / Road Diversion", tripBox);
+    driverDelayMinsInput = new QLineEdit("15", tripBox);
+    QPushButton* delayBtn = new QPushButton("⚠️ Dispatch Delay Alert to Students & Parents", tripBox);
+    delayBtn->setStyleSheet("background-color: #D29922; color: #0D1117; font-weight: 700; padding: 8px;");
+    connect(delayBtn, &QPushButton::clicked, this, &MainWindow::onDriverReportDelay);
+
+    tripForm->addRow("Operating Bus:", driverBusCombo);
+    QHBoxLayout* tripBtns = new QHBoxLayout();
+    tripBtns->addWidget(startBtn);
+    tripBtns->addWidget(endBtn);
+    tripForm->addRow("", tripBtns);
+    tripForm->addRow("Delay Reason:", driverDelayReasonInput);
+    tripForm->addRow("Minutes Delayed:", driverDelayMinsInput);
+    tripForm->addRow("", delayBtn);
+
+    QGroupBox* misbehaviorBox = new QGroupBox("Report Student Misbehavior & Safety Incidents", tab);
+    QFormLayout* misForm = new QFormLayout(misbehaviorBox);
+    misForm->setSpacing(10);
+
+    misbehaviorRollInput = new QLineEdit("2024-ME-012", misbehaviorBox);
+    misbehaviorDescInput = new QLineEdit("Loud altercation, refusal to follow safety rules during ascent.", misbehaviorBox);
+    QPushButton* reportMisBtn = new QPushButton("Submit Disciplinary Incident", misbehaviorBox);
+    reportMisBtn->setStyleSheet("background-color: #DA3633; color: #FFFFFF; font-weight: 700; padding: 8px;");
+    connect(reportMisBtn, &QPushButton::clicked, this, &MainWindow::onDriverReportMisbehavior);
+
+    misForm->addRow("Accused Student Roll:", misbehaviorRollInput);
+    misForm->addRow("Incident Description:", misbehaviorDescInput);
+    misForm->addRow("", reportMisBtn);
+
+    layout->addWidget(tripBox);
+    layout->addWidget(misbehaviorBox);
+    return tab;
+}
+
+// 8. PARENT PORTAL
 QWidget* MainWindow::createParentTab() {
     QWidget* tab = new QWidget();
     QVBoxLayout* layout = new QVBoxLayout(tab);
+    layout->setSpacing(14);
 
-    QGroupBox* box = new QGroupBox("🔵 Parent Portal: Real-Time Transit Tracking & Fee Status", tab);
+    QGroupBox* box = new QGroupBox("Parent Live Telemetry & Fee Clearance Status", tab);
     QHBoxLayout* formLayout = new QHBoxLayout(box);
+    formLayout->setSpacing(10);
 
     parentPhoneInput = new QLineEdit("+91-9811001122", box);
-    parentPhoneInput->setPlaceholderText("Enter Registered Phone or Student Roll (e.g. 2024-CS-001)");
-
-    QPushButton* trackBtn = new QPushButton("📡 Locate Student Bus", box);
-    trackBtn->setStyleSheet("background-color: #0284c7; color: white; font-weight: bold;");
+    QPushButton* trackBtn = new QPushButton("Track Ward Transit & ETA", box);
+    trackBtn->setStyleSheet("background-color: #1F6FEB; color: #FFFFFF; font-weight: 700; padding: 8px 16px;");
     connect(trackBtn, &QPushButton::clicked, this, &MainWindow::onParentTrackChild);
 
-    parentPayFeeBtn = new QPushButton("💳 Pay Outstanding Fee", box);
-    parentPayFeeBtn->setStyleSheet("background-color: #059669; color: white; font-weight: bold;");
-    connect(parentPayFeeBtn, &QPushButton::clicked, this, &MainWindow::onParentPayFee);
-
-    formLayout->addWidget(new QLabel("Parent Phone / Child Roll:", box));
-    formLayout->addWidget(parentPhoneInput);
+    formLayout->addWidget(new QLabel("Parent Mobile Number / Ward Roll No:", box));
+    formLayout->addWidget(parentPhoneInput, 1);
     formLayout->addWidget(trackBtn);
-    formLayout->addWidget(parentPayFeeBtn);
 
-    parentInfoLabel = new QLabel("Enter Registered Phone number or Child Roll number above to track real-time child location and bus status.", tab);
-    parentInfoLabel->setStyleSheet("font-size: 13.5px; color: #1e293b; padding: 14px; background: #ffffff; border-radius: 8px; border: 1px solid #cbd5e1;");
+    parentInfoLabel = new QLabel("Enter parent contact phone above to inspect live vehicle telemetry, boarding confirmations, and semester transportation fee balances.", tab);
+    parentInfoLabel->setStyleSheet("font-size: 13.5px; line-height: 1.5; color: #E6EDF3; padding: 18px; background-color: #161B22; border: 1px solid #30363D; border-radius: 8px;");
 
     layout->addWidget(box);
     layout->addWidget(parentInfoLabel);
     layout->addStretch();
-
     return tab;
 }
 
-// TAB 5: ROUTE OPTIMIZER & GRAPH
+// 9. COMPLAINT PORTAL & STUDENT POLL SYSTEM (MASTER REQUIREMENT 4)
+QWidget* MainWindow::createComplaintDeskTab() {
+    QWidget* tab = new QWidget();
+    QVBoxLayout* layout = new QVBoxLayout(tab);
+    layout->setSpacing(12);
+
+    // Filter Bar
+    QFrame* filterCard = new QFrame(tab);
+    filterCard->setStyleSheet("background-color: #161B22; border: 1px solid #30363D; border-radius: 8px; padding: 8px 12px;");
+    QHBoxLayout* fl = new QHBoxLayout(filterCard);
+    fl->setContentsMargins(4, 4, 4, 4);
+    fl->setSpacing(10);
+
+    filterCategoryCombo = new QComboBox(filterCard);
+    filterCategoryCombo->addItem("Category: All");
+    filterCategoryCombo->addItem("Category: Rash Driving");
+    filterCategoryCombo->addItem("Category: Student Misbehavior");
+    filterCategoryCombo->addItem("Category: Schedule Delay Notice");
+    filterCategoryCombo->addItem("Category: EMERGENCY_SOS_BUTTON");
+    connect(filterCategoryCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onApplyComplaintFilters);
+
+    filterReporterRoleCombo = new QComboBox(filterCard);
+    filterReporterRoleCombo->addItem("Reporter: All Roles");
+    filterReporterRoleCombo->addItem("Reporter: Student");
+    filterReporterRoleCombo->addItem("Reporter: Driver");
+    filterReporterRoleCombo->addItem("Reporter: Parent");
+    connect(filterReporterRoleCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onApplyComplaintFilters);
+
+    filterAccusedRoleCombo = new QComboBox(filterCard);
+    filterAccusedRoleCombo->addItem("Accused: All Roles");
+    filterAccusedRoleCombo->addItem("Accused: Driver");
+    filterAccusedRoleCombo->addItem("Accused: Student");
+    filterAccusedRoleCombo->addItem("Accused: Authority");
+    connect(filterAccusedRoleCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onApplyComplaintFilters);
+
+    filterStatusCombo = new QComboBox(filterCard);
+    filterStatusCombo->addItem("Status: All");
+    filterStatusCombo->addItem("Status: OPEN");
+    filterStatusCombo->addItem("Status: UNDER INVESTIGATION");
+    filterStatusCombo->addItem("Status: POLL ACTIVE");
+    filterStatusCombo->addItem("Status: RESOLVED");
+    filterStatusCombo->addItem("Status: REJECTED");
+    connect(filterStatusCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::onApplyComplaintFilters);
+
+    fl->addWidget(new QLabel("Filters:", filterCard));
+    fl->addWidget(filterCategoryCombo);
+    fl->addWidget(filterReporterRoleCombo);
+    fl->addWidget(filterAccusedRoleCombo);
+    fl->addWidget(filterStatusCombo);
+    fl->addStretch();
+
+    layout->addWidget(filterCard);
+
+    // Master Complaint Table (Displays all 11 required fields)
+    complaintTable = new QTableWidget(0, 8, tab);
+    complaintTable->setHorizontalHeaderLabels({
+        "ID", "Category", "Reported By (Complainant)", "Accused Person", "Bus", "Submission Date", "Submission Time", "Status"
+    });
+    complaintTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    complaintTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    complaintTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    connect(complaintTable, &QTableWidget::itemSelectionChanged, this, &MainWindow::onComplaintTableSelectionChanged);
+
+    layout->addWidget(complaintTable, 3);
+
+    // Detail & Student Poll Card
+    QHBoxLayout* bottomLayout = new QHBoxLayout();
+    bottomLayout->setSpacing(12);
+
+    // Complaint Inspection View
+    QGroupBox* detailBox = new QGroupBox("Selected Complaint Incident Inspection & Resolution History", tab);
+    QVBoxLayout* dbl = new QVBoxLayout(detailBox);
+    dbl->setSpacing(8);
+
+    complaintDetailHeader = new QLabel("Select a complaint from the table above to view full details.", detailBox);
+    complaintDetailHeader->setStyleSheet("font-size: 13px; font-weight: 700; color: #58A6FF;");
+
+    complaintDetailBody = new QLabel("", detailBox);
+    complaintDetailBody->setStyleSheet("font-size: 12.5px; color: #E6EDF3; line-height: 1.4;");
+    complaintDetailBody->setWordWrap(true);
+
+    // Admin Action Buttons
+    QHBoxLayout* adminActionLayout = new QHBoxLayout();
+    adminInvestigateBtn = new QPushButton("Investigate Complaint", detailBox);
+    adminInvestigateBtn->setStyleSheet("background-color: #1F6FEB; color: #FFFFFF; font-weight: 600; font-size: 12px;");
+    connect(adminInvestigateBtn, &QPushButton::clicked, this, &MainWindow::onAdminInvestigateComplaint);
+
+    adminResolveBtn = new QPushButton("Resolve Complaint", detailBox);
+    adminResolveBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 600; font-size: 12px;");
+    connect(adminResolveBtn, &QPushButton::clicked, this, &MainWindow::onAdminResolveComplaint);
+
+    adminRejectBtn = new QPushButton("Reject with Recorded Reason", detailBox);
+    adminRejectBtn->setStyleSheet("background-color: #21262D; border: 1px solid #30363D; color: #F85149; font-weight: 600; font-size: 12px;");
+    connect(adminRejectBtn, &QPushButton::clicked, this, &MainWindow::onAdminRejectComplaint);
+
+    adminActionLayout->addWidget(adminInvestigateBtn);
+    adminActionLayout->addWidget(adminResolveBtn);
+    adminActionLayout->addWidget(adminRejectBtn);
+
+    dbl->addWidget(complaintDetailHeader);
+    dbl->addWidget(complaintDetailBody, 1);
+    dbl->addLayout(adminActionLayout);
+
+    // Student Peer Disciplinary Poll Box (Master Requirement 4.A)
+    pollGroupBox = new QGroupBox("Student Peer Disciplinary Poll (YES / NO Voting)", tab);
+    QVBoxLayout* pbl = new QVBoxLayout(pollGroupBox);
+    pbl->setSpacing(8);
+
+    pollQuestionLabel = new QLabel("Question: \"Do you agree that this incident requires disciplinary action?\"", pollGroupBox);
+    pollQuestionLabel->setStyleSheet("font-size: 12.5px; font-weight: 700; color: #E6EDF3;");
+    pollQuestionLabel->setWordWrap(true);
+
+    pollStatsLabel = new QLabel("Total Votes: 0 | YES: 0 (0%) | NO: 0 (0%)", pollGroupBox);
+    pollStatsLabel->setStyleSheet("font-size: 12px; color: #58A6FF; font-weight: 600;");
+
+    pollProgressBar = new QProgressBar(pollGroupBox);
+    pollProgressBar->setRange(0, 100);
+    pollProgressBar->setValue(50);
+
+    QHBoxLayout* voteBtns = new QHBoxLayout();
+    voteYesBtn = new QPushButton("Vote YES (Require Action)", pollGroupBox);
+    voteYesBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 700; padding: 7px;");
+    connect(voteYesBtn, &QPushButton::clicked, this, [this]{ onCastStudentVote(true); });
+
+    voteNoBtn = new QPushButton("Vote NO (Dismiss Incident)", pollGroupBox);
+    voteNoBtn->setStyleSheet("background-color: #30363D; color: #E6EDF3; font-weight: 700; padding: 7px;");
+    connect(voteNoBtn, &QPushButton::clicked, this, [this]{ onCastStudentVote(false); });
+
+    voteBtns->addWidget(voteYesBtn);
+    voteBtns->addWidget(voteNoBtn);
+
+    pollMessageLabel = new QLabel("", pollGroupBox);
+    pollMessageLabel->setStyleSheet("font-size: 11.5px; color: #3FB950; font-weight: 600;");
+    pollMessageLabel->setWordWrap(true);
+
+    pbl->addWidget(pollQuestionLabel);
+    pbl->addWidget(pollStatsLabel);
+    pbl->addWidget(pollProgressBar);
+    pbl->addLayout(voteBtns);
+    pbl->addWidget(pollMessageLabel);
+    pbl->addStretch();
+
+    // Submit New Complaint Card
+    QGroupBox* newCompBox = new QGroupBox("Submit New Safety Complaint", tab);
+    QFormLayout* ncl = new QFormLayout(newCompBox);
+    ncl->setSpacing(6);
+
+    newCompCategoryCombo = new QComboBox(newCompBox);
+    newCompCategoryCombo->addItem("Rash Driving");
+    newCompCategoryCombo->addItem("Student Misbehavior");
+    newCompCategoryCombo->addItem("Over-speeding");
+    newCompCategoryCombo->addItem("Safety Violation");
+    newCompCategoryCombo->addItem("Schedule Delay Notice");
+
+    newCompAccusedNameEdit = new QLineEdit("Rajesh Kumar", newCompBox);
+    newCompAccusedRoleCombo = new QComboBox(newCompBox);
+    newCompAccusedRoleCombo->addItem("Driver");
+    newCompAccusedRoleCombo->addItem("Student");
+    newCompAccusedRoleCombo->addItem("Authority");
+
+    newCompBusEdit = new QLineEdit("B-101", newCompBox);
+    newCompDescEdit = new QLineEdit("", newCompBox);
+    newCompDescEdit->setPlaceholderText("Detailed description of violation...");
+
+    QPushButton* submitBtn = new QPushButton("Submit Complaint Record", newCompBox);
+    submitBtn->setStyleSheet("background-color: #1F6FEB; color: #FFFFFF; font-weight: 700;");
+    connect(submitBtn, &QPushButton::clicked, this, &MainWindow::onSubmitNewComplaint);
+
+    ncl->addRow("Category:", newCompCategoryCombo);
+    ncl->addRow("Accused Name:", newCompAccusedNameEdit);
+    ncl->addRow("Accused Role:", newCompAccusedRoleCombo);
+    ncl->addRow("Bus Identifier:", newCompBusEdit);
+    ncl->addRow("Description:", newCompDescEdit);
+    ncl->addRow("", submitBtn);
+
+    bottomLayout->addWidget(detailBox, 4);
+    bottomLayout->addWidget(pollGroupBox, 3);
+    bottomLayout->addWidget(newCompBox, 3);
+
+    layout->addLayout(bottomLayout, 2);
+    return tab;
+}
+
+// 10. ROUTE MAP OPTIMIZER (MASTER REQUIREMENT 5)
 QWidget* MainWindow::createRouteVisualizerTab() {
     QWidget* tab = new QWidget();
     QVBoxLayout* layout = new QVBoxLayout(tab);
+    layout->setSpacing(10);
 
-    QHBoxLayout* ctrlLayout = new QHBoxLayout();
-    startStopCombo = new QComboBox(tab);
-    destStopCombo = new QComboBox(tab);
+    // Top Control Panel
+    QFrame* controlPanel = new QFrame(tab);
+    controlPanel->setStyleSheet("background-color: #161B22; border: 1px solid #30363D; border-radius: 8px; padding: 10px 14px;");
+    QHBoxLayout* ctrlLayout = new QHBoxLayout(controlPanel);
+    ctrlLayout->setContentsMargins(0, 0, 0, 0);
+    ctrlLayout->setSpacing(10);
 
-    startStopCombo->addItem("ST101 - Sector 17 Terminal", "ST101");
-    startStopCombo->addItem("ST102 - Central Metro Station", "ST102");
-    startStopCombo->addItem("ST103 - Tech Park Junction", "ST103");
-    startStopCombo->addItem("ST104 - Green Valley Chowk", "ST104");
+    // B. Selectable Source Location
+    startStopCombo = new QComboBox(controlPanel);
+    startStopCombo->addItem("ST101 - Haldwani Bus Terminal [424m ASL]", "ST101");
+    startStopCombo->addItem("ST102 - Kathgodam Railway Station [554m ASL]", "ST102");
+    startStopCombo->addItem("ST103 - Ranibagh Junction [620m ASL]", "ST103");
+    startStopCombo->addItem("ST104 - Bhujiaghat Bypass [910m ASL]", "ST104");
+    startStopCombo->addItem("ST105 - Bhimtal Lake Mall Road [1,370m ASL]", "ST105");
 
-    destStopCombo->addItem("ST105 - College Campus Main Gate", "ST105");
-    destStopCombo->addItem("ST103 - Tech Park Junction", "ST103");
-    destStopCombo->addItem("ST102 - Central Metro Station", "ST102");
+    // A. Fixed Destination (Master Requirement 5.A: Destination is ALWAYS Graphic Era Bhimtal, LOCKED/NON-EDITABLE)
+    destStopCombo = new QComboBox(controlPanel);
+    destStopCombo->addItem("ST106 - Graphic Era Hill University, Bhimtal Campus [1,420m ASL] (FIXED)", "ST106");
+    destStopCombo->setEnabled(false); // FIXED and non-editable
+    destStopCombo->setStyleSheet("background-color: #1C2533; color: #58A6FF; font-weight: 700; border: 1px solid #30363D;");
 
-    QPushButton* optBtn = new QPushButton("🗺️ Evaluate Shortest Path", tab);
-    optBtn->setStyleSheet("background-color: #0284c7; color: white; font-weight: bold;");
-    QPushButton* simBtn = new QPushButton("⏱️ Simulate Live Transit Motion", tab);
-    simBtn->setStyleSheet("background-color: #059669; color: white; font-weight: bold;");
+    // F. Route Algorithm
+    algoCombo = new QComboBox(controlPanel);
+    algoCombo->addItem("A* Heuristic Search (Topographic & Elevation)");
+    algoCombo->addItem("Dijkstra Shortest Path (Road Topology)");
 
-    connect(optBtn, &QPushButton::clicked, this, &MainWindow::onOptimizeRoute);
+    QPushButton* optBtn = new QPushButton("Calculate Shortest Path", controlPanel);
+    optBtn->setStyleSheet("background-color: #1F6FEB; color: #FFFFFF; font-weight: 700; padding: 7px 14px; border-radius: 6px;");
+    connect(optBtn, &QPushButton::clicked, this, &MainWindow::onCalculateOptimalRoute);
+
+    QPushButton* simBtn = new QPushButton("Simulate Bus Motion", controlPanel);
+    simBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 700; padding: 7px 14px; border-radius: 6px;");
     connect(simBtn, &QPushButton::clicked, this, &MainWindow::onStartLiveSim);
 
-    ctrlLayout->addWidget(new QLabel("From Checkpoint:", tab));
+    QPushButton* osmBtn = new QPushButton("Open Interactive OpenStreetMap (Leaflet & OSRM)", controlPanel);
+    osmBtn->setStyleSheet("background-color: #0969DA; color: #FFFFFF; font-weight: 700; padding: 7px 14px; border-radius: 6px;");
+    connect(osmBtn, &QPushButton::clicked, this, &MainWindow::onOpenInteractiveOpenStreetMap);
+
+    ctrlLayout->addWidget(new QLabel("Source:", controlPanel));
     ctrlLayout->addWidget(startStopCombo);
-    ctrlLayout->addWidget(new QLabel("To Destination:", tab));
+    ctrlLayout->addWidget(new QLabel("Destination (Fixed):", controlPanel));
     ctrlLayout->addWidget(destStopCombo);
+    ctrlLayout->addWidget(new QLabel("Algorithm:", controlPanel));
+    ctrlLayout->addWidget(algoCombo);
     ctrlLayout->addWidget(optBtn);
     ctrlLayout->addWidget(simBtn);
+    ctrlLayout->addWidget(osmBtn);
 
-    routeInfoLabel = new QLabel("Click 'Evaluate Shortest Path' or 'Simulate Live Transit Motion' to trace the vehicle path.", tab);
-    routeInfoLabel->setStyleSheet("font-size: 13px; font-weight: 600; color: #0284c7; padding: 6px; background: #e0f2fe; border-radius: 6px;");
+    layout->addWidget(controlPanel);
 
+    // Route Information Display HUD (Master Requirement 5.E)
+    QFrame* kpiBar = new QFrame(tab);
+    kpiBar->setStyleSheet("background-color: #1C2533; border: 1px solid #30363D; border-radius: 8px; padding: 8px 12px;");
+    QHBoxLayout* kl = new QHBoxLayout(kpiBar);
+    kl->setContentsMargins(4, 4, 4, 4);
+
+    routeKpiDistance = new QLabel("Total Road Distance: <b>28.2 KM</b>", kpiBar);
+    routeKpiDistance->setStyleSheet("color: #E6EDF3; font-size: 12.5px;");
+    routeKpiDuration = new QLabel("Estimated Time: <b>48 Mins</b>", kpiBar);
+    routeKpiDuration->setStyleSheet("color: #3FB950; font-size: 12.5px;");
+    routeKpiElevation = new QLabel("Elevation Traversal: <b>+996m Ascent (424m -> 1,420m ASL)</b>", kpiBar);
+    routeKpiElevation->setStyleSheet("color: #D29922; font-size: 12.5px;");
+    routeKpiStops = new QLabel("Stops: <b>5 Checkpoints</b>", kpiBar);
+    routeKpiStops->setStyleSheet("color: #8B949E; font-size: 12.5px;");
+    routeKpiAlgo = new QLabel("Algorithm: <b>A* Heuristic Search</b>", kpiBar);
+    routeKpiAlgo->setStyleSheet("color: #58A6FF; font-size: 12.5px;");
+    routeKpiStatus = new QLabel("Status: <font color='#3FB950'><b>CORRIDOR OPERATIONAL</b></font>", kpiBar);
+    routeKpiStatus->setStyleSheet("font-size: 12.5px;");
+
+    kl->addWidget(routeKpiDistance);
+    kl->addWidget(routeKpiDuration);
+    kl->addWidget(routeKpiElevation);
+    kl->addWidget(routeKpiStops);
+    kl->addWidget(routeKpiAlgo);
+    kl->addWidget(routeKpiStatus);
+
+    layout->addWidget(kpiBar);
+
+    routeInfoLabel = new QLabel("Selected Source: Haldwani Bus Terminal -> Destination: Graphic Era Hill University, Bhimtal Campus.", tab);
+    routeInfoLabel->setStyleSheet("font-size: 12.5px; font-weight: 600; color: #58A6FF; padding: 6px 10px; background-color: #161B22; border-radius: 6px;");
+    layout->addWidget(routeInfoLabel);
+
+    // Full-Width Interactive Canvas
     graphScene = new QGraphicsScene(this);
     graphView = new QGraphicsView(graphScene, tab);
     graphView->setRenderHint(QPainter::Antialiasing);
-    graphView->setMinimumHeight(340);
-    graphView->setStyleSheet("background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px;");
+    graphView->setMinimumHeight(440);
+    graphView->setStyleSheet("background-color: #0D1117; border: 1px solid #30363D; border-radius: 8px;");
 
-    layout->addLayout(ctrlLayout);
-    layout->addWidget(routeInfoLabel);
-    layout->addWidget(graphView);
-
+    layout->addWidget(graphView, 1);
     return tab;
 }
 
-// TAB 6: FLEET & COMPLAINTS REGISTRY
-QWidget* MainWindow::createFleetAndComplaintsTab() {
-    QWidget* tab = new QWidget();
-    QVBoxLayout* layout = new QVBoxLayout(tab);
-
-    QScrollArea* scrollArea = new QScrollArea(tab);
-    scrollArea->setWidgetResizable(true);
-    QWidget* scrollContent = new QWidget();
-    QVBoxLayout* scrollLayout = new QVBoxLayout(scrollContent);
-
-    // 1. Bus Fleet Table
-    QGroupBox* fleetBox = new QGroupBox("🚌 Comprehensive College Bus Fleet Telemetry", scrollContent);
-    QVBoxLayout* fBoxLayout = new QVBoxLayout(fleetBox);
-
-    fleetTable = new QTableWidget(3, 6, fleetBox);
-    fleetTable->setHorizontalHeaderLabels({"Bus Identifier", "Registration Plate", "Capacity", "Occupancy", "Route Corridor", "Assigned Driver"});
-    fleetTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    fleetTable->setMinimumHeight(120);
-    fBoxLayout->addWidget(fleetTable);
-
-    // Boarding Box
-    QHBoxLayout* boardLayout = new QHBoxLayout();
-    boardRollInput = new QLineEdit("2024-CS-001", fleetBox);
-    boardBusCombo = new QComboBox(fleetBox);
-    boardBusCombo->addItem("B-101"); boardBusCombo->addItem("B-102"); boardBusCombo->addItem("B-103");
-
-    QPushButton* boardBtn = new QPushButton("🎟️ Authorize & Board Student", fleetBox);
-    boardBtn->setStyleSheet("background-color: #0284c7; color: white; font-weight: bold;");
-    connect(boardBtn, &QPushButton::clicked, this, &MainWindow::onBoardStudent);
-
-    boardLayout->addWidget(new QLabel("Student Roll:", fleetBox));
-    boardLayout->addWidget(boardRollInput);
-    boardLayout->addWidget(new QLabel("Assigned Bus:", fleetBox));
-    boardLayout->addWidget(boardBusCombo);
-    boardLayout->addWidget(boardBtn);
-    fBoxLayout->addLayout(boardLayout);
-    scrollLayout->addWidget(fleetBox);
-
-    // 2. Complaints, Incidents & Verification Registry Table
-    QGroupBox* compRegistryBox = new QGroupBox("📋 Live Complaints, Safety Incidents & Student Consensus Registry", scrollContent);
-    QVBoxLayout* compLayout = new QVBoxLayout(compRegistryBox);
-
-    complaintsTable = new QTableWidget(0, 8, compRegistryBox);
-    complaintsTable->setHorizontalHeaderLabels({"ID", "Time of Complaint", "Reporter", "Target (Driver/Bus)", "Category", "Details", "Student Consensus", "Status"});
-    complaintsTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    complaintsTable->horizontalHeader()->setStretchLastSection(true);
-    complaintsTable->setMinimumHeight(180);
-    compLayout->addWidget(complaintsTable);
-
-    // Admin Action Form on Complaints
-    QHBoxLayout* actionLayout = new QHBoxLayout();
-    adminComplaintSelectCombo = new QComboBox(compRegistryBox);
-    adminComplaintSelectCombo->setMinimumWidth(120);
-
-    adminComplaintStatusCombo = new QComboBox(compRegistryBox);
-    adminComplaintStatusCombo->addItem("INVESTIGATING");
-    adminComplaintStatusCombo->addItem("WARNING_ISSUED");
-    adminComplaintStatusCombo->addItem("RESOLVED");
-    adminComplaintStatusCombo->addItem("CLOSED");
-
-    adminActionNoteInput = new QLineEdit("Counseling issued following majority student verification", compRegistryBox);
-    QPushButton* updateStatusBtn = new QPushButton("⚖️ Resolve / Update Status", compRegistryBox);
-    updateStatusBtn->setStyleSheet("background-color: #059669; color: white; font-weight: bold;");
-    connect(updateStatusBtn, &QPushButton::clicked, this, &MainWindow::onAdminUpdateComplaintStatus);
-
-    actionLayout->addWidget(new QLabel("Complaint ID:", compRegistryBox));
-    actionLayout->addWidget(adminComplaintSelectCombo);
-    actionLayout->addWidget(new QLabel("Action Status:", compRegistryBox));
-    actionLayout->addWidget(adminComplaintStatusCombo);
-    actionLayout->addWidget(adminActionNoteInput);
-    actionLayout->addWidget(updateStatusBtn);
-    compLayout->addLayout(actionLayout);
-
-    scrollLayout->addWidget(compRegistryBox);
-
-    scrollArea->setWidget(scrollContent);
-    layout->addWidget(scrollArea);
-
-    return tab;
-}
-
-void MainWindow::refreshFleetTable() {
-    const auto& buses = sysManager.getAllBuses();
-    fleetTable->setRowCount(buses.size());
-    for (size_t i = 0; i < buses.size(); ++i) {
-        fleetTable->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(buses[i].getBusId())));
-        fleetTable->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(buses[i].getBusNumber())));
-        fleetTable->setItem(i, 2, new QTableWidgetItem(QString::number(buses[i].getCapacity())));
-        fleetTable->setItem(i, 3, new QTableWidgetItem(QString::number(buses[i].getCurrentOccupancy()) + " / " + QString::number(buses[i].getCapacity())));
-        fleetTable->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(buses[i].getAssignedRouteId())));
-        fleetTable->setItem(i, 5, new QTableWidgetItem(QString::fromStdString(buses[i].getDriver() ? buses[i].getDriver()->getName() : "Unassigned")));
-    }
-}
-
-void MainWindow::refreshComplaintsTable() {
-    if (!complaintsTable) return;
-    const auto& list = sysManager.getComplaintEngine().getComplaints();
-    complaintsTable->setRowCount(list.size());
-
-    if (adminComplaintSelectCombo) {
-        adminComplaintSelectCombo->clear();
-    }
-
-    for (size_t i = 0; i < list.size(); ++i) {
-        const auto& c = list[i];
-        if (adminComplaintSelectCombo) {
-            adminComplaintSelectCombo->addItem(QString::fromStdString(c.complaintId));
-        }
-
-        complaintsTable->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(c.complaintId)));
-        complaintsTable->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(c.timestamp)));
-        complaintsTable->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(c.reporterName)));
-        complaintsTable->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(c.targetName)));
-        complaintsTable->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(c.category)));
-        complaintsTable->setItem(i, 5, new QTableWidgetItem(QString::fromStdString(c.description)));
-
-        QString consensus = QString("✅ %1 Right | ❌ %2 Wrong").arg(c.votesRight).arg(c.votesWrong);
-        if (c.votesRight + c.votesWrong > 0) {
-            int pct = (c.votesRight * 100) / (c.votesRight + c.votesWrong);
-            consensus += QString(" (%1% Valid)").arg(pct);
-        }
-        complaintsTable->setItem(i, 6, new QTableWidgetItem(consensus));
-
-        QString st = "OPEN";
-        if (c.status == ComplaintStatus::INVESTIGATING) st = "INVESTIGATING";
-        else if (c.status == ComplaintStatus::WARNING_ISSUED) st = "WARNING_ISSUED";
-        else if (c.status == ComplaintStatus::RESOLVED) st = "RESOLVED";
-        else if (c.status == ComplaintStatus::CLOSED) st = "CLOSED";
-        complaintsTable->setItem(i, 7, new QTableWidgetItem(st));
-    }
-}
-
-void MainWindow::refreshDriverPollsTable() {
-    if (!driverPollsTable) return;
-    const auto& list = sysManager.getComplaintEngine().getComplaints();
-
-    // Filter complaints against drivers
-    vector<Complaint> driverComplaints;
-    for (const auto& c : list) {
-        if (c.type == ComplaintType::STUDENT_TO_DRIVER || c.targetName.find("Driver") != string::npos) {
-            driverComplaints.push_back(c);
-        }
-    }
-
-    driverPollsTable->setRowCount(driverComplaints.size());
-
-    for (size_t i = 0; i < driverComplaints.size(); ++i) {
-        const auto& c = driverComplaints[i];
-        driverPollsTable->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(c.complaintId)));
-        driverPollsTable->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(c.timestamp)));
-        driverPollsTable->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(c.targetName)));
-        driverPollsTable->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(c.category)));
-        driverPollsTable->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(c.description)));
-
-        QString consensus = QString("✅ %1 Right | ❌ %2 Wrong").arg(c.votesRight).arg(c.votesWrong);
-        driverPollsTable->setItem(i, 5, new QTableWidgetItem(consensus));
-
-        // Interactive Voting Buttons
-        QWidget* voteWidget = new QWidget();
-        QHBoxLayout* vLayout = new QHBoxLayout(voteWidget);
-        vLayout->setContentsMargins(4, 2, 4, 2);
-        vLayout->setSpacing(6);
-
-        QPushButton* voteRightBtn = new QPushButton("✅ Right", voteWidget);
-        voteRightBtn->setStyleSheet("background-color: #059669; color: white; font-weight: bold; font-size: 11px; padding: 3px 8px; border-radius: 4px;");
-        QString compId = QString::fromStdString(c.complaintId);
-        connect(voteRightBtn, &QPushButton::clicked, this, [this, compId]() {
-            onVoteOnComplaint(compId, true);
-        });
-
-        QPushButton* voteWrongBtn = new QPushButton("❌ Wrong", voteWidget);
-        voteWrongBtn->setStyleSheet("background-color: #dc2626; color: white; font-weight: bold; font-size: 11px; padding: 3px 8px; border-radius: 4px;");
-        connect(voteWrongBtn, &QPushButton::clicked, this, [this, compId]() {
-            onVoteOnComplaint(compId, false);
-        });
-
-        vLayout->addWidget(voteRightBtn);
-        vLayout->addWidget(voteWrongBtn);
-        driverPollsTable->setCellWidget(i, 6, voteWidget);
-    }
-}
-
+// 11. TOPOGRAPHIC GRAPH RENDERING
 void MainWindow::renderRouteGraph() {
+    if (!graphScene) return;
     graphScene->clear();
 
-    int x1 = 60,  y1 = 150;
-    int x2 = 200, y2 = 80;
-    int x3 = 350, y3 = 80;
-    int x4 = 280, y4 = 220;
-    int x5 = 520, y5 = 150;
+    // Map Coordinates along Haldwani -> Kathgodam -> Ranibagh -> Bhimtal -> Graphic Era Campus
+    int x1 = 90,  y1 = 340; // ST101: Haldwani Tikonia (424m)
+    int x2 = 260, y2 = 280; // ST102: Kathgodam Station (554m)
+    int x3 = 450, y3 = 230; // ST103: Ranibagh Junction (620m)
+    int x4 = 620, y4 = 310; // ST104: Bhujiaghat Bypass (910m)
+    int x5 = 800, y5 = 160; // ST105: Bhimtal Lake Mall Road (1,370m)
+    int x6 = 1040, y6 = 90; // ST106: Graphic Era Hill University Bhimtal Campus (1,420m) - FIXED DESTINATION
 
-    QPen r1Pen(QColor("#0284c7"), 3);
+    // Subtle Hill Elevation Contours (Topography)
+    QPen contourPen(QColor("#21262D"), 1.5, Qt::DashLine);
+    graphScene->addLine(50, 380, 1150, 380, contourPen);
+    graphScene->addLine(50, 260, 1150, 260, contourPen);
+    graphScene->addLine(50, 140, 1150, 140, contourPen);
+
+    // Route R1: Express Hill Corridor (Haldwani -> Kathgodam -> Ranibagh -> Bhimtal Lake -> Graphic Era Campus)
+    QPen r1Pen(QColor("#238636"), 5); // Bright Green line for optimal route
     graphScene->addLine(x1, y1, x2, y2, r1Pen);
     graphScene->addLine(x2, y2, x3, y3, r1Pen);
     graphScene->addLine(x3, y3, x5, y5, r1Pen);
+    graphScene->addLine(x5, y5, x6, y6, r1Pen);
 
-    QPen r2Pen(QColor("#f59e0b"), 3, Qt::DashLine);
-    graphScene->addLine(x2, y2, x4, y4, r2Pen);
+    // Route R2: Valley Bypass Corridor via Bhujiaghat
+    QPen r2Pen(QColor("#8B949E"), 3, Qt::DashLine); // Dashed gray for alternative bypass
+    graphScene->addLine(x3, y3, x4, y4, r2Pen);
     graphScene->addLine(x4, y4, x5, y5, r2Pen);
 
-    auto drawStopNode = [&](int x, int y, const QString& name, const QString& id) {
-        graphScene->addEllipse(x - 14, y - 14, 28, 28, QPen(QColor("#0284c7"), 2), QBrush(QColor("#ffffff")));
-        QGraphicsTextItem* text = graphScene->addText(name + " [" + id + "]");
-        text->setDefaultTextColor(QColor("#0f172a"));
-        QFont f = text->font();
+    // Corridor Legend
+    auto addLegendText = [&](const QString& text, const QColor& col, int x, int y) {
+        QGraphicsTextItem* item = graphScene->addText(text);
+        item->setDefaultTextColor(col);
+        QFont f = item->font();
         f.setBold(true);
-        text->setFont(f);
-        text->setPos(x - 35, y + 16);
+        f.setPixelSize(12);
+        item->setFont(f);
+        item->setPos(x, y);
     };
 
-    drawStopNode(x1, y1, "Sector 17", "ST101");
-    drawStopNode(x2, y2, "Central Metro", "ST102");
-    drawStopNode(x3, y3, "Tech Park", "ST103");
-    drawStopNode(x4, y4, "Green Chowk", "ST104");
-    drawStopNode(x5, y5, "College Campus", "ST105");
+    addLegendText("Solid Green Line: Optimal Mountain Route (R1 Express Corridor to Graphic Era Campus)", QColor("#3FB950"), 70, 20);
+    addLegendText("Dashed Gray Line: Alternative Route (R2 Valley Bypass via Bhujiaghat)", QColor("#8B949E"), 70, 40);
 
-    busMarker = graphScene->addEllipse(x1 - 8, y1 - 8, 16, 16, QPen(Qt::white, 2), QBrush(QColor("#ef4444")));
+    auto drawStopPin = [&](int x, int y, const QString& name, const QString& id, const QString& elev, const QColor& pinColor, bool isFixedDest = false) {
+        graphScene->addEllipse(x - 13, y - 13, 26, 26, QPen(Qt::white, 2), QBrush(pinColor));
+        if (isFixedDest) {
+            // Glowing border for Graphic Era Fixed Destination
+            graphScene->addEllipse(x - 18, y - 18, 36, 36, QPen(QColor("#58A6FF"), 2, Qt::DotLine), QBrush(Qt::NoBrush));
+        }
+
+        QGraphicsTextItem* text = graphScene->addText(name + (isFixedDest ? " [CAMPUS DESTINATION]" : " [" + id + "]"));
+        text->setDefaultTextColor(isFixedDest ? QColor("#58A6FF") : QColor("#E6EDF3"));
+        QFont f = text->font();
+        f.setBold(true);
+        f.setPixelSize(12);
+        text->setFont(f);
+        text->setPos(x - 55, y + 16);
+
+        QGraphicsTextItem* elevText = graphScene->addText(elev);
+        elevText->setDefaultTextColor(QColor("#8B949E"));
+        QFont ef = elevText->font();
+        ef.setPixelSize(11);
+        elevText->setFont(ef);
+        elevText->setPos(x - 30, y + 34);
+    };
+
+    // Draw Stop Nodes matching user colors:
+    // Green: Start Location (#238636)
+    // Red: Destination (#DA3633)
+    // Intermediate: Green (#238636)
+    // Explored: Cyan (#06b6d4)
+    drawStopPin(x1, y1, "Haldwani Bus Terminal", "ST101", "Alt: 424m ASL", QColor("#238636"));
+    drawStopPin(x2, y2, "Kathgodam Rail Station", "ST102", "Alt: 554m ASL", QColor("#238636"));
+    drawStopPin(x3, y3, "Ranibagh Junction", "ST103", "Alt: 620m ASL", QColor("#238636"));
+    drawStopPin(x4, y4, "Bhujiaghat Bypass", "ST104", "Alt: 910m ASL", QColor("#06b6d4")); // Explored node
+    drawStopPin(x5, y5, "Bhimtal Lake Mall Road", "ST105", "Alt: 1,370m ASL", QColor("#238636"));
+    drawStopPin(x6, y6, "Graphic Era Hill University", "ST106", "Alt: 1,420m ASL", QColor("#DA3633"), true);
+
+    // Initial Bus Marker at Haldwani
+    busMarker = graphScene->addEllipse(x1 - 9, y1 - 9, 18, 18, QPen(Qt::white, 2), QBrush(QColor("#DA3633")));
 }
 
-// SLOTS IMPLEMENTATIONS
+// 12. DATA REFRESH HELPERS
+void MainWindow::refreshAllDataViews() {
+    refreshFleetMetrics();
+    refreshStudentDirectory();
+    refreshAttendanceTable();
+    refreshComplaintTable();
+    renderRouteGraph();
+}
+
+void MainWindow::refreshFleetMetrics() {
+    // Total fleet KPIs
+    const auto& buses = sysManager.getAllBuses();
+    int totalCap = 0;
+    for (const auto& b : buses) totalCap += b.getCapacity();
+
+    if (kpiTotalBusesLabel) kpiTotalBusesLabel->setText(QString("%1 Units Active").arg(buses.size()));
+    if (kpiTotalSeatsLabel) kpiTotalSeatsLabel->setText(QString("%1 Seats Capacity").arg(totalCap));
+    if (kpiScheduleLabel) kpiScheduleLabel->setText(sysManager.getScheduleType() == ScheduleType::FULL_DAY ? "Full-Day Active" : "Half-Day Active");
+    
+    int activeCompCount = 0;
+    for (const auto& c : sysManager.getComplaintEngine().getComplaints()) {
+        if (c.status != "RESOLVED" && c.status != "REJECTED") activeCompCount++;
+    }
+    if (kpiComplaintsLabel) kpiComplaintsLabel->setText(QString("%1 Active Cases").arg(activeCompCount));
+}
+
+void MainWindow::refreshStudentDirectory() {
+    if (!studentDirTable) return;
+    const auto& students = sysManager.getAllStudents();
+    studentDirTable->setRowCount(students.size());
+
+    for (size_t i = 0; i < students.size(); ++i) {
+        studentDirTable->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(students[i].getName())));
+        studentDirTable->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(students[i].getRollNumber())));
+        studentDirTable->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(students[i].getPhone())));
+        studentDirTable->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(students[i].getAssignedStopId())));
+        studentDirTable->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(students[i].getAssignedRouteId())));
+
+        QTableWidgetItem* feeItem = new QTableWidgetItem(students[i].isFeePaid() ? "PAID" : "PENDING");
+        feeItem->setForeground(students[i].isFeePaid() ? QColor("#3FB950") : QColor("#F85149"));
+        feeItem->setFont(QFont(feeItem->font().family(), -1, QFont::Bold));
+        studentDirTable->setItem(i, 5, feeItem);
+    }
+}
+
+void MainWindow::refreshAttendanceTable() {
+    if (!attendanceTable) return;
+    const auto& students = sysManager.getAllStudents();
+    attendanceTable->setRowCount(students.size());
+
+    QStringList mockTimes = {"07:32:15 AM", "07:44:02 AM", "08:02:40 AM", "08:18:11 AM"};
+
+    for (size_t i = 0; i < students.size(); ++i) {
+        QString time = (i < mockTimes.size()) ? mockTimes[i] : "08:25:00 AM";
+        attendanceTable->setItem(i, 0, new QTableWidgetItem("2026-11-15 " + time));
+        attendanceTable->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(students[i].getRollNumber())));
+        attendanceTable->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(students[i].getName())));
+        attendanceTable->setItem(i, 3, new QTableWidgetItem(i % 2 == 0 ? "B-101" : "B-102"));
+        attendanceTable->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(students[i].getAssignedStopId())));
+
+        QTableWidgetItem* feeItem = new QTableWidgetItem(students[i].isFeePaid() ? "PAID" : "PENDING");
+        feeItem->setForeground(students[i].isFeePaid() ? QColor("#3FB950") : QColor("#F85149"));
+        attendanceTable->setItem(i, 5, feeItem);
+
+        QString statusText = students[i].isFeePaid() ? "SUCCESSFUL" : "DENIED (UNPAID FEE)";
+        QColor statusColor = students[i].isFeePaid() ? QColor("#3FB950") : QColor("#F85149");
+        QTableWidgetItem* statusItem = new QTableWidgetItem(statusText);
+        statusItem->setForeground(statusColor);
+        statusItem->setFont(QFont(statusItem->font().family(), -1, QFont::Bold));
+        attendanceTable->setItem(i, 6, statusItem);
+    }
+}
+
+void MainWindow::refreshComplaintTable() {
+    if (!complaintTable) return;
+
+    QString catFilter = filterCategoryCombo ? filterCategoryCombo->currentText().replace("Category: ", "") : "All";
+    QString repFilter = filterReporterRoleCombo ? filterReporterRoleCombo->currentText().replace("Reporter: ", "") : "All Roles";
+    QString accFilter = filterAccusedRoleCombo ? filterAccusedRoleCombo->currentText().replace("Accused: ", "") : "All Roles";
+    QString statFilter = filterStatusCombo ? filterStatusCombo->currentText().replace("Status: ", "") : "All";
+
+    const auto& complaints = sysManager.getComplaintEngine().getComplaints();
+    vector<const Complaint*> filtered;
+
+    for (const auto& c : complaints) {
+        if (catFilter != "All" && c.category != catFilter.toStdString()) continue;
+        if (repFilter != "All Roles" && c.reporterRole != repFilter.toStdString()) continue;
+        if (accFilter != "All Roles" && c.accusedRole != accFilter.toStdString()) continue;
+        if (statFilter != "All" && c.status != statFilter.toStdString()) continue;
+        filtered.push_back(&c);
+    }
+
+    complaintTable->setRowCount(filtered.size());
+    for (size_t i = 0; i < filtered.size(); ++i) {
+        const auto* c = filtered[i];
+        complaintTable->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(c->complaintId)));
+        complaintTable->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(c->category)));
+        complaintTable->setItem(i, 2, new QTableWidgetItem(QString("%1 [%2]").arg(QString::fromStdString(c->reporterName), QString::fromStdString(c->reporterRole))));
+        complaintTable->setItem(i, 3, new QTableWidgetItem(QString("%1 [%2]").arg(QString::fromStdString(c->accusedName), QString::fromStdString(c->accusedRole))));
+        complaintTable->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(c->busId)));
+        complaintTable->setItem(i, 5, new QTableWidgetItem(QString::fromStdString(c->submissionDate)));
+        complaintTable->setItem(i, 6, new QTableWidgetItem(QString::fromStdString(c->submissionTime)));
+
+        QTableWidgetItem* statItem = new QTableWidgetItem(QString::fromStdString(c->status));
+        if (c->status == "RESOLVED") statItem->setForeground(QColor("#3FB950"));
+        else if (c->status == "POLL ACTIVE") statItem->setForeground(QColor("#58A6FF"));
+        else if (c->status == "UNDER INVESTIGATION") statItem->setForeground(QColor("#D29922"));
+        else if (c->status == "REJECTED") statItem->setForeground(QColor("#F85149"));
+        else statItem->setForeground(QColor("#E6EDF3"));
+        statItem->setFont(QFont(statItem->font().family(), -1, QFont::Bold));
+        complaintTable->setItem(i, 7, statItem);
+    }
+
+    if (!filtered.empty()) {
+        displayComplaintDetails(filtered[0]->complaintId);
+    }
+}
+
+void MainWindow::displayComplaintDetails(const string& complaintId) {
+    selectedComplaintId = complaintId;
+    Complaint* c = sysManager.getComplaintEngine().findComplaintById(complaintId);
+    if (!c) return;
+
+    complaintDetailHeader->setText(QString("Complaint Incident: %1 • Category: %2")
+                                   .arg(QString::fromStdString(c->complaintId), QString::fromStdString(c->category)));
+
+    complaintDetailBody->setText(QString(
+        "<b>Reported By:</b> %1 (%2)  |  <b>Accused:</b> %3 (%4)<br>"
+        "<b>Operating Bus:</b> %5  |  <b>Submission:</b> %6 at %7<br>"
+        "<b>Status:</b> <b>%8</b><br><br>"
+        "<b>Incident Description:</b><br>%9<br><br>"
+        "<b>Disciplinary Authority Resolution Note:</b><br><i>%10</i>"
+    ).arg(QString::fromStdString(c->reporterName), QString::fromStdString(c->reporterRole))
+     .arg(QString::fromStdString(c->accusedName), QString::fromStdString(c->accusedRole))
+     .arg(QString::fromStdString(c->busId))
+     .arg(QString::fromStdString(c->submissionDate), QString::fromStdString(c->submissionTime))
+     .arg(QString::fromStdString(c->status))
+     .arg(QString::fromStdString(c->description))
+     .arg(c->adminActionNote.empty() ? "No resolution directives entered yet." : QString::fromStdString(c->adminActionNote)));
+
+    // Poll Widget Updates
+    if (c->isPollActive || c->status == "POLL ACTIVE") {
+        pollGroupBox->setVisible(true);
+        int totalVotes = c->pollYesVotes + c->pollNoVotes;
+        int yesPct = (totalVotes > 0) ? (c->pollYesVotes * 100 / totalVotes) : 0;
+        int noPct = (totalVotes > 0) ? (c->pollNoVotes * 100 / totalVotes) : 0;
+
+        pollStatsLabel->setText(QString("Total Eligible Votes: <b>%1</b>  |  YES: <b>%2 (%3%)</b>  |  NO: <b>%4 (%5%)</b>")
+                                .arg(totalVotes).arg(c->pollYesVotes).arg(yesPct).arg(c->pollNoVotes).arg(noPct));
+        pollProgressBar->setValue(yesPct);
+
+        // Check if student has already voted
+        bool alreadyVoted = (std::find(c->votedStudentRolls.begin(), c->votedStudentRolls.end(), activeUsername) != c->votedStudentRolls.end());
+        bool isComplainant = (!c->complainantRoll.empty() && c->complainantRoll == activeUsername);
+        bool isAccused = (!c->accusedRoll.empty() && c->accusedRoll == activeUsername);
+
+        if (alreadyVoted) {
+            pollMessageLabel->setText("✓ You have already cast your confidential vote on this incident.");
+            pollMessageLabel->setStyleSheet("color: #3FB950; font-size: 11.5px;");
+            voteYesBtn->setEnabled(false);
+            voteNoBtn->setEnabled(false);
+        } else if (isComplainant || isAccused) {
+            pollMessageLabel->setText("⚠ Voting Disabled: Disciplinary rules prohibit parties involved in the complaint from casting a poll vote.");
+            pollMessageLabel->setStyleSheet("color: #D29922; font-size: 11.5px;");
+            voteYesBtn->setEnabled(false);
+            voteNoBtn->setEnabled(false);
+        } else {
+            pollMessageLabel->setText("• Please cast your confidential peer vote below:");
+            pollMessageLabel->setStyleSheet("color: #58A6FF; font-size: 11.5px;");
+            voteYesBtn->setEnabled(true);
+            voteNoBtn->setEnabled(true);
+        }
+    } else {
+        pollGroupBox->setVisible(false);
+    }
+}
+
+// 13. AUTHENTICATION & LOGIN SLOTS
+void MainWindow::onPerformLogin() {
+    QString username = loginUserEdit->text().trimmed();
+    QString password = loginPassEdit->text();
+
+    UserSession session = sysManager.login(username.toStdString(), password.toStdString());
+
+    if (!session.isAuthenticated || !session.activeAccount) {
+        loginStatusLabel->setText("Invalid username or password. Please verify your credentials.");
+        return;
+    }
+
+    UserAccount* acc = session.activeAccount;
+    activeUsername = acc->getUsername();
+    activeRole = acc->getRole();
+    loginStatusLabel->setText("");
+
+    loggedUserLabel->setText(QString("User: <b>%1</b>").arg(QString::fromStdString(activeUsername)));
+    loggedRoleBadge->setText(QString(" %1 ").arg(QString::fromStdString(acc->getRoleString()).toUpper()));
+
+    setupTabsForRole(activeRole, activeUsername);
+    refreshAllDataViews();
+
+    stackedWidget->setCurrentIndex(1); // Switch to Authenticated Portal View
+}
+
+void MainWindow::onPerformLogout() {
+    sysManager.logout();
+    activeUsername.clear();
+    tabWidget->clear();
+    stackedWidget->setCurrentIndex(0); // Return to Login View
+}
+
+void MainWindow::onTogglePasswordVisibility() {
+    isPasswordVisible = !isPasswordVisible;
+    loginPassEdit->setEchoMode(isPasswordVisible ? QLineEdit::Normal : QLineEdit::Password);
+    showPassBtn->setText(isPasswordVisible ? "Hide" : "Show");
+}
+
+void MainWindow::onQuickDemoLogin() {
+    QString roleCode = loginRoleCombo->currentData().toString();
+    if (roleCode == "ADMIN") {
+        loginUserEdit->setText("admin");
+        loginPassEdit->setText("admin123");
+    } else if (roleCode == "DRIVER") {
+        loginUserEdit->setText("D-01");
+        loginPassEdit->setText("driver123");
+    } else if (roleCode == "STUDENT") {
+        loginUserEdit->setText("2024-CS-001");
+        loginPassEdit->setText("student123");
+    } else if (roleCode == "PARENT") {
+        loginUserEdit->setText("P-101");
+        loginPassEdit->setText("parent123");
+    }
+}
+
+// 14. ADMIN ACTIONS
 void MainWindow::onScheduleChanged(int index) {
     sysManager.setScheduleType(index == 0 ? ScheduleType::FULL_DAY : ScheduleType::HALF_DAY);
+    refreshFleetMetrics();
     onSearchStudentSchedule();
 }
 
-void MainWindow::onSearchStudentSchedule() {
-    QString roll = studentRollInput->text().trimmed();
-    Student* s = sysManager.findStudentByRoll(roll.toStdString());
-
-    if (!s) {
-        studentInfoLabel->setText("❌ Student Roll Number not found in campus database.");
-        scheduleTable->setRowCount(0);
-        return;
-    }
-
-    Stop* stop = sysManager.findStopById(s->getAssignedStopId());
-    QString stopName = stop ? QString::fromStdString(stop->getStopName()) : QString::fromStdString(s->getAssignedStopId());
-
-    studentInfoLabel->setText(QString("Passenger: <b>%1</b> | Roll: <b>%2</b> | Assigned Stop: <b>%3 [%4]</b> | Route: <b>%5</b> | Fee Account: %6")
-                              .arg(QString::fromStdString(s->getName()))
-                              .arg(QString::fromStdString(s->getRollNumber()))
-                              .arg(stopName)
-                              .arg(QString::fromStdString(s->getAssignedStopId()))
-                              .arg(QString::fromStdString(s->getAssignedRouteId()))
-                              .arg(s->isFeePaid() ? "<font color='#16a34a'><b>PAID IN FULL</b></font>" : "<font color='#dc2626'><b>OUTSTANDING DUE</b></font>"));
-
-    // Populate Real Passing Buses for this Stop
-    const auto& allBuses = sysManager.getAllBuses();
-    vector<Bus> relevantBuses;
-    for (const auto& b : allBuses) {
-        if (b.getAssignedRouteId() == s->getAssignedRouteId()) {
-            relevantBuses.push_back(b);
-        }
-    }
-    if (relevantBuses.empty()) relevantBuses = allBuses;
-
-    scheduleTable->setRowCount(relevantBuses.size());
-    for (size_t i = 0; i < relevantBuses.size(); ++i) {
-        const auto& b = relevantBuses[i];
-        QString depTime = sysManager.getScheduleType() == ScheduleType::FULL_DAY ? "07:30 AM" : "07:15 AM";
-        if (b.getBusId() == "B-102") depTime = sysManager.getScheduleType() == ScheduleType::FULL_DAY ? "07:45 AM" : "07:30 AM";
-        if (b.getBusId() == "B-103") depTime = sysManager.getScheduleType() == ScheduleType::FULL_DAY ? "08:05 AM" : "07:45 AM";
-
-        QString campusEta = sysManager.getScheduleType() == ScheduleType::FULL_DAY ? "08:25 AM" : "08:00 AM";
-
-        scheduleTable->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(b.getBusId())));
-        scheduleTable->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(b.getAssignedRouteId()) + " (" + QString::fromStdString(b.getBusNumber()) + ")"));
-        scheduleTable->setItem(i, 2, new QTableWidgetItem(depTime));
-        scheduleTable->setItem(i, 3, new QTableWidgetItem(campusEta));
-        scheduleTable->setItem(i, 4, new QTableWidgetItem(QString::number(b.getCapacity() - b.getCurrentOccupancy()) + " Free Seats Available"));
-    }
-}
-
-void MainWindow::onFindConnectingBuses() {
-    QString roll = studentRollInput->text().trimmed();
-    Student* s = sysManager.findStudentByRoll(roll.toStdString());
-    string stopId = s ? s->getAssignedStopId() : "ST101";
-
-    QMessageBox::information(this, "Connecting Bus Engine", 
-        QString("🔄 <b>ALTERNATIVE & CONNECTING BUS ROUTE</b><br><br>"
-                "<b>Boarding Station:</b> %1<br>"
-                "<b>Primary Bus:</b> B-101 (Dep: 07:30 AM)<br>"
-                "<b>Connecting Transit Bus:</b> Bus B-102 (UK-04-PA-2002)<br>"
-                "<b>Estimated Connection Departure:</b> 07:45 AM<br>"
-                "<b>Available Seats:</b> 42 Seats Free<br>"
-                "<b>Route Option:</b> Route R2 (Valley Corridor)<br><br>"
-                "<i>Connecting transit service verified and safe for student transfer!</i>")
-        .arg(QString::fromStdString(stopId)));
-}
-
-void MainWindow::onShowDigitalQRPass() {
-    QString roll = studentRollInput->text().trimmed();
-    DigitalPass pass = sysManager.getStudentPass(roll.toStdString());
-    QMessageBox::information(this, "Digital QR Bus Pass", 
-                             QString("🎫 <b>CAMPUS DIGITAL BUS PASS</b><br><br>"
-                                     "<b>Student Name:</b> %1<br>"
-                                     "<b>Roll Number:</b> %2<br>"
-                                     "<b>Permitted Corridor:</b> %3<br>"
-                                     "<b>Boarding Checkpoint:</b> Sector 17 Terminal [ST101]<br>"
-                                     "<b>Cryptographic QR Hash:</b> %4<br>"
-                                     "<b>Validity:</b> Current Academic Semester 2026<br><br>"
-                                     "<font color='#059669'><b>[PASS STATUS: VERIFIED & ACTIVE]</b></font>")
-                             .arg(QString::fromStdString(pass.studentName))
-                             .arg(QString::fromStdString(pass.studentRoll))
-                             .arg(QString::fromStdString(pass.routeId))
-                             .arg(QString::fromStdString(pass.verificationHash)));
-}
-
-void MainWindow::onSubmitDriverRating() {
-    QString driverId = ratingDriverIdInput->text().trimmed();
-    QString roll = studentRollInput->text().trimmed();
-    int stars = 5 - ratingStarCombo->currentIndex(); // 5 down to 1
-    QString feedback = ratingFeedbackInput->text().trimmed();
-
-    sysManager.studentRateDriver(roll.toStdString(), driverId.toStdString(), stars, feedback.toStdString());
-    double avg = sysManager.getComplaintEngine().getAverageDriverRating(driverId.toStdString());
-
-    QMessageBox::information(this, "Driver Rating Recorded", 
-        QString("⭐ <b>Rating Submitted Successfully!</b><br><br>"
-                "<b>Operator:</b> %1<br>"
-                "<b>Your Score:</b> %2 / 5 Stars<br>"
-                "<b>Feedback:</b> \"%3\"<br>"
-                "<b>Driver Cumulative Average Rating:</b> %4 ★")
-        .arg(driverId)
-        .arg(stars)
-        .arg(feedback)
-        .arg(QString::number(avg, 'f', 1)));
-}
-
-void MainWindow::onTriggerStudentSOS() {
-    QString roll = studentRollInput->text().trimmed();
-    sysManager.triggerStudentSOS(roll.toStdString(), "B-101", "Sector 17 Terminal");
-    QMessageBox::critical(this, "🚨 EMERGENCY SOS ACTIVATED", 
-        "🚨 <b>EMERGENCY SOS ALERT DISPATCHED!</b><br><br>"
-        "College Transport Control Center, Campus Security, and Nearest Emergency Responders have been notified of your exact GPS checkpoint!");
-    refreshComplaintsTable();
-}
-
-// LODGE DRIVER COMPLAINT & TRIGGER COMMUNITY PEER VERIFICATION POPUP
-void MainWindow::onStudentFileComplaint() {
-    QString roll = studentRollInput->text().trimmed();
-    QString busId = complaintDriverCombo->currentData().toString();
-    QString category = complaintCategoryCombo->currentText();
-    QString desc = complaintDescInput->text().trimmed();
-
-    if (desc.isEmpty()) {
-        QMessageBox::warning(this, "Input Required", "Please enter specific incident observations before lodging the complaint.");
-        return;
-    }
-
-    // Submit complaint with real current timestamp
-    Complaint c = sysManager.studentReportDriver(roll.toStdString(), busId.toStdString(), category.toStdString(), desc.toStdString());
-
-    complaintDescInput->clear();
-    refreshComplaintsTable();
-    refreshDriverPollsTable();
-
-    // POP-UP PROMPT FOR STUDENTS TO VOTE RIGHT OR WRONG ON THIS DRIVER COMPLAINT
-    QMessageBox voteDialog(this);
-    voteDialog.setWindowTitle("📢 Driver Safety Report - Community Verification");
-    voteDialog.setIcon(QMessageBox::Question);
-    voteDialog.setText(QString(
-        "<b>🚨 NEW DRIVER MISCONDUCT REPORT LODGED FOR PEER VERIFICATION</b><br><br>"
-        "<b>Incident Reference:</b> %1<br>"
-        "<b>Time of Complaint:</b> <font color='#0284c7'><b>%2</b></font><br>"
-        "<b>Reported Target:</b> %3<br>"
-        "<b>Category:</b> %4<br>"
-        "<b>Passenger Account:</b> \"%5\"<br><br>"
-        "<i>As a student commuter on this corridor, do you verify this report as <b>RIGHT</b> (Valid) or <b>WRONG</b> (Disputed)?</i>")
-        .arg(QString::fromStdString(c.complaintId))
-        .arg(QString::fromStdString(c.timestamp))
-        .arg(QString::fromStdString(c.targetName))
-        .arg(QString::fromStdString(c.category))
-        .arg(QString::fromStdString(c.description)));
-
-    QPushButton* rightBtn = voteDialog.addButton("✅ Vote: Report is RIGHT", QMessageBox::YesRole);
-    rightBtn->setStyleSheet("background-color: #059669; color: white; font-weight: bold; padding: 6px 14px; border-radius: 4px;");
-
-    QPushButton* wrongBtn = voteDialog.addButton("❌ Vote: Report is WRONG", QMessageBox::NoRole);
-    wrongBtn->setStyleSheet("background-color: #dc2626; color: white; font-weight: bold; padding: 6px 14px; border-radius: 4px;");
-
-    QPushButton* decideLaterBtn = voteDialog.addButton("Decide Later", QMessageBox::RejectRole);
-
-    voteDialog.exec();
-
-    if (voteDialog.clickedButton() == rightBtn) {
-        onVoteOnComplaint(QString::fromStdString(c.complaintId), true);
-    } else if (voteDialog.clickedButton() == wrongBtn) {
-        onVoteOnComplaint(QString::fromStdString(c.complaintId), false);
-    }
-}
-
-void MainWindow::onVoteOnComplaint(const QString& compId, bool isRight) {
-    QString roll = studentRollInput->text().trimmed();
-    if (roll.isEmpty()) roll = "2024-CS-001";
-
-    string outMsg;
-    bool ok = sysManager.voteOnDriverComplaint(compId.toStdString(), roll.toStdString(), isRight, outMsg);
-
-    if (ok) {
-        QMessageBox::information(this, "Verification Vote Recorded", QString::fromStdString(outMsg));
-    } else {
-        QMessageBox::warning(this, "Vote Notice", QString::fromStdString(outMsg));
-    }
-
-    refreshComplaintsTable();
-    refreshDriverPollsTable();
-}
-
-void MainWindow::onDriverStartTrip() {
-    sysManager.driverStartTrip("B-101");
-    QMessageBox::information(this, "Driver Trip Control", "🚀 Morning Trip for Bus B-101 has officially started! GPS Telemetry active.");
-    refreshFleetTable();
-}
-
-void MainWindow::onDriverEndTrip() {
-    sysManager.driverEndTrip("B-101");
-    QMessageBox::information(this, "Driver Trip Control", "🏁 Trip ended successfully. All passengers unboarded safely.");
-    refreshFleetTable();
-}
-
-void MainWindow::onDriverReportDelay() {
-    QString reason = driverDelayReasonInput->text().trimmed();
-    int mins = driverDelayMinsInput->text().toInt();
-    sysManager.driverReportDelay("B-101", reason.toStdString(), mins);
-    QMessageBox::warning(this, "Delay Notice Dispatched", 
-        QString("⚠️ <b>Delay Notice Dispatched!</b><br><br>Alert sent to all students & parents on Route B-101.<br>Delay: %1 minutes (Reason: %2)")
-        .arg(mins).arg(reason));
-}
-
-void MainWindow::onDriverReportMisbehavior() {
-    QString roll = misbehaviorRollInput->text().trimmed();
-    QString desc = misbehaviorDescInput->text().trimmed();
-    sysManager.driverReportMisbehavior("Driver Rajesh Kumar", roll.toStdString(), desc.toStdString());
-    QMessageBox::information(this, "Misbehavior Logged", 
-        QString("🛑 Student Misbehavior Incident Logged with current timestamp.<br>Report Reference submitted to Dean of Student Welfare."));
-    refreshComplaintsTable();
-}
-
 void MainWindow::onAdminUpdateBus() {
-    QString busId = adminBusCombo->currentText();
-    QString regNo = adminRegInput->text().trimmed();
+    QString busId = adminBusCombo->currentText().section(" ", 0, 0);
+    QString reg = adminRegInput->text();
     int cap = adminCapInput->text().toInt();
-    QString routeId = adminRouteCombo->currentText();
+    QString rId = adminRouteCombo->currentText().section(" ", 0, 0);
 
-    if (sysManager.adminUpdateBus(busId.toStdString(), regNo.toStdString(), cap, routeId.toStdString())) {
-        QMessageBox::information(this, "Admin Update", "✅ Admin Update Successful: Bus " + busId + " parameters saved!");
-        refreshFleetTable();
+    if (sysManager.adminUpdateBus(busId.toStdString(), reg.toStdString(), cap, rId.toStdString())) {
+        QMessageBox::information(this, "Configuration Updated", "Bus " + busId + " specifications updated successfully.");
+        refreshFleetMetrics();
     }
 }
 
 void MainWindow::onAdminUpdateTiming() {
     QString stopId = adminTimingStopCombo->currentData().toString();
     QString busId = adminTimingBusCombo->currentText();
-    ScheduleType sType = (adminTimingScheduleCombo->currentIndex() == 1) ? ScheduleType::HALF_DAY : ScheduleType::FULL_DAY;
-    QString newTime = adminNewTimeInput->text().trimmed();
+    ScheduleType s = (adminTimingScheduleCombo->currentIndex() == 1) ? ScheduleType::HALF_DAY : ScheduleType::FULL_DAY;
+    QString time = adminNewTimeInput->text();
 
-    if (sysManager.adminUpdateStopTiming(stopId.toStdString(), busId.toStdString(), sType, newTime.toStdString())) {
-        QMessageBox::information(this, "Admin Timing Update", "✅ Departure time for Bus " + busId + " set to " + newTime + "!");
+    if (sysManager.adminUpdateStopTiming(stopId.toStdString(), busId.toStdString(), s, time.toStdString())) {
+        QMessageBox::information(this, "Timing Updated", "Departure timing for Stop " + stopId + " on Bus " + busId + " set to " + time + ".");
     }
 }
 
 void MainWindow::onAdminBroadcastNotice() {
-    sysManager.adminBroadcastNotice(TargetAudience::ALL_STUDENTS, "📢 College Transport Notice", "All campus bus corridors operating normally under safety standards.");
-    QMessageBox::information(this, "Broadcast Dispatched", "📢 Announcement broadcasted to all students and parents!");
+    sysManager.adminBroadcastNotice(TargetAudience::ALL_STUDENTS, "Mountain Transit Broadcast", "All campus transit coaches operating on standard mountain schedule.");
+    QMessageBox::information(this, "Broadcast Dispatched", "Campus transit broadcast notice transmitted to all student & parent portals.");
 }
 
-void MainWindow::onAdminUpdateComplaintStatus() {
-    if (!adminComplaintSelectCombo || adminComplaintSelectCombo->count() == 0) return;
-    QString compId = adminComplaintSelectCombo->currentText();
-    QString statusStr = adminComplaintStatusCombo->currentText();
-    QString note = adminActionNoteInput->text().trimmed();
+void MainWindow::onAdminRegisterStudentDialog() {
+    QDialog d(this);
+    d.setWindowTitle("Register New Student Commuter");
+    d.setStyleSheet("background-color: #161B22; color: #E6EDF3;");
+    QFormLayout* fl = new QFormLayout(&d);
 
-    ComplaintStatus st = ComplaintStatus::OPEN;
-    if (statusStr == "INVESTIGATING") st = ComplaintStatus::INVESTIGATING;
-    else if (statusStr == "WARNING_ISSUED") st = ComplaintStatus::WARNING_ISSUED;
-    else if (statusStr == "RESOLVED") st = ComplaintStatus::RESOLVED;
-    else if (statusStr == "CLOSED") st = ComplaintStatus::CLOSED;
+    QLineEdit* nameEdit = new QLineEdit(&d);
+    QLineEdit* rollEdit = new QLineEdit(&d);
+    QLineEdit* phoneEdit = new QLineEdit(&d);
+    QLineEdit* emailEdit = new QLineEdit(&d);
+    QComboBox* routeCombo = new QComboBox(&d);
+    routeCombo->addItem("R1"); routeCombo->addItem("R2");
+    QComboBox* stopCombo = new QComboBox(&d);
+    stopCombo->addItem("ST101 - Haldwani");
+    stopCombo->addItem("ST102 - Kathgodam");
+    stopCombo->addItem("ST103 - Ranibagh");
+    stopCombo->addItem("ST104 - Bhujiaghat");
+    stopCombo->addItem("ST105 - Bhimtal Lake");
 
-    sysManager.getComplaintEngine().updateComplaintStatus(compId.toStdString(), st, note.toStdString());
-    QMessageBox::information(this, "Complaint Status Updated", "✅ Complaint " + compId + " updated to " + statusStr + " with official admin action note.");
-    refreshComplaintsTable();
-    refreshDriverPollsTable();
-}
+    QComboBox* feeCombo = new QComboBox(&d);
+    feeCombo->addItem("PAID IN FULL", true);
+    feeCombo->addItem("PENDING", false);
 
-void MainWindow::onParentTrackChild() {
-    QString query = parentPhoneInput->text().trimmed();
-    Parent* p = sysManager.findParentByPhoneOrChild(query.toStdString());
+    fl->addRow("Full Name:", nameEdit);
+    fl->addRow("Roll Number:", rollEdit);
+    fl->addRow("Phone Number:", phoneEdit);
+    fl->addRow("Email Address:", emailEdit);
+    fl->addRow("Assigned Route:", routeCombo);
+    fl->addRow("Boarding Stop:", stopCombo);
+    fl->addRow("Fee Clearance:", feeCombo);
 
-    QString childName = p ? QString::fromStdString(p->getChildName()) : "Aarav Sharma";
-    QString roll = p ? QString::fromStdString(p->getChildRollNumber()) : "2024-CS-001";
-    QString parentName = p ? QString::fromStdString(p->getName()) : "Vijay Sharma";
-    double fee = p ? p->getFeeBalance() : 0.0;
+    QDialogButtonBox* bb = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &d);
+    connect(bb, &QDialogButtonBox::accepted, &d, &QDialog::accept);
+    connect(bb, &QDialogButtonBox::rejected, &d, &QDialog::reject);
+    fl->addRow("", bb);
 
-    parentInfoLabel->setText(QString(
-        "📡 <b>LIVE PARENT CHILD TRANSIT TELEMETRY</b><br><br>"
-        "<b>Parent / Guardian:</b> %1<br>"
-        "<b>Student:</b> %2 (Roll: %3)<br>"
-        "<b>Assigned Vehicle:</b> Bus B-101 (Express Route R1)<br>"
-        "<b>Assigned Driver:</b> Rajesh Kumar (Phone: +91-9876500001)<br>"
-        "<b>Current Transit Checkpoint:</b> Central Metro Station (ST102)<br>"
-        "<b>Estimated Arrival at College:</b> 08:25 AM (<font color='#16a34a'><b>ON TIME ✅</b></font>)<br>"
-        "<b>Fee Ledger Status:</b> %4")
-        .arg(parentName)
-        .arg(childName)
-        .arg(roll)
-        .arg(fee > 0 ? "₹" + QString::number(fee) + " Outstanding Due" : "<font color='#16a34a'><b>PAID IN FULL</b></font>"));
-}
+    if (d.exec() == QDialog::Accepted) {
+        string name = nameEdit->text().toStdString();
+        string roll = rollEdit->text().toStdString();
+        string phone = phoneEdit->text().toStdString();
+        string email = emailEdit->text().toStdString();
+        string rId = routeCombo->currentText().toStdString();
+        string sId = stopCombo->currentText().section(" ", 0, 0).toStdString();
+        bool fee = feeCombo->currentData().toBool();
 
-void MainWindow::onParentPayFee() {
-    QString query = parentPhoneInput->text().trimmed();
-    Parent* p = sysManager.findParentByPhoneOrChild(query.toStdString());
+        if (name.empty() || roll.empty()) {
+            QMessageBox::warning(this, "Input Required", "Student Name and Roll Number cannot be empty.");
+            return;
+        }
 
-    if (p) {
-        p->setFeeBalance(0.0);
+        if (sysManager.adminRegisterNewStudent(name, roll, phone, email, rId, sId, fee)) {
+            QMessageBox::information(this, "Student Enrolled", "Student " + QString::fromStdString(name) + " successfully registered!");
+            refreshStudentDirectory();
+            refreshAttendanceTable();
+        } else {
+            QMessageBox::warning(this, "Duplicate Error", "A student with this roll number is already registered.");
+        }
     }
-    QMessageBox::information(this, "Fee Payment Confirmed", "💳 <b>Payment Authorized!</b><br>Outstanding transport fee cleared. Digital fee receipt dispatched via SMS.");
-    onParentTrackChild();
-}
-
-void MainWindow::onOptimizeRoute() {
-    QString startId = startStopCombo->currentData().toString();
-    QString destId = destStopCombo->currentData().toString();
-
-    if (startId == destId) {
-        routeInfoLabel->setText("Please select different start and destination stops.");
-        return;
-    }
-
-    if (startId == "ST101" && destId == "ST105") {
-        routeInfoLabel->setText("Optimal Path: <b>ST101 (Sector 17) ➔ ST102 (Metro) ➔ ST103 (Tech Park) ➔ ST105 (Campus)</b> | Distance: 15.7 km | ETA: 34 mins");
-    } else {
-        routeInfoLabel->setText("Optimal Path: <b>" + startId + " ➔ " + destId + "</b> | Evaluated via Dijkstra shortest distance algorithm.");
-    }
-}
-
-void MainWindow::onStartLiveSim() {
-    simStep = 0;
-    currentSimStops = {"ST101 (Sector 17)", "ST102 (Central Metro)", "ST103 (Tech Park)", "ST105 (College Campus)"};
-    simTimer->start(1200);
-}
-
-void MainWindow::onSimStep() {
-    if (simStep >= 4) {
-        simTimer->stop();
-        routeInfoLabel->setText("✅ Live Simulation Complete! Bus B-101 arrived safely at College Campus.");
-        return;
-    }
-
-    int coords[4][2] = {{60, 150}, {200, 80}, {350, 80}, {520, 150}};
-    if (busMarker) {
-        busMarker->setPos(coords[simStep][0] - 60, coords[simStep][1] - 150);
-    }
-    routeInfoLabel->setText(QString("⏱️ Live GPS Simulation: Vehicle traversing Checkpoint %1/4 [%2]")
-                            .arg(simStep + 1)
-                            .arg(QString::fromStdString(currentSimStops[simStep])));
-    simStep++;
 }
 
 void MainWindow::onBoardStudent() {
@@ -1205,9 +1473,295 @@ void MainWindow::onBoardStudent() {
 
     try {
         sysManager.processBoarding(roll.toStdString(), busId.toStdString());
-        QMessageBox::information(this, "Boarding Confirmed", "✅ Student " + roll + " successfully verified and boarded on Bus " + busId + "!");
-        refreshFleetTable();
+        QMessageBox::information(this, "Boarding Authorized", "Passenger attendance logged successfully for Bus " + busId + ".");
+        refreshAttendanceTable();
+        refreshFleetMetrics();
     } catch (const SeatFullException& ex) {
-        QMessageBox::warning(this, "Boarding Denied (Capacity Exceeded)", ex.what());
+        QMessageBox::warning(this, "Boarding Denied", ex.what());
     }
+}
+
+void MainWindow::onVerifyQRPass() {
+    QString roll = boardRollInput->text().trimmed();
+    DigitalPass pass = sysManager.getStudentPass(roll.toStdString());
+    QMessageBox::information(this, "Digital QR Cryptographic Verification",
+                             QString("<b>PASS VERIFICATION RESULT: AUTHENTIC</b><br><br>"
+                                     "<b>Student:</b> %1<br>"
+                                     "<b>Roll Number:</b> %2<br>"
+                                     "<b>Route:</b> %3<br>"
+                                     "<b>SHA-256 Token:</b> %4<br><br>"
+                                     "<font color='#3FB950'><b>ACCESS GRANTED FOR BOARDING</b></font>")
+                             .arg(QString::fromStdString(pass.studentName),
+                                  QString::fromStdString(pass.studentRoll),
+                                  QString::fromStdString(pass.routeId),
+                                  QString::fromStdString(pass.verificationHash)));
+}
+
+// 15. STUDENT SLOTS
+void MainWindow::onSearchStudentSchedule() {
+    QString roll = studentRollInput->text().trimmed();
+    Student* s = sysManager.findStudentByRoll(roll.toStdString());
+
+    if (!s) {
+        studentInfoLabel->setText("Student record not found for roll number: " + roll);
+        studentScheduleTable->setRowCount(0);
+        return;
+    }
+
+    studentInfoLabel->setText(QString(
+        "Student Commuter: <b>%1</b>  |  Roll: <b>%2</b>  |  Assigned Stop: <b>%3</b>  |  Semester Fee: %4"
+    ).arg(QString::fromStdString(s->getName()))
+     .arg(QString::fromStdString(s->getRollNumber()))
+     .arg(QString::fromStdString(s->getAssignedStopId()))
+     .arg(s->isFeePaid() ? "<font color='#3FB950'><b>PAID IN FULL</b></font>" : "<font color='#F85149'><b>PENDING</b></font>"));
+
+    studentScheduleTable->setRowCount(1);
+    studentScheduleTable->setItem(0, 0, new QTableWidgetItem("B-101 (UK-04-PA-1001)"));
+    studentScheduleTable->setItem(0, 1, new QTableWidgetItem("Express Hill Corridor (R1)"));
+    studentScheduleTable->setItem(0, 2, new QTableWidgetItem(QString::fromStdString(s->getAssignedStopId())));
+    studentScheduleTable->setItem(0, 3, new QTableWidgetItem(sysManager.getScheduleType() == ScheduleType::FULL_DAY ? "07:15 AM" : "07:00 AM"));
+}
+
+void MainWindow::onShowDigitalQRPass() {
+    QString roll = studentRollInput->text().trimmed();
+    DigitalPass pass = sysManager.getStudentPass(roll.toStdString());
+    QMessageBox::information(this, "Digital QR Bus Pass",
+                             QString("<b>OFFICIAL DIGITAL BUS PASS</b><br><br>"
+                                     "<b>Student:</b> %1<br>"
+                                     "<b>Roll Number:</b> %2<br>"
+                                     "<b>Route:</b> %3<br>"
+                                     "<b>Digital Token:</b> %4<br><br>"
+                                     "<font color='#3FB950'><b>VALID FOR GRAPHIC ERA CAMPUS TRANSIT</b></font>")
+                             .arg(QString::fromStdString(pass.studentName),
+                                  QString::fromStdString(pass.studentRoll),
+                                  QString::fromStdString(pass.routeId),
+                                  QString::fromStdString(pass.verificationHash)));
+}
+
+void MainWindow::onSubmitDriverRating() {
+    QString driverId = ratingDriverIdInput->text().trimmed();
+    QString roll = studentRollInput->text().trimmed();
+    int stars = 5 - ratingStarCombo->currentIndex();
+    QString feedback = ratingFeedbackInput->text();
+
+    sysManager.studentRateDriver(roll.toStdString(), driverId.toStdString(), stars, feedback.toStdString());
+    QMessageBox::information(this, "Rating Submitted", "Thank you! Your rating of " + QString::number(stars) + " stars has been registered for Driver " + driverId + ".");
+}
+
+void MainWindow::onTriggerStudentSOS() {
+    QString roll = studentRollInput->text().trimmed();
+    sysManager.triggerStudentSOS(roll.toStdString(), "B-101", "Haldwani Mountain Corridor");
+    QMessageBox::critical(this, "EMERGENCY SOS TRANSMITTED", "EMERGENCY SOS ALERT TRANSMITTED TO CAMPUS TRANSPORT SECURITY DESK!");
+    refreshComplaintTable();
+}
+
+// 16. DRIVER SLOTS
+void MainWindow::onDriverStartTrip() {
+    sysManager.driverStartTrip("B-101");
+    QMessageBox::information(this, "Trip Telemetry Active", "Mountain ascent trip for Bus B-101 started.");
+}
+
+void MainWindow::onDriverEndTrip() {
+    sysManager.driverEndTrip("B-101");
+    QMessageBox::information(this, "Trip Concluded", "Bus B-101 reached Graphic Era Hill University Terminal.");
+}
+
+void MainWindow::onDriverReportDelay() {
+    QString reason = driverDelayReasonInput->text();
+    int mins = driverDelayMinsInput->text().toInt();
+    sysManager.driverReportDelay("B-101", reason.toStdString(), mins);
+    QMessageBox::warning(this, "Delay Broadcast", "Highway delay notice dispatched to all commuters.");
+}
+
+void MainWindow::onDriverReportMisbehavior() {
+    QString roll = misbehaviorRollInput->text().trimmed();
+    QString desc = misbehaviorDescInput->text();
+    sysManager.driverReportMisbehavior("Driver Rajesh Kumar", roll.toStdString(), desc.toStdString());
+    QMessageBox::information(this, "Incident Logged", "Disciplinary misbehavior report logged against Student " + roll + ". Student Disciplinary Poll activated.");
+    refreshComplaintTable();
+}
+
+// 17. PARENT SLOTS
+void MainWindow::onParentTrackChild() {
+    QString query = parentPhoneInput->text().trimmed();
+    Parent* p = sysManager.findParentByPhoneOrChild(query.toStdString());
+
+    parentInfoLabel->setText(QString(
+        "<b>LIVE WARD TRANSIT TELEMETRY MONITOR</b><br><br>"
+        "<b>Parent/Guardian:</b> %1  |  <b>Student Ward:</b> %2 (%3)<br>"
+        "<b>Assigned Vehicle:</b> Bus B-101 (UK-04-PA-1001) • Express Hill Corridor<br>"
+        "<b>Current Mountain Checkpoint:</b> Kathgodam Railway Station [ST102]<br>"
+        "<b>ETA to Graphic Era Bhimtal Campus:</b> 08:25 AM (<font color='#3FB950'><b>ON SCHEDULE</b></font>)<br>"
+        "<b>Transportation Fee Status:</b> %4"
+    ).arg(p ? QString::fromStdString(p->getName()) : "Vijay Sharma")
+     .arg(p ? QString::fromStdString(p->getChildName()) : "Aarav Sharma")
+     .arg(p ? QString::fromStdString(p->getChildRollNumber()) : "2024-CS-001")
+     .arg(p && p->getFeeBalance() > 0 ? "₹" + QString::number(p->getFeeBalance()) + " (Outstanding)" : "<font color='#3FB950'><b>PAID IN FULL</b></font>"));
+}
+
+// 18. COMPLAINT & STUDENT POLL SLOTS
+void MainWindow::onComplaintTableSelectionChanged() {
+    int row = complaintTable->currentRow();
+    if (row < 0) return;
+    QString compId = complaintTable->item(row, 0)->text();
+    displayComplaintDetails(compId.toStdString());
+}
+
+void MainWindow::onApplyComplaintFilters() {
+    refreshComplaintTable();
+}
+
+void MainWindow::onCastStudentVote(bool voteYes) {
+    if (selectedComplaintId.empty()) return;
+    string outMsg;
+    bool success = sysManager.castStudentPollVote(selectedComplaintId, activeUsername, voteYes, outMsg);
+
+    if (success) {
+        QMessageBox::information(this, "Vote Recorded", QString::fromStdString(outMsg));
+    } else {
+        QMessageBox::warning(this, "Voting Denied", QString::fromStdString(outMsg));
+    }
+
+    displayComplaintDetails(selectedComplaintId);
+    refreshComplaintTable();
+}
+
+void MainWindow::onAdminInvestigateComplaint() {
+    if (selectedComplaintId.empty()) return;
+    sysManager.adminInvestigateComplaint(selectedComplaintId);
+    displayComplaintDetails(selectedComplaintId);
+    refreshComplaintTable();
+}
+
+void MainWindow::onAdminResolveComplaint() {
+    if (selectedComplaintId.empty()) return;
+    bool ok;
+    QString note = QInputDialog::getText(this, "Resolve Complaint", "Enter Official Disciplinary Resolution Directives:", QLineEdit::Normal, "Hearing concluded; counseling issued.", &ok);
+    if (ok) {
+        sysManager.adminResolveComplaint(selectedComplaintId, note.toStdString());
+        displayComplaintDetails(selectedComplaintId);
+        refreshComplaintTable();
+    }
+}
+
+void MainWindow::onAdminRejectComplaint() {
+    if (selectedComplaintId.empty()) return;
+    bool ok;
+    QString reason = QInputDialog::getText(this, "Reject Complaint", "Enter Recorded Evidentiary Rejection Reason:", QLineEdit::Normal, "Dismissed due to lack of corroborating evidence.", &ok);
+    if (ok) {
+        sysManager.adminRejectComplaint(selectedComplaintId, reason.toStdString());
+        displayComplaintDetails(selectedComplaintId);
+        refreshComplaintTable();
+    }
+}
+
+void MainWindow::onSubmitNewComplaint() {
+    QString cat = newCompCategoryCombo->currentText();
+    QString accName = newCompAccusedNameEdit->text().trimmed();
+    QString accRole = newCompAccusedRoleCombo->currentText();
+    QString bus = newCompBusEdit->text().trimmed();
+    QString desc = newCompDescEdit->text().trimmed();
+
+    if (accName.isEmpty() || desc.isEmpty()) {
+        QMessageBox::warning(this, "Input Required", "Accused person name and incident description must be provided.");
+        return;
+    }
+
+    string repRole = "Student";
+    if (activeRole == UserRole::ADMIN) repRole = "Admin";
+    else if (activeRole == UserRole::DRIVER) repRole = "Driver";
+    else if (activeRole == UserRole::PARENT) repRole = "Parent";
+
+    string newId = sysManager.submitComprehensiveComplaint(
+        cat.toStdString(), desc.toStdString(),
+        activeUsername, repRole,
+        accName.toStdString(), accRole.toStdString(),
+        bus.toStdString(), activeUsername, accName.toStdString()
+    );
+
+    QMessageBox::information(this, "Complaint Registered", "Complaint " + QString::fromStdString(newId) + " registered successfully.");
+    newCompDescEdit->clear();
+    refreshComplaintTable();
+    displayComplaintDetails(newId);
+}
+
+// 19. ROUTE OPTIMIZER SLOTS
+void MainWindow::onCalculateOptimalRoute() {
+    QString startId = startStopCombo->currentData().toString();
+    QString algo = algoCombo->currentText();
+
+    double dist = 28.2;
+    int duration = 48;
+    int elevGain = 996;
+    int stops = 5;
+
+    if (startId == "ST102") {
+        dist = 23.7; duration = 38; elevGain = 866; stops = 4;
+    } else if (startId == "ST103") {
+        dist = 19.7; duration = 32; elevGain = 800; stops = 3;
+    } else if (startId == "ST104") {
+        dist = 15.4; duration = 28; elevGain = 510; stops = 3;
+    } else if (startId == "ST105") {
+        dist = 4.2; duration = 10; elevGain = 50; stops = 2;
+    }
+
+    routeKpiDistance->setText(QString("Total Road Distance: <b>%1 KM</b>").arg(dist, 0, 'f', 1));
+    routeKpiDuration->setText(QString("Estimated Time: <b>%1 Mins</b>").arg(duration));
+    routeKpiElevation->setText(QString("Elevation Traversal: <b>+%1m Ascent</b>").arg(elevGain));
+    routeKpiStops->setText(QString("Stops: <b>%1 Checkpoints</b>").arg(stops));
+    routeKpiAlgo->setText(QString("Algorithm: <b>%1</b>").arg(algo.contains("A*") ? "A* Search" : "Dijkstra"));
+
+    routeInfoLabel->setText(QString("Calculated Optimal Route: <b>%1</b> -> <b>Graphic Era Hill University, Bhimtal Campus</b> | Method: <b>%2</b>")
+                            .arg(startStopCombo->currentText().section(" - ", 1, 1).section(" [", 0, 0), algo));
+}
+
+void MainWindow::onStartLiveSim() {
+    simStep = 0;
+    QString startId = startStopCombo->currentData().toString();
+    if (startId == "ST101") currentSimStops = {"Haldwani", "Kathgodam", "Ranibagh", "Bhimtal Lake", "Graphic Era Campus"};
+    else if (startId == "ST102") currentSimStops = {"Kathgodam", "Ranibagh", "Bhimtal Lake", "Graphic Era Campus"};
+    else if (startId == "ST103") currentSimStops = {"Ranibagh", "Bhimtal Lake", "Graphic Era Campus"};
+    else if (startId == "ST104") currentSimStops = {"Bhujiaghat Bypass", "Bhimtal Lake", "Graphic Era Campus"};
+    else currentSimStops = {"Bhimtal Lake", "Graphic Era Campus"};
+
+    simTimer->start(1200);
+}
+
+void MainWindow::onSimStep() {
+    if (simStep >= (int)currentSimStops.size()) {
+        simTimer->stop();
+        routeInfoLabel->setText("✅ Arrival Confirmed: Bus arrived safely at Graphic Era Hill University, Bhimtal Campus!");
+        return;
+    }
+
+    int coords[6][2] = {
+        {90, 340},   // Haldwani
+        {260, 280},  // Kathgodam
+        {450, 230},  // Ranibagh
+        {620, 310},  // Bhujiaghat
+        {800, 160},  // Bhimtal Lake
+        {1040, 90}   // Graphic Era Campus
+    };
+
+    int ptIdx = 0;
+    string cur = currentSimStops[simStep];
+    if (cur == "Haldwani") ptIdx = 0;
+    else if (cur == "Kathgodam") ptIdx = 1;
+    else if (cur == "Ranibagh") ptIdx = 2;
+    else if (cur == "Bhujiaghat Bypass") ptIdx = 3;
+    else if (cur == "Bhimtal Lake") ptIdx = 4;
+    else if (cur == "Graphic Era Campus") ptIdx = 5;
+
+    if (busMarker) {
+        busMarker->setPos(coords[ptIdx][0] - 90, coords[ptIdx][1] - 340);
+    }
+
+    routeInfoLabel->setText(QString("⏱️ Live Vehicle Telemetry: Bus traversing Checkpoint %1/%2 [%3] en route to Graphic Era Campus")
+                            .arg(simStep + 1).arg(currentSimStops.size()).arg(QString::fromStdString(cur)));
+    simStep++;
+}
+
+void MainWindow::onOpenInteractiveOpenStreetMap() {
+    QString htmlPath = QDir::current().filePath("web/index.html");
+    QDesktopServices::openUrl(QUrl::fromLocalFile(htmlPath));
 }

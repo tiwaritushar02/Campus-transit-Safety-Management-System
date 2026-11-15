@@ -3,8 +3,16 @@
 
 /**
  * ============================================================================
- * QT GUI MODULE: Extended Desktop Application Interface (Role-Based Visibility)
+ * QT GUI MODULE: Smart College Bus Management System (Master Redesign)
  * FILE: MainWindow.hpp
+ * 
+ * DESIGN FEATURES:
+ * - GitHub-Inspired Professional Dark Theme (#0D1117, #161B22, #1C2533, #30363D)
+ * - Glass/Dark Login Screen with College Bus & Campus Background Overlay
+ * - Advanced Complaint Management with Reporter/Accused Tracking & Student YES/NO Polls
+ * - Real Haldwani to Graphic Era Hill University (Bhimtal Campus) Route Optimizer
+ * - Fixed Destination (GEHU Bhimtal Campus) with A* and Dijkstra Algorithms
+ * - Multi-Role Authorization: Admin, Student, Driver, Parent Portals
  * ============================================================================
  */
 
@@ -16,10 +24,12 @@
 #include <QPushButton>
 #include <QTableWidget>
 #include <QLabel>
+#include <QProgressBar>
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsEllipseItem>
 #include <QTimer>
+#include <QGroupBox>
 #include "SystemManager.hpp"
 
 using namespace std;
@@ -29,8 +39,10 @@ class MainWindow : public QMainWindow {
 
 private:
     SystemManager sysManager;
+    string activeUsername;
+    UserRole activeRole;
 
-    // Stacked View Navigation
+    // Stacked Navigation (Index 0 = Login Screen, Index 1 = Authenticated Portal)
     QStackedWidget* stackedWidget;
     QWidget* loginWidget;
     QWidget* portalWidget;
@@ -39,129 +51,190 @@ private:
     QComboBox* loginRoleCombo;
     QLineEdit* loginUserEdit;
     QLineEdit* loginPassEdit;
+    QPushButton* showPassBtn;
     QLabel* loginStatusLabel;
+    bool isPasswordVisible;
 
-    // Logged In Banner
+    // Authenticated Header Bar
     QLabel* loggedUserLabel;
     QLabel* loggedRoleBadge;
     QComboBox* scheduleComboBox;
     QTabWidget* tabWidget;
 
-    // Tab Widgets for Role Filtering
+    // Portals
+    QWidget* adminTabWidget;
     QWidget* studentTabWidget;
     QWidget* driverTabWidget;
-    QWidget* adminTabWidget;
     QWidget* parentTabWidget;
     QWidget* routeVisualizerTabWidget;
-    QWidget* fleetAndComplaintsTabWidget;
+    QWidget* complaintDeskTabWidget;
 
-    // Tab 1: Student Portal
+    // Admin Dashboard Summary Metric KPI Labels
+    QLabel* kpiTotalBusesLabel;
+    QLabel* kpiTotalSeatsLabel;
+    QLabel* kpiCorridorsLabel;
+    QLabel* kpiScheduleLabel;
+    QLabel* kpiAttendanceLabel;
+    QLabel* kpiComplaintsLabel;
+
+    // Admin Bus Fleet Configuration
+    QComboBox* adminBusCombo;
+    QLineEdit* adminRegInput;
+    QLineEdit* adminCapInput;
+    QComboBox* adminRouteCombo;
+
+    // Admin Stop Timings & Broadcast
+    QComboBox* adminTimingStopCombo;
+    QComboBox* adminTimingBusCombo;
+    QComboBox* adminTimingScheduleCombo;
+    QLineEdit* adminNewTimeInput;
+
+    // Admin Student Transport Directory
+    QTableWidget* studentDirTable;
+    QPushButton* registerStudentBtn;
+
+    // Admin Attendance & Boarding Management
+    QLineEdit* boardRollInput;
+    QComboBox* boardBusCombo;
+    QTableWidget* attendanceTable;
+
+    // Student Portal
     QLineEdit* studentRollInput;
     QLabel* studentInfoLabel;
-    QTableWidget* scheduleTable;
+    QTableWidget* studentScheduleTable;
     QLineEdit* ratingDriverIdInput;
     QComboBox* ratingStarCombo;
     QLineEdit* ratingFeedbackInput;
 
-    // Student Complaint & Peer Voting Widgets
-    QComboBox* complaintDriverCombo;
-    QComboBox* complaintCategoryCombo;
-    QLineEdit* complaintDescInput;
-    QTableWidget* driverPollsTable;
-
-    // Tab 2: Driver Portal
+    // Driver Portal
     QComboBox* driverBusCombo;
     QLineEdit* driverDelayReasonInput;
     QLineEdit* driverDelayMinsInput;
     QLineEdit* misbehaviorRollInput;
     QLineEdit* misbehaviorDescInput;
 
-    // Tab 3: Admin Control Panel
-    QComboBox* adminBusCombo;
-    QLineEdit* adminRegInput;
-    QLineEdit* adminCapInput;
-    QComboBox* adminRouteCombo;
-    QComboBox* adminTimingStopCombo;
-    QComboBox* adminTimingBusCombo;
-    QComboBox* adminTimingScheduleCombo;
-    QLineEdit* adminNewTimeInput;
-
-    // Tab 4: Parent Portal
+    // Parent Portal
     QLineEdit* parentPhoneInput;
     QLabel* parentInfoLabel;
-    QPushButton* parentPayFeeBtn;
 
-    // Tab 5: Route Optimizer & Visualizer
+    // Complaint Desk & Student Disciplinary Poll
+    QComboBox* filterCategoryCombo;
+    QComboBox* filterReporterRoleCombo;
+    QComboBox* filterAccusedRoleCombo;
+    QComboBox* filterStatusCombo;
+    QTableWidget* complaintTable;
+
+    QLabel* complaintDetailHeader;
+    QLabel* complaintDetailBody;
+    QGroupBox* pollGroupBox;
+    QLabel* pollQuestionLabel;
+    QLabel* pollStatsLabel;
+    QProgressBar* pollProgressBar;
+    QPushButton* voteYesBtn;
+    QPushButton* voteNoBtn;
+    QLabel* pollMessageLabel;
+    string selectedComplaintId;
+
+    // Admin Complaint Action Buttons
+    QPushButton* adminInvestigateBtn;
+    QPushButton* adminResolveBtn;
+    QPushButton* adminRejectBtn;
+
+    // Submit Complaint Form
+    QComboBox* newCompCategoryCombo;
+    QLineEdit* newCompAccusedNameEdit;
+    QComboBox* newCompAccusedRoleCombo;
+    QLineEdit* newCompBusEdit;
+    QLineEdit* newCompDescEdit;
+
+    // Route Optimizer & Topographic Graph
+    QComboBox* startStopCombo;
+    QComboBox* destStopCombo; // FIXED: Graphic Era Hill University, Bhimtal Campus
+    QComboBox* algoCombo;     // Dijkstra vs A*
+    QLabel* routeKpiDistance;
+    QLabel* routeKpiDuration;
+    QLabel* routeKpiElevation;
+    QLabel* routeKpiStops;
+    QLabel* routeKpiAlgo;
+    QLabel* routeKpiStatus;
+    QLabel* routeInfoLabel;
+
     QGraphicsView* graphView;
     QGraphicsScene* graphScene;
-    QComboBox* startStopCombo;
-    QComboBox* destStopCombo;
-    QLabel* routeInfoLabel;
     QTimer* simTimer;
     int simStep;
     vector<string> currentSimStops;
     QGraphicsEllipseItem* busMarker;
 
-    // Tab 6: Fleet & Complaints Registry
-    QTableWidget* fleetTable;
-    QLineEdit* boardRollInput;
-    QComboBox* boardBusCombo;
-    QTableWidget* complaintsTable;
-    QComboBox* adminComplaintSelectCombo;
-    QComboBox* adminComplaintStatusCombo;
-    QLineEdit* adminActionNoteInput;
-
-    // GUI Initialization Helpers
+    // Initialization Helpers
     void setupUI();
-    QWidget* createTopHeader(bool isLoggedIn);
+    void applyGitHubTheme();
     QWidget* createLoginScreen();
     QWidget* createPortalScreen();
 
+    QWidget* createAdminTab();
     QWidget* createStudentTab();
     QWidget* createDriverTab();
-    QWidget* createAdminTab();
     QWidget* createParentTab();
     QWidget* createRouteVisualizerTab();
-    QWidget* createFleetAndComplaintsTab();
-    
+    QWidget* createComplaintDeskTab();
+
     void setupTabsForRole(UserRole role, const string& username);
+    void refreshAllDataViews();
+    void refreshFleetMetrics();
+    void refreshStudentDirectory();
+    void refreshAttendanceTable();
+    void refreshComplaintTable();
+    void displayComplaintDetails(const string& complaintId);
     void renderRouteGraph();
-    void refreshFleetTable();
-    void refreshComplaintsTable();
-    void refreshDriverPollsTable();
 
 private slots:
     // Authentication Slots
     void onPerformLogin();
     void onPerformLogout();
+    void onTogglePasswordVisibility();
+    void onQuickDemoLogin();
 
-    // Portal Slots
+    // Portal Global Slots
     void onScheduleChanged(int index);
+
+    // Admin Slots
+    void onAdminUpdateBus();
+    void onAdminUpdateTiming();
+    void onAdminBroadcastNotice();
+    void onAdminRegisterStudentDialog();
+    void onBoardStudent();
+    void onVerifyQRPass();
+
+    // Student Slots
     void onSearchStudentSchedule();
-    void onFindConnectingBuses();
     void onShowDigitalQRPass();
     void onSubmitDriverRating();
     void onTriggerStudentSOS();
-    void onStudentFileComplaint();
-    void onVoteOnComplaint(const QString& compId, bool isRight);
 
+    // Driver Slots
     void onDriverStartTrip();
     void onDriverEndTrip();
     void onDriverReportDelay();
     void onDriverReportMisbehavior();
 
-    void onAdminUpdateBus();
-    void onAdminUpdateTiming();
-    void onAdminBroadcastNotice();
-    void onAdminUpdateComplaintStatus();
-
+    // Parent Slots
     void onParentTrackChild();
-    void onParentPayFee();
 
-    void onOptimizeRoute();
+    // Complaint & Student Poll Slots
+    void onComplaintTableSelectionChanged();
+    void onApplyComplaintFilters();
+    void onCastStudentVote(bool voteYes);
+    void onAdminInvestigateComplaint();
+    void onAdminResolveComplaint();
+    void onAdminRejectComplaint();
+    void onSubmitNewComplaint();
+
+    // Route Optimizer Slots
+    void onCalculateOptimalRoute();
     void onStartLiveSim();
     void onSimStep();
-    void onBoardStudent();
+    void onOpenInteractiveOpenStreetMap();
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
