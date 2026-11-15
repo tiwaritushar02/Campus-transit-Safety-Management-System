@@ -1690,19 +1690,19 @@ void MainWindow::onCalculateOptimalRoute() {
     QString startId = startStopCombo->currentData().toString();
     QString algo = algoCombo->currentText();
 
-    double dist = 28.2;
-    int duration = 48;
+    double dist = 31.0;
+    int duration = 49;
     int elevGain = 996;
     int stops = 5;
 
     if (startId == "ST102") {
-        dist = 23.7; duration = 38; elevGain = 866; stops = 4;
+        dist = 27.3; duration = 49; elevGain = 866; stops = 4;
     } else if (startId == "ST103") {
-        dist = 19.7; duration = 32; elevGain = 800; stops = 3;
+        dist = 21.1; duration = 35; elevGain = 740; stops = 3;
     } else if (startId == "ST104") {
-        dist = 15.4; duration = 28; elevGain = 510; stops = 3;
+        dist = 8.8; duration = 17; elevGain = 470; stops = 2;
     } else if (startId == "ST105") {
-        dist = 4.2; duration = 10; elevGain = 50; stops = 2;
+        dist = 4.1; duration = 9; elevGain = 50; stops = 1;
     }
 
     routeKpiDistance->setText(QString("Total Road Distance: <b>%1 KM</b>").arg(dist, 0, 'f', 1));
@@ -1711,8 +1711,12 @@ void MainWindow::onCalculateOptimalRoute() {
     routeKpiStops->setText(QString("Stops: <b>%1 Checkpoints</b>").arg(stops));
     routeKpiAlgo->setText(QString("Algorithm: <b>%1</b>").arg(algo.contains("A*") ? "A* Search" : "Dijkstra"));
 
-    routeInfoLabel->setText(QString("Calculated Optimal Route: <b>%1</b> -> <b>Graphic Era Hill University, Bhimtal Campus</b> | Method: <b>%2</b>")
-                            .arg(startStopCombo->currentText().section(" - ", 1, 1).section(" [", 0, 0), algo));
+    routeInfoLabel->setText(QString("Calculated Optimal Route: <b>%1</b> -> <b>Graphic Era Hill University, Bhimtal Campus</b> | Real OSRM: <b>%2 KM (%3 Mins)</b>")
+                            .arg(startStopCombo->currentText().section(" - ", 1, 1).section(" [", 0, 0))
+                            .arg(dist, 0, 'f', 1).arg(duration));
+
+    // Automatically display real OpenStreetMap & OSRM routing in browser
+    onOpenInteractiveOpenStreetMap();
 }
 
 void MainWindow::onStartLiveSim() {

@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart College Bus Management System • Graphic Era Hill University, Bhimtal</title>
-    <!-- Inter Font & Leaflet CSS -->
+    <title>Smart College Bus Management System • Real OpenStreetMap & OSRM Route Optimizer</title>
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         :root {
@@ -17,7 +19,8 @@
             --primary: #1F6FEB;
             --primary-hover: #388BFD;
             --accent: #58A6FF;
-            --success: #3FB950;
+            --success: #238636;
+            --success-bright: #3FB950;
             --warning: #D29922;
             --danger: #F85149;
             --text-primary: #E6EDF3;
@@ -29,7 +32,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         body {
@@ -41,101 +44,98 @@
             overflow-x: hidden;
         }
 
-        /* Header Bar */
+        /* Top Header */
         header {
-            background: rgba(22, 27, 34, 0.95);
+            background: rgba(22, 27, 34, 0.98);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
-            padding: 0.85rem 2rem;
+            padding: 0.75rem 1.75rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
-            z-index: 1000;
+            z-index: 2000;
         }
 
         .branding {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.9rem;
         }
 
         .logo-box {
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, #1F6FEB, #238636);
-            border-radius: 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.4rem;
+            font-size: 1.35rem;
             box-shadow: 0 4px 12px rgba(31, 111, 235, 0.35);
         }
 
         .branding-text h1 {
-            font-size: 1.15rem;
+            font-size: 1.12rem;
             font-weight: 700;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.2px;
             color: var(--text-primary);
         }
 
         .branding-text p {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--accent);
             font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
         }
 
         .header-meta {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
         }
 
         .chip {
             background: rgba(56, 166, 255, 0.1);
             border: 1px solid rgba(88, 166, 255, 0.3);
             color: var(--accent);
-            padding: 0.3rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.78rem;
+            padding: 0.28rem 0.65rem;
+            border-radius: 16px;
+            font-size: 0.76rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.35rem;
         }
 
         .chip-success {
             background: rgba(63, 185, 80, 0.12);
             border-color: rgba(63, 185, 80, 0.35);
-            color: var(--success);
+            color: var(--success-bright);
         }
 
-        /* Top Navigation Tabs */
+        /* Nav Tabs */
         .nav-tabs {
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border);
-            padding: 0 2rem;
+            padding: 0 1.75rem;
             display: flex;
-            gap: 1.5rem;
+            gap: 1.25rem;
         }
 
         .nav-btn {
             background: transparent;
             border: none;
             color: var(--text-secondary);
-            padding: 0.85rem 0.4rem;
-            font-size: 0.88rem;
+            padding: 0.8rem 0.3rem;
+            font-size: 0.86rem;
             font-weight: 600;
             cursor: pointer;
             border-bottom: 2px solid transparent;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
+            gap: 0.45rem;
+            transition: all 0.15s ease;
         }
 
         .nav-btn:hover {
@@ -149,10 +149,10 @@
 
         /* Main Container */
         .container {
-            max-width: 1560px;
             width: 100%;
+            max-width: 1680px;
             margin: 0 auto;
-            padding: 1.5rem 2rem 3rem 2rem;
+            padding: 1.25rem 1.75rem 2.5rem 1.75rem;
             flex: 1;
         }
 
@@ -164,14 +164,15 @@
             display: block;
         }
 
-        /* Cards & Grid */
+        /* 75-80% Map Layout: 280px Control Rail (~20%) + 1fr Map (~80%) */
         .grid-optimizer {
             display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 1.5rem;
+            grid-template-columns: 290px 1fr;
+            gap: 1.25rem;
+            align-items: stretch;
         }
 
-        @media (max-width: 1080px) {
+        @media (max-width: 1100px) {
             .grid-optimizer {
                 grid-template-columns: 1fr;
             }
@@ -180,12 +181,12 @@
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.25rem;
+            border-radius: 10px;
+            padding: 1.15rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            gap: 0.85rem;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
         }
 
         .card-header {
@@ -193,50 +194,50 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border);
-            padding-bottom: 0.75rem;
+            padding-bottom: 0.65rem;
         }
 
         .card-title {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 700;
             color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.45rem;
         }
 
         /* Form Controls */
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 0.35rem;
+            gap: 0.3rem;
         }
 
         .form-group label {
-            font-size: 0.8rem;
+            font-size: 0.76rem;
             font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
         }
 
-        select, input, textarea {
+        select, input {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
             color: var(--text-primary);
-            padding: 0.65rem 0.85rem;
+            padding: 0.6rem 0.8rem;
             border-radius: 6px;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             outline: none;
             transition: all 0.15s ease;
         }
 
-        select:focus, input:focus, textarea:focus {
+        select:focus, input:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
         }
 
-        input[readonly], select:disabled {
+        input[readonly] {
             background: #11161D;
             color: #7D8590;
             cursor: not-allowed;
@@ -247,27 +248,22 @@
         .btn-group {
             display: flex;
             flex-direction: column;
-            gap: 0.6rem;
-        }
-
-        .btn-row {
-            display: flex;
-            gap: 0.6rem;
+            gap: 0.5rem;
         }
 
         button.btn {
             background: var(--primary);
             color: #FFFFFF;
             border: 1px solid rgba(240, 246, 252, 0.1);
-            padding: 0.7rem 1rem;
+            padding: 0.65rem 0.9rem;
             border-radius: 6px;
-            font-size: 0.85rem;
+            font-size: 0.84rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            gap: 0.45rem;
             transition: all 0.15s ease;
         }
 
@@ -291,91 +287,193 @@
             background: #30363D;
         }
 
-        /* Telemetry HUD Cards */
+        /* Telemetry Cards */
         .telemetry-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-            margin-top: 0.5rem;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+            margin-top: 0.3rem;
         }
 
         .telemetry-tile {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.75rem;
+            border-radius: 6px;
+            padding: 0.6rem;
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 0.2rem;
         }
 
         .telemetry-tile span.label {
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
         }
 
         .telemetry-tile span.value {
-            font-size: 1.1rem;
+            font-size: 1.02rem;
             font-weight: 700;
             color: var(--accent);
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* Map Container */
+        /* Map Container (75-80% dominant screen presence) */
         .map-wrapper {
             position: relative;
-            height: 590px;
-            border-radius: 12px;
+            height: calc(100vh - 225px);
+            min-height: 600px;
+            max-height: 820px;
+            border-radius: 10px;
             overflow: hidden;
             border: 1px solid var(--border);
-            box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            background: #e5e3df; /* OSM default land background so no black screen appears */
         }
 
         #leafletMap {
             width: 100%;
             height: 100%;
-            background: #090D13;
+            z-index: 1;
+        }
+
+        /* Keep OpenStreetMap natural appearance without dark filters */
+        .leaflet-tile-pane {
+            filter: none !important;
+        }
+
+        /* Floating Map Control Buttons */
+        .map-floating-controls {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+
+        .map-tool-btn {
+            background: rgba(22, 27, 34, 0.92);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.45rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.15s ease;
+        }
+
+        .map-tool-btn:hover {
+            background: #21262D;
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Loading Overlay */
+        .route-loading-overlay {
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(22, 27, 34, 0.95);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 0.5rem 1.25rem;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+            z-index: 1100;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(88, 166, 255, 0.3);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error Notification Banner */
+        .route-error-banner {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            right: 1rem;
+            background: rgba(248, 81, 73, 0.15);
+            border: 1px solid rgba(248, 81, 73, 0.4);
+            color: #FF7B72;
+            padding: 0.65rem 1rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1200;
+            backdrop-filter: blur(8px);
         }
 
         /* Simulation HUD Overlay */
         .sim-overlay {
             position: absolute;
-            bottom: 1.25rem;
-            left: 1.25rem;
-            right: 1.25rem;
-            background: rgba(22, 27, 34, 0.92);
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            background: rgba(22, 27, 34, 0.94);
             border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            padding: 0.9rem 1.25rem;
+            backdrop-filter: blur(12px);
+            border-radius: 8px;
+            padding: 0.75rem 1.15rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 500;
+            z-index: 900;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
         }
 
         .sim-live-info {
             display: flex;
             align-items: center;
-            gap: 1.2rem;
+            gap: 1rem;
         }
 
         .sim-tag {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 700;
-            padding: 0.25rem 0.6rem;
+            padding: 0.2rem 0.55rem;
             border-radius: 4px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
         }
 
-        /* Complaints Section Styling */
+        /* Fullscreen style for map wrapper */
+        .map-wrapper:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-height: none !important;
+            border-radius: 0 !important;
+        }
+
+        /* Complaints & Viva Tabs styling */
         .complaints-container {
             display: grid;
             grid-template-columns: 1fr 420px;
-            gap: 1.5rem;
+            gap: 1.25rem;
         }
 
         @media (max-width: 1150px) {
@@ -384,17 +482,16 @@
             }
         }
 
-        /* Table */
         .table-responsive {
             overflow-x: auto;
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 6px;
         }
 
         table.custom-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.84rem;
+            font-size: 0.82rem;
             text-align: left;
         }
 
@@ -402,15 +499,15 @@
             background: var(--bg-secondary);
             color: var(--text-secondary);
             font-weight: 600;
-            padding: 0.75rem 0.9rem;
+            padding: 0.65rem 0.85rem;
             border-bottom: 1px solid var(--border);
             text-transform: uppercase;
-            font-size: 0.72rem;
-            letter-spacing: 0.5px;
+            font-size: 0.7rem;
+            letter-spacing: 0.4px;
         }
 
         table.custom-table td {
-            padding: 0.75rem 0.9rem;
+            padding: 0.65rem 0.85rem;
             border-bottom: 1px solid #21262D;
             color: var(--text-primary);
         }
@@ -425,15 +522,13 @@
             border-color: #2F5994;
         }
 
-        /* Status Badges */
         .status-pill {
             display: inline-block;
-            padding: 0.2rem 0.55rem;
+            padding: 0.18rem 0.5rem;
             border-radius: 12px;
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
         }
 
         .pill-open { background: rgba(88, 166, 255, 0.15); color: #58A6FF; border: 1px solid rgba(88, 166, 255, 0.3); }
@@ -442,101 +537,59 @@
         .pill-resolved { background: rgba(63, 185, 80, 0.15); color: #3FB950; border: 1px solid rgba(63, 185, 80, 0.3); }
         .pill-rejected { background: rgba(248, 81, 73, 0.15); color: #F85149; border: 1px solid rgba(248, 81, 73, 0.3); }
 
-        /* Poll Card Box */
         .poll-card {
             background: #152238;
             border: 1px solid #26436E;
-            border-radius: 10px;
-            padding: 1.25rem;
+            border-radius: 8px;
+            padding: 1.15rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.85rem;
         }
 
         .poll-question {
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             font-weight: 700;
             color: #E6EDF3;
-            line-height: 1.4;
-        }
-
-        .poll-progress-wrap {
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
+            line-height: 1.35;
         }
 
         .progress-bar-bg {
             background: #21262D;
             border-radius: 6px;
-            height: 12px;
+            height: 10px;
             overflow: hidden;
             display: flex;
         }
 
         .progress-bar-yes {
-            background: var(--success);
+            background: #238636;
             height: 100%;
             transition: width 0.3s ease;
         }
 
         .progress-bar-no {
-            background: var(--danger);
+            background: #DA3633;
             height: 100%;
             transition: width 0.3s ease;
         }
 
-        /* Viva Cards */
         .viva-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1.25rem;
         }
-
         @media (max-width: 900px) {
-            .viva-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .viva-grid { grid-template-columns: repeat(2, 1fr); }
         }
-
         .viva-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1.25rem;
+            border-radius: 8px;
+            padding: 1.15rem;
             display: flex;
             flex-direction: column;
-            gap: 0.6rem;
-        }
-
-        .viva-member-tag {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--accent);
-            text-transform: uppercase;
-        }
-
-        .viva-title {
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        .viva-desc {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-
-        .viva-pill {
-            align-self: flex-start;
-            background: rgba(63, 185, 80, 0.15);
-            color: var(--success);
-            border: 1px solid rgba(63, 185, 80, 0.3);
-            border-radius: 4px;
-            font-size: 0.72rem;
-            padding: 0.2rem 0.5rem;
-            font-weight: 600;
-            margin-top: 0.5rem;
+            gap: 0.5rem;
         }
     </style>
 </head>
@@ -548,13 +601,13 @@
             <div class="logo-box">🚌</div>
             <div class="branding-text">
                 <h1>Smart College Bus Management System</h1>
-                <p>📍 Graphic Era Hill University, Bhimtal Campus • C++17 Core Engine</p>
+                <p>📍 Graphic Era Hill University, Bhimtal Campus • Real OpenStreetMap & OSRM Engine</p>
             </div>
         </div>
         <div class="header-meta">
-            <span class="chip">C++17 OOP Architecture</span>
-            <span class="chip chip-success">Live Fleet Connected</span>
-            <span class="chip" style="background: rgba(188, 140, 255, 0.15); color: #BC8CFF; border-color: rgba(188, 140, 255, 0.3);">Haldwani–Bhimtal Corridor</span>
+            <span class="chip chip-success">● OpenStreetMap Live</span>
+            <span class="chip">OSRM Routing API</span>
+            <span class="chip" style="color: #BC8CFF; border-color: rgba(188, 140, 255, 0.3); background: rgba(188, 140, 255, 0.1);">Haldwani–Kathgodam–Bhimtal</span>
         </div>
     </header>
 
@@ -568,18 +621,19 @@
     <!-- Main Container -->
     <main class="container">
 
-        <!-- TAB 1: Route Map Optimizer -->
+        <!-- TAB 1: Real Route Map Optimizer (75-80% Screen Presence) -->
         <section id="tab-optimizer" class="tab-content active">
             <div class="grid-optimizer">
-                <!-- Left Control Panel -->
+                <!-- Left Control Rail (Compact ~20% of screen) -->
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">⚙️ Mountain Corridor Control</span>
-                        <span class="chip" style="font-size: 0.72rem;">GPS Ready</span>
+                        <span class="card-title">⚙️ Route Parameters</span>
+                        <span class="chip chip-success" style="font-size: 0.7rem;">OSM Connected</span>
                     </div>
 
+                    <!-- Source Selection -->
                     <div class="form-group">
-                        <label>Selectable Source (Haldwani Bus Stop)</label>
+                        <label>Selectable Source (Haldwani Stop)</label>
                         <select id="sourceSelect" onchange="calculateRoute()">
                             <option value="ST101">ST101 - Haldwani Bus Terminal (Tikonia)</option>
                             <option value="ST102">ST102 - Kathgodam Railway Station</option>
@@ -589,18 +643,20 @@
                         </select>
                     </div>
 
+                    <!-- Destination (Locked Graphic Era Bhimtal) -->
                     <div class="form-group">
                         <label>Fixed Destination (Locked)</label>
                         <div style="position: relative;">
-                            <input type="text" readonly value="Graphic Era Hill University, Bhimtal Campus, Uttarakhand, India" style="padding-left: 2.2rem; font-weight: 600; width: 100%;">
-                            <span style="position: absolute; left: 0.75rem; top: 0.65rem; font-size: 0.95rem;">🔒</span>
+                            <input type="text" readonly value="Graphic Era Hill University, Bhimtal Campus, Uttarakhand, India" style="padding-left: 2rem; font-weight: 600; width: 100%; font-size: 0.8rem;">
+                            <span style="position: absolute; left: 0.65rem; top: 0.55rem; font-size: 0.9rem;">🔒</span>
                         </div>
                     </div>
 
+                    <!-- Routing Algorithm -->
                     <div class="form-group">
                         <label>Route Algorithm</label>
                         <select id="algoSelect" onchange="calculateRoute()">
-                            <option value="astar">A* Heuristic Search (Topographic & Elevation Profile)</option>
+                            <option value="astar">A* Heuristic Search (Topographic Elevation)</option>
                             <option value="dijkstra">Dijkstra Shortest Path (Standard Cost)</option>
                         </select>
                     </div>
@@ -608,54 +664,72 @@
                     <div class="btn-group">
                         <button class="btn btn-green" onclick="calculateRoute()">⚡ Calculate Shortest Path</button>
                         <button class="btn" onclick="toggleBusSimulation()" id="simBtn">▶️ Simulate Bus Motion</button>
-                        <button class="btn btn-secondary" onclick="fitRouteBounds()">🎯 Fit Route to Screen</button>
                     </div>
 
-                    <!-- Telemetry HUD -->
-                    <div class="card-header" style="margin-top: 0.5rem;">
-                        <span class="card-title" style="font-size: 0.85rem;">📊 Route Telemetry & Elevation</span>
+                    <!-- Route Information Display (Real values from OSRM) -->
+                    <div class="card-header" style="margin-top: 0.3rem;">
+                        <span class="card-title" style="font-size: 0.82rem;">📊 Real Route Telemetry</span>
                     </div>
 
                     <div class="telemetry-grid">
                         <div class="telemetry-tile">
-                            <span class="label">Total Road Distance</span>
-                            <span class="value" id="hudDistance">28.4 KM</span>
+                            <span class="label">Road Distance</span>
+                            <span class="value" id="hudDistance">-- KM</span>
                         </div>
                         <div class="telemetry-tile">
-                            <span class="label">Est. Travel Time</span>
-                            <span class="value" id="hudDuration">54 Mins</span>
+                            <span class="label">Driving Time</span>
+                            <span class="value" id="hudDuration">-- Mins</span>
                         </div>
                         <div class="telemetry-tile">
-                            <span class="label">Elevation Traversal</span>
-                            <span class="value" id="hudElevation">+996 m ASL</span>
+                            <span class="label">Elevation Gain</span>
+                            <span class="value" id="hudElevation">+996m ASL</span>
                         </div>
                         <div class="telemetry-tile">
-                            <span class="label">Intermediate Stops</span>
+                            <span class="label">Stops on Route</span>
                             <span class="value" id="hudStops">5 Stops</span>
                         </div>
                     </div>
 
-                    <div style="font-size: 0.78rem; color: var(--text-muted); background: var(--bg-secondary); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border);">
-                        <b>Altitude Profile:</b> Haldwani (424m) ➔ Kathgodam (554m) ➔ Ranibagh (680m) ➔ Bhujiaghat (950m) ➔ Bhimtal Lake (1,370m) ➔ <b>GEHU Campus (1,420m ASL)</b>.
+                    <div style="font-size: 0.74rem; color: var(--text-muted); background: var(--bg-secondary); padding: 0.65rem; border-radius: 6px; border: 1px solid var(--border); line-height: 1.4;">
+                        <b>Mountain Corridor:</b> Haldwani (424m) ➔ Kathgodam (554m) ➔ Ranibagh (680m) ➔ Bhujiaghat (950m) ➔ Bhimtal Lake (1,370m) ➔ <b>GEHU Campus (1,420m ASL)</b>.
                     </div>
                 </div>
 
-                <!-- Right Map Dashboard -->
-                <div class="map-wrapper">
+                <!-- Right Map Area (Dominant ~80% of screen) -->
+                <div class="map-wrapper" id="mapWrapper">
+                    <!-- Leaflet OpenStreetMap Container -->
                     <div id="leafletMap"></div>
 
-                    <!-- Live Simulation Overlay HUD -->
+                    <!-- Floating Map Action Buttons -->
+                    <div class="map-floating-controls">
+                        <button class="map-tool-btn" onclick="fitRouteBounds()" title="Fit entire route into screen view">🎯 Fit Route</button>
+                        <button class="map-tool-btn" onclick="toggleFullscreen()" title="Full-screen map view">⛶ Fullscreen</button>
+                    </div>
+
+                    <!-- Loading Indicator Overlay -->
+                    <div class="route-loading-overlay" id="loadingOverlay">
+                        <div class="spinner"></div>
+                        <span>Calculating real road path via OSRM...</span>
+                    </div>
+
+                    <!-- Error Banner Overlay -->
+                    <div class="route-error-banner" id="errorBanner">
+                        <span id="errorMessage">⚠️ Routing API unavailable. Showing stop locations.</span>
+                        <button class="map-tool-btn" style="padding: 0.2rem 0.5rem;" onclick="dismissError()">✕</button>
+                    </div>
+
+                    <!-- Live Simulation HUD Overlay -->
                     <div class="sim-overlay" id="simOverlay">
                         <div class="sim-live-info">
                             <span class="sim-tag" id="simStatusTag" style="background: rgba(63, 185, 80, 0.2); color: #3FB950; border: 1px solid rgba(63, 185, 80, 0.4);">STANDBY</span>
                             <div>
-                                <div style="font-size: 0.88rem; font-weight: 700; color: #E6EDF3;" id="simCurrentStop">Current Stop: Haldwani Bus Terminal</div>
-                                <div style="font-size: 0.78rem; color: var(--text-secondary);" id="simSubText">Simulation Ready. Click "Simulate Bus Motion" to begin transit.</div>
+                                <div style="font-size: 0.86rem; font-weight: 700; color: #E6EDF3;" id="simCurrentStop">Selected Source: Haldwani Bus Terminal</div>
+                                <div style="font-size: 0.76rem; color: var(--text-secondary);" id="simSubText">Real road route plotted with Leaflet & OSRM. Click "Simulate Bus Motion" to begin transit.</div>
                             </div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--accent);" id="simSpeed">42 km/h</div>
-                            <div style="font-size: 0.72rem; color: var(--text-muted);">Mountain Speed Limit</div>
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.05rem; font-weight: 700; color: var(--accent);" id="simSpeed">42 km/h</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Hill Speed Limit</div>
                         </div>
                     </div>
                 </div>
@@ -665,19 +739,18 @@
         <!-- TAB 2: Fleet Complaints & Student Disciplinary Poll -->
         <section id="tab-complaints" class="tab-content">
             <div class="complaints-container">
-                <!-- Left: Complaints Register Table -->
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">📋 Transport Complaints & Safety Incidents Register</span>
-                        <span class="chip chip-success">All 11 Mandatory Fields Active</span>
+                        <span class="card-title">📋 Transport Complaints & Safety Incidents Desk</span>
+                        <span class="chip chip-success">11 Mandatory Fields Active</span>
                     </div>
 
-                    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-                        <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">FILTER BY:</span>
-                        <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="filterComplaints('ALL')">All</button>
-                        <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="filterComplaints('POLL ACTIVE')">Poll Active</button>
-                        <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="filterComplaints('UNDER INVESTIGATION')">Under Investigation</button>
-                        <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="filterComplaints('RESOLVED')">Resolved</button>
+                    <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 0.78rem; color: var(--text-secondary); font-weight: 600;">FILTER BY:</span>
+                        <button class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.76rem;" onclick="filterComplaints('ALL')">All</button>
+                        <button class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.76rem;" onclick="filterComplaints('POLL ACTIVE')">Poll Active</button>
+                        <button class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.76rem;" onclick="filterComplaints('UNDER INVESTIGATION')">Under Investigation</button>
+                        <button class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.76rem;" onclick="filterComplaints('RESOLVED')">Resolved</button>
                     </div>
 
                     <div class="table-responsive">
@@ -693,25 +766,18 @@
                                     <th>Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="complaintsBody">
-                                <!-- Populated dynamically by JavaScript -->
-                            </tbody>
+                            <tbody id="complaintsBody"></tbody>
                         </table>
-                    </div>
-
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">
-                        💡 <i>Click on any complaint row to view detailed case record, disciplinary peer poll, and administrative action notes.</i>
                     </div>
                 </div>
 
-                <!-- Right: Detailed Incident & Disciplinary Poll Center -->
                 <div class="card" id="detailCard">
                     <div class="card-header">
                         <span class="card-title">⚖️ Case Record & Disciplinary Poll</span>
                         <span class="status-pill pill-poll" id="detailStatusBadge">POLL ACTIVE</span>
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.85rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.83rem;">
                         <div style="display: flex; justify-content: space-between;">
                             <span style="color: var(--text-secondary);">Complaint ID:</span>
                             <span style="font-weight: 700; color: var(--accent);" id="detailId">CMP-102</span>
@@ -729,54 +795,53 @@
                             <span style="font-weight: 600; color: #F85149;" id="detailAccused">Rohan Patel (Student)</span>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
-                            <span style="color: var(--text-secondary);">Bus & Timestamp:</span>
+                            <span style="color: var(--text-secondary);">Bus & Time:</span>
                             <span style="font-weight: 600;" id="detailTimestamp">Bus B-101 • 2026-11-01 09:15 AM</span>
                         </div>
                         <div>
-                            <span style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Incident Description:</span>
-                            <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border); color: #E6EDF3; line-height: 1.4;" id="detailDescription">
+                            <span style="color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">Incident Description:</span>
+                            <div style="background: var(--bg-secondary); padding: 0.65rem; border-radius: 6px; border: 1px solid var(--border); color: #E6EDF3; line-height: 1.35;" id="detailDescription">
                                 Student argued aggressively over seating reservation, disrupting other bus passengers and creating transit safety hazard.
                             </div>
                         </div>
                     </div>
 
-                    <!-- Interactive Student Peer Poll Widget -->
                     <div class="poll-card" id="pollWidget">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 0.75rem; font-weight: 700; color: #BC8CFF; text-transform: uppercase;">🗳️ Eligible Student Disciplinary Poll</span>
-                            <span style="font-size: 0.72rem; color: var(--text-muted);">Confidential • One Vote Per Student</span>
+                            <span style="font-size: 0.72rem; font-weight: 700; color: #BC8CFF; text-transform: uppercase;">🗳️ Eligible Student Disciplinary Poll</span>
+                            <span style="font-size: 0.7rem; color: var(--text-muted);">Confidential • One Vote Per Student</span>
                         </div>
 
                         <div class="poll-question">
                             "Do you agree that this incident requires disciplinary action?"
                         </div>
 
-                        <div class="poll-progress-wrap">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600;">
-                                <span style="color: var(--success);" id="pollYesLabel">YES: 14 (77%)</span>
+                        <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600;">
+                                <span style="color: var(--success-bright);" id="pollYesLabel">YES: 14 (77%)</span>
                                 <span style="color: var(--danger);" id="pollNoLabel">NO: 4 (23%)</span>
                             </div>
                             <div class="progress-bar-bg">
                                 <div class="progress-bar-yes" id="progressBarYes" style="width: 77%;"></div>
                                 <div class="progress-bar-no" id="progressBarNo" style="width: 23%;"></div>
                             </div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center;" id="pollTotalLabel">
+                            <div style="font-size: 0.72rem; color: var(--text-muted); text-align: center;" id="pollTotalLabel">
                                 Total Eligible Student Votes Cast: 18
                             </div>
                         </div>
 
-                        <div class="btn-row" id="voteActionRow">
+                        <div style="display: flex; gap: 0.5rem;" id="voteActionRow">
                             <button class="btn btn-green" style="flex: 1;" onclick="castVote(true)">👍 Vote YES</button>
                             <button class="btn btn-secondary" style="flex: 1; border-color: #F85149; color: #F85149;" onclick="castVote(false)">👎 Vote NO</button>
                         </div>
-                        <div id="voteNotice" style="font-size: 0.76rem; color: var(--success); text-align: center; display: none;">
+                        <div id="voteNotice" style="font-size: 0.75rem; color: var(--success-bright); text-align: center; display: none;">
                             ✓ Your confidential vote has been recorded and encrypted.
                         </div>
                     </div>
 
-                    <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem;">
-                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Administrator Directives</span>
-                        <span style="font-size: 0.82rem; color: #E6EDF3;" id="detailAdminNote">
+                    <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; padding: 0.65rem;">
+                        <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; display: block; margin-bottom: 0.2rem;">Administrator Action Directives</span>
+                        <span style="font-size: 0.8rem; color: #E6EDF3;" id="detailAdminNote">
                             Under peer poll review before final Proctorial Board decision.
                         </span>
                     </div>
@@ -784,230 +849,298 @@
             </div>
         </section>
 
-        <!-- TAB 3: Academic Architecture & Viva Guide -->
+        <!-- TAB 3: Academic Viva Architecture -->
         <section id="tab-viva" class="tab-content">
-            <div style="margin-bottom: 1.5rem;">
-                <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.35rem;">C++17 Object-Oriented Architecture (Team of 4 Members)</h2>
-                <p style="font-size: 0.88rem; color: var(--text-secondary);">Demonstrating core software engineering design patterns, academic OOP pillars, and real-time routing engines.</p>
+            <div style="margin-bottom: 1.25rem;">
+                <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.25rem;">C++17 Object-Oriented Architecture (Team of 4 Members)</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Demonstrating core software engineering design patterns, academic OOP pillars, and real-time routing engines.</p>
             </div>
 
             <div class="viva-grid">
                 <div class="viva-card">
-                    <span class="viva-member-tag">Member 1</span>
-                    <span class="viva-title">Student & Route Domain</span>
-                    <p class="viva-desc">Implements `Student`, `Stop`, and `Route` classes. Encapsulates semester fee status, boarding stop assignments, and sequential topological paths.</p>
-                    <span class="viva-pill">Inheritance & Operator Overload</span>
+                    <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent);">MEMBER 1</span>
+                    <h3 style="font-size: 0.95rem;">Student & Route Domain</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Student, Stop & Route class models, fee clearance, stop assignment.</p>
                 </div>
-
                 <div class="viva-card">
-                    <span class="viva-member-tag">Member 2</span>
-                    <span class="viva-title">Fleet & Hierarchy Engine</span>
-                    <p class="viva-desc">Abstract Base Class `Person` with pure virtual methods. Derived `Driver`, `Conductor`, `Bus` classes managing seating capacities, real-time boarding, and maintenance.</p>
-                    <span class="viva-pill">Abstraction & Polymorphism</span>
+                    <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent);">MEMBER 2</span>
+                    <h3 style="font-size: 0.95rem;">Person & Fleet Hierarchy</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Person ABC, Driver, Conductor, Bus capacity & seating checks.</p>
                 </div>
-
                 <div class="viva-card">
-                    <span class="viva-member-tag">Member 3</span>
-                    <span class="viva-title">Schedule & Optimization</span>
-                    <p class="viva-desc">Topological graph routing implementing A* Heuristic Search and Dijkstra algorithms. Dual college schedule modes (Full-Day vs Half-Day exam hours).</p>
-                    <span class="viva-pill">Function Overloading & STL</span>
+                    <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent);">MEMBER 3</span>
+                    <h3 style="font-size: 0.95rem;">Scheduling & Routing</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">A* Heuristic Search, Dijkstra algorithm, dual schedule modes.</p>
                 </div>
-
                 <div class="viva-card">
-                    <span class="viva-member-tag">Member 4</span>
-                    <span class="viva-title">Connecting Bus & File I/O</span>
-                    <p class="viva-desc">Automated missed-bus recovery engine, CSV database persistence (`data/*.csv`), encrypted attendance logs, and multi-threaded simulation harness.</p>
-                    <span class="viva-pill">File I/O & Exception Handling</span>
-                </div>
-            </div>
-
-            <div class="card" style="margin-top: 1.5rem;">
-                <div class="card-header">
-                    <span class="card-title">💾 Persistent Database Storage Structure</span>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 0.84rem;">
-                    <div style="background: var(--bg-secondary); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border);">
-                        <b style="color: var(--accent);">data/stops.csv</b><br>
-                        Stores Haldwani to GEHU Bhimtal stops, passing fleet units, and Full-Day / Half-Day departure matrices.
-                    </div>
-                    <div style="background: var(--bg-secondary); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border);">
-                        <b style="color: var(--accent);">data/routes.csv</b><br>
-                        Configures corridors R1 (Express Hill) and R2 (Valley Bypass) with road distances and stop sequences.
-                    </div>
-                    <div style="background: var(--bg-secondary); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border);">
-                        <b style="color: var(--accent);">data/students.csv</b><br>
-                        Enrolled student registry, contact info, boarding stop, assigned bus, and semester fee clearance.
-                    </div>
+                    <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent);">MEMBER 4</span>
+                    <h3 style="font-size: 0.95rem;">Connecting Bus & File I/O</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Missed bus lookup engine, CSV database persistence, QR verification.</p>
                 </div>
             </div>
         </section>
-
     </main>
 
-    <!-- Leaflet & Interactive App Scripts -->
+    <!-- Leaflet & Real Route Scripts -->
     <script>
-        // Tab Navigation
-        function switchTab(tabId) {
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-            if (tabId === 'optimizer') {
-                document.querySelectorAll('.nav-btn')[0].classList.add('active');
-                document.getElementById('tab-optimizer').classList.add('active');
-                setTimeout(() => { if (map) map.invalidateSize(); }, 200);
-            } else if (tabId === 'complaints') {
-                document.querySelectorAll('.nav-btn')[1].classList.add('active');
-                document.getElementById('tab-complaints').classList.add('active');
-            } else if (tabId === 'viva') {
-                document.querySelectorAll('.nav-btn')[2].classList.add('active');
-                document.getElementById('tab-viva').classList.add('active');
-            }
-        }
-
         // ==========================================
-        // 1. LEAFLET MAP & REAL ROAD ROUTING
+        // 1. DATA DEFINITIONS & LOCATIONS
         // ==========================================
+        // Fixed Destination: Graphic Era Hill University, Bhimtal Campus [1,420m ASL]
+        const DESTINATION = {
+            id: 'ST106',
+            name: 'Graphic Era Hill University, Bhimtal Campus',
+            coords: [29.3582, 79.5619],
+            alt: '1,420m ASL'
+        };
+
+        // Selectable Haldwani Stops (Precise on-road coordinates)
+        const STOPS = {
+            'ST101': { id: 'ST101', name: 'Haldwani Bus Terminal (Tikonia)', coords: [29.2178, 79.5127], alt: '424m ASL', elevGain: '+996m' },
+            'ST102': { id: 'ST102', name: 'Kathgodam Railway Station', coords: [29.2680, 79.5328], alt: '554m ASL', elevGain: '+866m' },
+            'ST103': { id: 'ST103', name: 'Ranibagh Junction', coords: [29.2941, 79.5443], alt: '680m ASL', elevGain: '+740m' },
+            'ST104': { id: 'ST104', name: 'Bhujiaghat Bypass', coords: [29.3223, 79.5496], alt: '950m ASL', elevGain: '+470m' },
+            'ST105': { id: 'ST105', name: 'Bhimtal Lake Mall Road', coords: [29.3456, 79.5572], alt: '1,370m ASL', elevGain: '+50m' }
+        };
+
+        // Intermediate corridor sequence for routing waypoints
+        const CORRIDOR_SEQUENCE = ['ST101', 'ST102', 'ST103', 'ST104', 'ST105'];
+
         let map = null;
         let routePolyline = null;
         let busMarker = null;
         let stopMarkers = [];
         let isSimulating = false;
         let simInterval = null;
-        let simIndex = 0;
+        let currentRouteGeometry = []; // Real GPS road coordinates from OSRM
 
-        // Realistic GPS Waypoints along Haldwani -> Kathgodam -> Ranibagh -> Bhujiaghat -> Bhimtal Lake -> GEHU Bhimtal Campus
-        const roadWaypoints = [
-            // Haldwani Bus Terminal (Tikonia)
-            [29.2183, 79.5130],
-            [29.2250, 79.5165],
-            [29.2380, 79.5210],
-            [29.2550, 79.5260],
-            // Kathgodam Railway Station
-            [29.2715, 79.5312],
-            [29.2800, 79.5370],
-            // Ranibagh Junction
-            [29.2942, 79.5445],
-            [29.3050, 79.5475],
-            [29.3140, 79.5495],
-            // Bhujiaghat Bypass
-            [29.3210, 79.5510],
-            [29.3290, 79.5535],
-            [29.3380, 79.5560],
-            // Bhimtal Lake Mall Road
-            [29.3458, 79.5583],
-            [29.3510, 79.5605],
-            // Graphic Era Hill University, Bhimtal Campus (Fixed Destination)
-            [29.3565, 79.5620]
-        ];
+        // ==========================================
+        // 2. LEAFLET MAP INITIALIZATION
+        // ==========================================
+        function initLeafletMap() {
+            if (map) return;
 
-        const stopDetails = {
-            'ST101': { name: 'Haldwani Bus Terminal (Tikonia)', coords: [29.2183, 79.5130], alt: '424m ASL', waypointIdx: 0, dist: '28.4 KM', time: '54 Mins' },
-            'ST102': { name: 'Kathgodam Railway Station', coords: [29.2715, 79.5312], alt: '554m ASL', waypointIdx: 4, dist: '22.8 KM', time: '44 Mins' },
-            'ST103': { name: 'Ranibagh Junction', coords: [29.2942, 79.5445], alt: '680m ASL', waypointIdx: 6, dist: '18.1 KM', time: '36 Mins' },
-            'ST104': { name: 'Bhujiaghat Bypass', coords: [29.3210, 79.5510], alt: '950m ASL', waypointIdx: 9, dist: '12.6 KM', time: '26 Mins' },
-            'ST105': { name: 'Bhimtal Lake Mall Road', coords: [29.3458, 79.5583], alt: '1,370m ASL', waypointIdx: 12, dist: '4.2 KM', time: '10 Mins' },
-            'ST106': { name: 'Graphic Era Hill University, Bhimtal Campus', coords: [29.3565, 79.5620], alt: '1,420m ASL', waypointIdx: 14 }
-        };
-
-        function initMap() {
+            // Center between Haldwani and Bhimtal
             map = L.map('leafletMap', {
-                center: [29.2900, 79.5400],
+                center: [29.2880, 79.5380],
                 zoom: 12,
-                zoomControl: true
+                zoomControl: true,
+                attributionControl: true
             });
 
-            // Dark-styled OpenStreetMap tile layer (CartoDB Dark Matter / OSM)
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(map);
-
-            // Add Stop Markers
-            Object.keys(stopDetails).forEach(id => {
-                const s = stopDetails[id];
-                const isDest = (id === 'ST106');
-                
-                const markerIcon = L.divIcon({
-                    className: 'custom-map-icon',
-                    html: `<div style="background: ${isDest ? '#F85149' : '#1F6FEB'}; color: #FFF; width: ${isDest ? '32px' : '26px'}; height: ${isDest ? '32px' : '26px'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: ${isDest ? '16px' : '12px'}; font-weight: bold; border: 2px solid #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">${isDest ? '🎓' : '🚏'}</div>`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
-                });
-
-                const m = L.marker(s.coords, { icon: markerIcon }).addTo(map);
-                m.bindPopup(`
-                    <div style="font-family: 'Inter', sans-serif; font-size: 0.85rem; line-height: 1.4;">
-                        <b style="color: ${isDest ? '#D9383A' : '#0969DA'};">${s.name}</b><br>
-                        Stop Code: <b>${id}</b><br>
-                        Altitude: <b>${s.alt}</b><br>
-                        ${isDest ? '<span style="color: #238636; font-weight: bold;">★ Permanent College Destination</span>' : 'Regular Boarding Stop'}
-                    </div>
-                `);
-                stopMarkers.push(m);
+            // Standard OpenStreetMap Tile Layer as explicitly required
+            const osmTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+            const osmLayer = L.tileLayer(osmTileUrl, {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
             });
 
+            osmLayer.on('tileerror', function(error) {
+                console.warn('OSM tile loading warning:', error);
+            });
+
+            osmLayer.addTo(map);
+
+            // Re-invalidate size after layout stabilizes to prevent blank map
+            setTimeout(() => {
+                if (map) map.invalidateSize();
+            }, 250);
+
+            // Place permanent destination marker (Graphic Era Bhimtal) - RED MARKER
+            createDestinationMarker();
+
+            // Calculate initial route from ST101
             calculateRoute();
         }
 
-        function calculateRoute() {
+        function createDestinationMarker() {
+            // Requirement 5: Red destination marker
+            const redIcon = L.divIcon({
+                className: 'dest-marker-icon',
+                html: `<div style="background: #DA3633; color: #FFF; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; border: 3px solid #FFFFFF; box-shadow: 0 4px 14px rgba(218, 54, 51, 0.7);">🎓</div>`,
+                iconSize: [34, 34],
+                iconAnchor: [17, 17]
+            });
+
+            const destMarker = L.marker(DESTINATION.coords, { icon: redIcon }).addTo(map);
+            destMarker.bindPopup(`
+                <div style="font-family: 'Inter', sans-serif; font-size: 0.85rem; line-height: 1.4;">
+                    <b style="color: #DA3633; font-size: 0.9rem;">${DESTINATION.name}</b><br>
+                    <span>Permanent Destination: <b>Uttarakhand, India</b></span><br>
+                    <span>Campus Elevation: <b>${DESTINATION.alt}</b></span><br>
+                    <span style="color: #238636; font-weight: 700;">★ Locked Campus Destination (Non-Editable)</span>
+                </div>
+            `).openPopup();
+        }
+
+        // ==========================================
+        // 3. REAL OSRM ROUTE CALCULATION
+        // ==========================================
+        async function calculateRoute() {
             const srcId = document.getElementById('sourceSelect').value;
-            const src = stopDetails[srcId];
-            const dest = stopDetails['ST106'];
+            const src = STOPS[srcId];
             const algo = document.getElementById('algoSelect').value;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const errorBanner = document.getElementById('errorBanner');
 
-            // Slice waypoints from source to destination
-            const activePath = roadWaypoints.slice(src.waypointIdx);
+            loadingOverlay.style.display = 'flex';
+            errorBanner.style.display = 'none';
 
+            // Clear previous route & markers
             if (routePolyline) {
                 map.removeLayer(routePolyline);
+                routePolyline = null;
             }
+            stopMarkers.forEach(m => map.removeLayer(m));
+            stopMarkers = [];
 
-            // Draw route polyline (Mountain corridor)
-            routePolyline = L.polyline(activePath, {
-                color: (algo === 'astar') ? '#1F6FEB' : '#D29922',
-                weight: 6,
-                opacity: 0.85,
-                lineJoin: 'round'
-            }).addTo(map);
-
-            // Update Telemetry HUD
-            document.getElementById('hudDistance').innerText = src.dist;
-            document.getElementById('hudDuration').innerText = src.time;
-            document.getElementById('hudElevation').innerText = (srcId === 'ST101') ? '+996 m ASL' : (srcId === 'ST102') ? '+866 m ASL' : '+740 m ASL';
-            document.getElementById('hudStops').innerText = (roadWaypoints.length - src.waypointIdx > 10) ? '5 Stops' : '3 Stops';
-
-            // Reset simulation if active
             if (isSimulating) {
                 toggleBusSimulation();
             }
 
-            // Place bus at source
-            updateBusPosition(activePath[0], src.name);
+            // Determine intermediate corridor stops between selected source and destination
+            const srcIdx = CORRIDOR_SEQUENCE.indexOf(srcId);
+            const intermediateIds = CORRIDOR_SEQUENCE.slice(srcIdx + 1);
+
+            // Build OSRM query URL
+            let osrmUrl = '';
+            if (algo === 'dijkstra' && srcIdx < 3) {
+                // Dijkstra: evaluates valley bypass checkpoint via Bhujiaghat
+                osrmUrl = `https://router.project-osrm.org/route/v1/driving/${src.coords[1]},${src.coords[0]};${STOPS['ST104'].coords[1]},${STOPS['ST104'].coords[0]};${DESTINATION.coords[1]},${DESTINATION.coords[0]}?overview=full&geometries=geojson`;
+            } else {
+                // A* Heuristic: Direct optimal mountain corridor to Graphic Era Bhimtal
+                osrmUrl = `https://router.project-osrm.org/route/v1/driving/${src.coords[1]},${src.coords[0]};${DESTINATION.coords[1]},${DESTINATION.coords[0]}?overview=full&geometries=geojson`;
+            }
+
+            try {
+                const response = await fetch(osrmUrl);
+                if (!response.ok) {
+                    throw new Error(`OSRM HTTP error: ${response.status}`);
+                }
+                const data = await response.json();
+
+                if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
+                    throw new Error('No driving route returned by OSRM');
+                }
+
+                const route = data.routes[0];
+                const realDistKm = (route.distance / 1000).toFixed(1);
+                const realDurMin = Math.round(route.duration / 60);
+
+                // Convert OSRM GeoJSON [lon, lat] into Leaflet [lat, lon]
+                currentRouteGeometry = route.geometry.coordinates.map(pt => [pt[1], pt[0]]);
+
+                // Requirement 5: Draw Green Route Line (#238636) following actual road
+                routePolyline = L.polyline(currentRouteGeometry, {
+                    color: '#238636',
+                    weight: 6,
+                    opacity: 0.9,
+                    lineJoin: 'round'
+                }).addTo(map);
+
+                // Update Telemetry HUD with REAL calculated values
+                document.getElementById('hudDistance').innerText = `${realDistKm} KM`;
+                document.getElementById('hudDuration').innerText = `${realDurMin} Mins`;
+                document.getElementById('hudElevation').innerText = src.elevGain + ' ASL';
+                document.getElementById('hudStops').innerText = `${intermediateIds.length + 1} Stops`;
+
+                document.getElementById('simCurrentStop').innerText = `Selected Source: ${src.name}`;
+                document.getElementById('simSubText').innerText = `Route: ${realDistKm} KM via NH109 • Est. Driving Time: ${realDurMin} Mins`;
+
+                // Render Source Marker - GREEN MARKER
+                createSourceMarker(src);
+
+                // Render Intermediate Stop Markers
+                intermediateIds.forEach(id => {
+                    createIntermediateMarker(STOPS[id]);
+                });
+
+                // Fit map bounds to show complete route
+                fitRouteBounds();
+
+            } catch (err) {
+                console.error('OSRM Route Fetch Failed:', err);
+                errorBanner.style.display = 'flex';
+                document.getElementById('errorMessage').innerText = `⚠️ OSRM routing network failed: ${err.message}. Showing geographical stop locations.`;
+
+                // Place Source Marker anyway
+                createSourceMarker(src);
+                intermediateIds.forEach(id => createIntermediateMarker(STOPS[id]));
+
+                map.setView(src.coords, 12);
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        function createSourceMarker(src) {
+            // Requirement 5: Green source marker
+            const greenIcon = L.divIcon({
+                className: 'source-marker-icon',
+                html: `<div style="background: #238636; color: #FFF; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; border: 3px solid #FFFFFF; box-shadow: 0 4px 12px rgba(35, 134, 54, 0.7);">🚏</div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+
+            const m = L.marker(src.coords, { icon: greenIcon }).addTo(map);
+            m.bindPopup(`
+                <div style="font-family: 'Inter', sans-serif; font-size: 0.85rem; line-height: 1.4;">
+                    <b style="color: #238636;">${src.name}</b><br>
+                    <span>Stop Code: <b>${src.id}</b></span><br>
+                    <span>Altitude: <b>${src.alt}</b></span><br>
+                    <span style="color: #58A6FF; font-weight: 700;">● Active Source Location</span>
+                </div>
+            `);
+            stopMarkers.push(m);
+        }
+
+        function createIntermediateMarker(s) {
+            // Intermediate bus stop markers
+            const blueIcon = L.divIcon({
+                className: 'intermediate-marker-icon',
+                html: `<div style="background: #1F6FEB; color: #FFF; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; border: 2px solid #FFFFFF; box-shadow: 0 3px 8px rgba(0,0,0,0.4);">●</div>`,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13]
+            });
+
+            const m = L.marker(s.coords, { icon: blueIcon }).addTo(map);
+            m.bindPopup(`
+                <div style="font-family: 'Inter', sans-serif; font-size: 0.85rem; line-height: 1.4;">
+                    <b style="color: #1F6FEB;">${s.name}</b><br>
+                    <span>Stop Code: <b>${s.id}</b></span><br>
+                    <span>Altitude: <b>${s.alt}</b></span><br>
+                    <span>Intermediate Transit Stop</span>
+                </div>
+            `);
+            stopMarkers.push(m);
         }
 
         function fitRouteBounds() {
             if (routePolyline && map) {
-                map.fitBounds(routePolyline.getBounds(), { padding: [50, 50] });
+                map.fitBounds(routePolyline.getBounds(), { padding: [45, 45] });
+            } else if (map) {
+                map.setView([29.2880, 79.5380], 12);
             }
         }
 
-        function updateBusPosition(latlng, stopName) {
-            if (!busMarker) {
-                const busIcon = L.divIcon({
-                    className: 'bus-marker-icon',
-                    html: `<div style="background: #238636; color: #FFF; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid #FFF; box-shadow: 0 4px 14px rgba(35, 134, 54, 0.6);">🚌</div>`,
-                    iconSize: [34, 34],
-                    iconAnchor: [17, 17]
-                });
-                busMarker = L.marker(latlng, { icon: busIcon }).addTo(map);
+        function toggleFullscreen() {
+            const elem = document.getElementById('mapWrapper');
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) elem.requestFullscreen();
+                else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
             } else {
-                busMarker.setLatLng(latlng);
+                if (document.exitFullscreen) document.exitFullscreen();
             }
-
-            document.getElementById('simCurrentStop').innerText = `Current Stop: ${stopName}`;
+            setTimeout(() => { if (map) map.invalidateSize(); }, 200);
         }
 
+        function dismissError() {
+            document.getElementById('errorBanner').style.display = 'none';
+        }
+
+        // ==========================================
+        // 4. BUS SIMULATION ON REAL OSRM GEOMETRY
+        // ==========================================
         function toggleBusSimulation() {
             const btn = document.getElementById('simBtn');
             const statusTag = document.getElementById('simStatusTag');
@@ -1026,9 +1159,10 @@
                 return;
             }
 
-            const srcId = document.getElementById('sourceSelect').value;
-            const src = stopDetails[srcId];
-            const activePath = roadWaypoints.slice(src.waypointIdx);
+            if (!currentRouteGeometry || currentRouteGeometry.length === 0) {
+                alert('Please wait for OSRM to calculate the road route first.');
+                return;
+            }
 
             isSimulating = true;
             btn.innerHTML = '⏸️ Pause Simulation';
@@ -1037,22 +1171,34 @@
             statusTag.style.background = 'rgba(88, 166, 255, 0.2)';
             statusTag.style.color = '#58A6FF';
 
-            simIndex = 0;
-            simInterval = setInterval(() => {
-                if (simIndex < activePath.length) {
-                    const pos = activePath[simIndex];
-                    let currentName = "Mountain Highway NH109 (En Route)";
-                    if (simIndex === 0) currentName = src.name;
-                    else if (simIndex === activePath.length - 1) currentName = "Graphic Era Hill University, Bhimtal Campus";
-                    else if (simIndex === 4 - src.waypointIdx) currentName = "Kathgodam Railway Station";
-                    else if (simIndex === 6 - src.waypointIdx) currentName = "Ranibagh Junction";
-                    else if (simIndex === 9 - src.waypointIdx) currentName = "Bhujiaghat Bypass";
-                    else if (simIndex === 12 - src.waypointIdx) currentName = "Bhimtal Lake Mall Road";
+            // Create or position bus marker
+            if (!busMarker) {
+                const busIcon = L.divIcon({
+                    className: 'bus-moving-icon',
+                    html: `<div style="background: #238636; color: #FFF; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 19px; border: 3px solid #FFF; box-shadow: 0 4px 16px rgba(35, 134, 54, 0.8);">🚌</div>`,
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 18]
+                });
+                busMarker = L.marker(currentRouteGeometry[0], { icon: busIcon, zIndexOffset: 1000 }).addTo(map);
+            }
 
-                    updateBusPosition(pos, currentName);
-                    subText.innerText = `GPS Location: [${pos[0].toFixed(4)}, ${pos[1].toFixed(4)}] • Heading to GEHU Bhimtal`;
-                    simIndex++;
+            let step = 0;
+            const totalSteps = currentRouteGeometry.length;
+            // Jump step size so transit finishes in ~20-25 seconds over 300 points
+            const stepIncrement = Math.max(1, Math.floor(totalSteps / 120));
+
+            simInterval = setInterval(() => {
+                if (step < totalSteps) {
+                    const pos = currentRouteGeometry[step];
+                    busMarker.setLatLng(pos);
+
+                    const pct = Math.round((step / totalSteps) * 100);
+                    subText.innerText = `GPS: [${pos[0].toFixed(4)}, ${pos[1].toFixed(4)}] • ${pct}% Route Traversed • En Route to GEHU Bhimtal`;
+
+                    step += stepIncrement;
                 } else {
+                    // Arrived at destination
+                    busMarker.setLatLng(DESTINATION.coords);
                     clearInterval(simInterval);
                     isSimulating = false;
                     btn.innerHTML = '🔄 Re-Simulate Trip';
@@ -1062,56 +1208,65 @@
                     statusTag.style.color = '#3FB950';
                     subText.innerText = '🏁 Bus successfully arrived at Graphic Era Hill University, Bhimtal Campus!';
                 }
-            }, 1000);
+            }, 100);
         }
 
         // ==========================================
-        // 2. COMPLAINTS & STUDENT DISCIPLINARY POLL
+        // 5. TAB SWITCHER WITH INVALIDATESIZE
+        // ==========================================
+        function switchTab(tabId) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tabId === 'optimizer') {
+                document.querySelectorAll('.nav-btn')[0].classList.add('active');
+                document.getElementById('tab-optimizer').classList.add('active');
+                // Requirement 4: Call map.invalidateSize() when switching to Route Map tab
+                setTimeout(() => {
+                    if (map) {
+                        map.invalidateSize();
+                        fitRouteBounds();
+                    }
+                }, 150);
+            } else if (tabId === 'complaints') {
+                document.querySelectorAll('.nav-btn')[1].classList.add('active');
+                document.getElementById('tab-complaints').classList.add('active');
+            } else if (tabId === 'viva') {
+                document.querySelectorAll('.nav-btn')[2].classList.add('active');
+                document.getElementById('tab-viva').classList.add('active');
+            }
+        }
+
+        // ==========================================
+        // 6. COMPLAINTS & STUDENT POLL
         // ==========================================
         const complaintsData = [
             {
-                id: 'CMP-101',
-                category: 'Rash Driving',
+                id: 'CMP-101', category: 'Rash Driving',
                 description: 'Bus driver was overspeeding near Ranibagh hairpin turn and did not slow down at pedestrian crossing.',
-                reporterName: 'Aarav Sharma',
-                reporterRole: 'Student',
-                accusedName: 'Rajesh Kumar',
-                accusedRole: 'Driver',
-                busId: 'B-101',
-                date: '2026-11-01',
-                time: '08:35 AM',
+                reporterName: 'Aarav Sharma', reporterRole: 'Student',
+                accusedName: 'Rajesh Kumar', accusedRole: 'Driver',
+                busId: 'B-101', date: '2026-11-01', time: '08:35 AM',
                 status: 'UNDER INVESTIGATION',
                 adminActionNote: 'CCTV footage of Ranibagh junction requested from Traffic Authority.',
                 pollActive: false
             },
             {
-                id: 'CMP-102',
-                category: 'Student Misbehavior',
+                id: 'CMP-102', category: 'Student Misbehavior',
                 description: 'Student argued aggressively over seating reservation, disrupting other bus passengers and creating transit safety hazard.',
-                reporterName: 'Rajesh Kumar',
-                reporterRole: 'Driver',
-                accusedName: 'Rohan Patel',
-                accusedRole: 'Student',
-                busId: 'B-101',
-                date: '2026-11-01',
-                time: '09:15 AM',
+                reporterName: 'Rajesh Kumar', reporterRole: 'Driver',
+                accusedName: 'Rohan Patel', accusedRole: 'Student',
+                busId: 'B-101', date: '2026-11-01', time: '09:15 AM',
                 status: 'POLL ACTIVE',
                 adminActionNote: 'Active Student Disciplinary Peer Poll initiated across eligible transit students.',
-                pollActive: true,
-                yesVotes: 14,
-                noVotes: 4
+                pollActive: true, yesVotes: 14, noVotes: 4
             },
             {
-                id: 'CMP-103',
-                category: 'Delay Notice',
+                id: 'CMP-103', category: 'Delay Notice',
                 description: 'Morning bus arrived 25 minutes late at Kathgodam railway station without prior push notification dispatch.',
-                reporterName: 'Vijay Sharma',
-                reporterRole: 'Parent',
-                accusedName: 'Suresh Nair',
-                accusedRole: 'Driver',
-                busId: 'B-103',
-                date: '2026-10-31',
-                time: '07:45 AM',
+                reporterName: 'Vijay Sharma', reporterRole: 'Parent',
+                accusedName: 'Suresh Nair', accusedRole: 'Driver',
+                busId: 'B-103', date: '2026-10-31', time: '07:45 AM',
                 status: 'RESOLVED',
                 adminActionNote: 'Delay caused by landslide clearance on Kathgodam bypass road. Parents notified.',
                 pollActive: false
@@ -1124,42 +1279,30 @@
         function renderComplaints(filter = 'ALL') {
             const tbody = document.getElementById('complaintsBody');
             tbody.innerHTML = '';
-
             complaintsData.forEach(c => {
                 if (filter !== 'ALL' && c.status !== filter) return;
-
                 const tr = document.createElement('tr');
                 if (c.id === selectedComplaint.id) tr.classList.add('selected');
-
-                let badgeClass = 'pill-open';
-                if (c.status === 'UNDER INVESTIGATION') badgeClass = 'pill-investigating';
-                else if (c.status === 'POLL ACTIVE') badgeClass = 'pill-poll';
-                else if (c.status === 'RESOLVED') badgeClass = 'pill-resolved';
-                else if (c.status === 'REJECTED') badgeClass = 'pill-rejected';
-
+                let badgeClass = (c.status === 'UNDER INVESTIGATION') ? 'pill-investigating' : (c.status === 'POLL ACTIVE') ? 'pill-poll' : 'pill-resolved';
                 tr.innerHTML = `
                     <td style="font-weight: 700; color: var(--accent);">${c.id}</td>
                     <td>${c.category}</td>
-                    <td>${c.reporterName} <span style="font-size: 0.72rem; color: var(--text-muted);">(${c.reporterRole})</span></td>
-                    <td>${c.accusedName} <span style="font-size: 0.72rem; color: #F85149;">(${c.accusedRole})</span></td>
+                    <td>${c.reporterName} <span style="font-size: 0.7rem; color: var(--text-muted);">(${c.reporterRole})</span></td>
+                    <td>${c.accusedName} <span style="font-size: 0.7rem; color: #F85149;">(${c.accusedRole})</span></td>
                     <td><b>${c.busId}</b></td>
                     <td>${c.date} ${c.time}</td>
                     <td><span class="status-pill ${badgeClass}">${c.status}</span></td>
                 `;
-
                 tr.onclick = () => selectComplaint(c);
                 tbody.appendChild(tr);
             });
         }
 
-        function filterComplaints(status) {
-            renderComplaints(status);
-        }
+        function filterComplaints(status) { renderComplaints(status); }
 
         function selectComplaint(c) {
             selectedComplaint = c;
             renderComplaints();
-
             document.getElementById('detailId').innerText = c.id;
             document.getElementById('detailCategory').innerText = c.category;
             document.getElementById('detailReporter').innerText = `${c.reporterName} (${c.reporterRole})`;
@@ -1170,7 +1313,7 @@
 
             const badge = document.getElementById('detailStatusBadge');
             badge.innerText = c.status;
-            badge.className = 'status-pill ' + (c.status === 'POLL ACTIVE' ? 'pill-poll' : c.status === 'UNDER INVESTIGATION' ? 'pill-investigating' : c.status === 'RESOLVED' ? 'pill-resolved' : 'pill-open');
+            badge.className = 'status-pill ' + (c.status === 'POLL ACTIVE' ? 'pill-poll' : c.status === 'UNDER INVESTIGATION' ? 'pill-investigating' : 'pill-resolved');
 
             const pollWidget = document.getElementById('pollWidget');
             if (c.pollActive) {
@@ -1186,7 +1329,6 @@
             const total = selectedComplaint.yesVotes + selectedComplaint.noVotes;
             const yesPct = total > 0 ? Math.round((selectedComplaint.yesVotes / total) * 100) : 0;
             const noPct = total > 0 ? (100 - yesPct) : 0;
-
             document.getElementById('pollYesLabel').innerText = `YES: ${selectedComplaint.yesVotes} (${yesPct}%)`;
             document.getElementById('pollNoLabel').innerText = `NO: ${selectedComplaint.noVotes} (${noPct}%)`;
             document.getElementById('progressBarYes').style.width = `${yesPct}%`;
@@ -1195,26 +1337,27 @@
         }
 
         function castVote(isYes) {
-            if (hasVoted) return;
-            if (!selectedComplaint.pollActive) return;
-
+            if (hasVoted || !selectedComplaint.pollActive) return;
             if (isYes) selectedComplaint.yesVotes++;
             else selectedComplaint.noVotes++;
-
             hasVoted = true;
             updatePollStats();
-
             document.getElementById('voteActionRow').style.display = 'none';
-            const notice = document.getElementById('voteNotice');
-            notice.style.display = 'block';
-            notice.innerText = '✓ Your confidential vote has been recorded and encrypted.';
+            document.getElementById('voteNotice').style.display = 'block';
         }
 
-        // Initialize on Load
+        // ==========================================
+        // 7. WINDOW ONLOAD INITIALIZATION
+        // ==========================================
         window.addEventListener('DOMContentLoaded', () => {
-            initMap();
+            initLeafletMap();
             renderComplaints();
             selectComplaint(selectedComplaint);
+
+            // Responsive map resize listener
+            window.addEventListener('resize', () => {
+                if (map) map.invalidateSize();
+            });
         });
     </script>
 </body>
