@@ -1,0 +1,12 @@
+# Build directories and generated binaries
+build/
+bin/
+obj/
+*.o
+SmartCollegeBusSystem
+
+# IDE & OS cache
+.qtcreator/
+*.user*
+.DS_Store
+cache/

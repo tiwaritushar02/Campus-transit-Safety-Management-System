@@ -1,0 +1,7 @@
+stopId,stopName,passingBuses,fullDayTimes,halfDayTimes
+ST101,Haldwani Bus Terminal (Tikonia),"B-101;B-102;B-103","07:00;07:15;07:30","06:45;07:00;07:15"
+ST102,Kathgodam Railway Station,"B-101;B-102;B-103","07:15;07:30;07:45","07:00;07:15;07:30"
+ST103,Ranibagh Junction,"B-101;B-102;B-103","07:30;07:45;08:00","07:12;07:30;07:45"
+ST104,Bhujiaghat Bypass,"B-102;B-103","07:55;08:15","07:35;08:00"
+ST105,Bhimtal Lake Mall Road,"B-101;B-102;B-103","08:10;08:30;08:45","07:55;08:15;08:30"
+ST106,"Graphic Era Hill University, Bhimtal Campus","B-101;B-102;B-103","08:25;08:45;09:00","08:10;08:30;08:45"
