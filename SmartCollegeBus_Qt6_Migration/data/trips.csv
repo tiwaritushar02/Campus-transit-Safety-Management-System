@@ -1,0 +1,4 @@
+tripId,routeId,sourceStopId,sourceStopName,destStopId,destStopName,departureTime,assignedBusId,assignedDriverId,status,alertSent
+TRP101,R1,ST101,Haldwani Bus Terminal (Tikonia),ST106,Graphic Era Hill University Bhimtal,07:30,NONE,NONE,Scheduled,0
+TRP102,R1,ST102,Kathgodam Railway Station,ST106,Graphic Era Hill University Bhimtal,07:45,B-101,D-01,Assigned,1
+TRP103,R2,ST103,Ranibagh Junction,ST106,Graphic Era Hill University Bhimtal,08:00,B-102,D-02,Assigned,1

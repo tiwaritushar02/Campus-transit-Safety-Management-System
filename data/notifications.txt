@@ -1,0 +1,3 @@
+2026-11-01 07:00:00:ALL:CAMPUS TRANSIT ACTIVE:All Haldwani–Bhimtal corridors operating on Full-Day schedule.
+2026-11-01 08:30:00:STUDENT:DISCIPLINARY POLL ACTIVE:Eligible students please cast your vote on incident CMP-102.
+2026-11-01 09:00:00:DRIVER:WEATHER ALERT:Light rainfall near Bhujiaghat bypass. Exercise extreme caution.

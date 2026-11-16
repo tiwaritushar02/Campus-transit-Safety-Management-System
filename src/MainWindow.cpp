@@ -25,6 +25,7 @@
 #include <QDialogButtonBox>
 #include <QScrollArea>
 #include <QApplication>
+#include <QCheckBox>
 #include <algorithm>
 
 using namespace std;
@@ -221,7 +222,7 @@ QWidget* MainWindow::createLoginScreen() {
     QWidget* screen = new QWidget();
     screen->setObjectName("loginScreen");
 
-    // Set campus bus background image if available
+    // Set yellow bus depot background image with cover styling
     QString bgPath = QDir::current().filePath("assets/campus_bus_bg.jpg");
     if (QFile::exists(bgPath)) {
         screen->setStyleSheet(QString(
@@ -232,40 +233,81 @@ QWidget* MainWindow::createLoginScreen() {
             "}"
         ).arg(bgPath));
     } else {
-        screen->setStyleSheet("QWidget#loginScreen { background-color: #0D1117; }");
+        screen->setStyleSheet("QWidget#loginScreen { background-color: #080D16; }");
     }
 
-    QVBoxLayout* rootLayout = new QVBoxLayout(screen);
-    rootLayout->setAlignment(Qt::AlignCenter);
+    QHBoxLayout* rootLayout = new QHBoxLayout(screen);
+    rootLayout->setContentsMargins(60, 40, 60, 40);
+    rootLayout->setSpacing(40);
 
-    // Glass/Dark Login Card
+    // Left Hero Branding Section
+    QVBoxLayout* leftBrandLayout = new QVBoxLayout();
+    leftBrandLayout->setSpacing(12);
+
+    QLabel* badge = new QLabel("OFFICIAL TRANSPORT LOGISTICS", screen);
+    badge->setStyleSheet(
+        "background-color: rgba(14, 165, 233, 0.15); "
+        "border: 1px solid #0EA5E9; color: #38BDF8; "
+        "font-size: 11px; font-weight: 700; padding: 5px 14px; "
+        "border-radius: 12px; letter-spacing: 1.5px;"
+    );
+    badge->setFixedWidth(240);
+
+    QLabel* heroTitle = new QLabel("Graphic Era Hill University\nBhimtal Campus", screen);
+    heroTitle->setStyleSheet(
+        "font-size: 32px; font-weight: 800; color: #FFFFFF; "
+        "line-height: 1.2; letter-spacing: -0.6px; background: transparent;"
+    );
+
+    QLabel* heroSub = new QLabel("Smart College Bus Fleet & Mountain Corridor Transit System", screen);
+    heroSub->setStyleSheet("font-size: 15px; font-weight: 600; color: #58A6FF; margin-bottom: 6px; background: transparent;");
+
+    QLabel* heroDesc = new QLabel(
+        "Real-time GPS bus fleet monitoring, automated digital student passes, "
+        "and topographic route optimization across Haldwani, Kathgodam, Ranibagh, and Bhimtal.",
+        screen
+    );
+    heroDesc->setWordWrap(true);
+    heroDesc->setStyleSheet("font-size: 13px; color: #94A3B8; line-height: 1.5; max-width: 520px; background: transparent;");
+
+    leftBrandLayout->addStretch(2);
+    leftBrandLayout->addWidget(badge);
+    leftBrandLayout->addWidget(heroTitle);
+    leftBrandLayout->addWidget(heroSub);
+    leftBrandLayout->addWidget(heroDesc);
+    leftBrandLayout->addStretch(1);
+
+    rootLayout->addLayout(leftBrandLayout, 3);
+
+    // Right Dark Navy Glassmorphism Login Card
     QFrame* loginCard = new QFrame(screen);
-    loginCard->setFixedWidth(460);
+    loginCard->setObjectName("loginCard");
+    loginCard->setFixedWidth(440);
     loginCard->setStyleSheet(
-        "QFrame { "
-        "  background-color: rgba(22, 27, 34, 0.94); "
-        "  border: 1px solid #30363D; "
-        "  border-radius: 12px; "
-        "  padding: 24px; "
+        "#loginCard { "
+        "  background-color: rgba(13, 21, 37, 0.88); "
+        "  border: 1px solid rgba(56, 189, 248, 0.35); "
+        "  border-radius: 16px; "
+        "  padding: 26px; "
         "}"
     );
 
     QVBoxLayout* cardLayout = new QVBoxLayout(loginCard);
     cardLayout->setSpacing(12);
 
-    // System Branding Header
-    QLabel* brandIcon = new QLabel("🚌", loginCard);
-    brandIcon->setStyleSheet("font-size: 32px; background: transparent;");
-    brandIcon->setAlignment(Qt::AlignCenter);
+    // Card Header
+    QLabel* cardBadge = new QLabel("CAMPUS FLEET TRANSIT", loginCard);
+    cardBadge->setStyleSheet("color: #38BDF8; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; background: transparent;");
 
-    QLabel* brandTitle = new QLabel("Welcome to Smart College Bus Management System", loginCard);
-    brandTitle->setStyleSheet("font-size: 17px; font-weight: 700; color: #E6EDF3; background: transparent;");
-    brandTitle->setAlignment(Qt::AlignCenter);
-    brandTitle->setWordWrap(true);
+    QLabel* cardTitle = new QLabel("Sign In to Portal", loginCard);
+    cardTitle->setStyleSheet("font-size: 20px; font-weight: 800; color: #FFFFFF; letter-spacing: -0.3px; background: transparent;");
 
-    QLabel* brandSubtitle = new QLabel("Secure Multi-Role Transportation Portal • Graphic Era Hill University", loginCard);
-    brandSubtitle->setStyleSheet("font-size: 12px; color: #8B949E; margin-bottom: 10px; background: transparent;");
-    brandSubtitle->setAlignment(Qt::AlignCenter);
+    QLabel* cardSub = new QLabel("Select authorized role and enter college credentials", loginCard);
+    cardSub->setStyleSheet("font-size: 11.5px; color: #8B949E; margin-bottom: 6px; background: transparent;");
+
+    cardLayout->addWidget(cardBadge);
+    cardLayout->addWidget(cardTitle);
+    cardLayout->addWidget(cardSub);
 
     // Form
     QFormLayout* form = new QFormLayout();
@@ -273,70 +315,126 @@ QWidget* MainWindow::createLoginScreen() {
     form->setLabelAlignment(Qt::AlignLeft);
 
     loginRoleCombo = new QComboBox(loginCard);
-    loginRoleCombo->addItem("🔴 Admin Portal", "ADMIN");
-    loginRoleCombo->addItem("🟡 Driver Portal", "DRIVER");
-    loginRoleCombo->addItem("🟢 Student / Commuter Portal", "STUDENT");
-    loginRoleCombo->addItem("🔵 Parent / Guardian Portal", "PARENT");
+    loginRoleCombo->setStyleSheet(
+        "QComboBox { background-color: #0E1626; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #E6EDF3; padding: 8px 12px; font-size: 12.5px; font-weight: 600; }"
+        "QComboBox:focus { border: 1.5px solid #38BDF8; }"
+        "QComboBox::drop-down { border: none; padding-right: 8px; }"
+        "QComboBox QAbstractItemView { background-color: #0E1626; color: #E6EDF3; selection-background-color: #0284C7; selection-color: #FFFFFF; border: 1px solid #38BDF8; }"
+    );
+    loginRoleCombo->addItem("Administrator", "ADMIN");
+    loginRoleCombo->addItem("Driver Portal", "DRIVER");
+    loginRoleCombo->addItem("Student / Commuter Portal", "STUDENT");
+    loginRoleCombo->addItem("Parent / Guardian Portal", "PARENT");
 
     loginUserEdit = new QLineEdit("admin", loginCard);
     loginUserEdit->setPlaceholderText("Enter Username, Driver ID, or Roll Number");
+    loginUserEdit->setStyleSheet(
+        "QLineEdit { background-color: #0A101D; border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; color: #FFFFFF; padding: 10px 12px; font-size: 13px; }"
+        "QLineEdit:focus { border: 1.5px solid #38BDF8; background-color: #0E172A; }"
+    );
 
     // Password Field with Show/Hide Toggle
-    QHBoxLayout* passLayout = new QHBoxLayout();
+    QWidget* passContainer = new QWidget(loginCard);
+    QHBoxLayout* passLayout = new QHBoxLayout(passContainer);
     passLayout->setContentsMargins(0, 0, 0, 0);
     passLayout->setSpacing(6);
 
-    loginPassEdit = new QLineEdit("admin123", loginCard);
+    loginPassEdit = new QLineEdit("admin123", passContainer);
     loginPassEdit->setEchoMode(QLineEdit::Password);
     loginPassEdit->setPlaceholderText("Enter Account Password");
+    loginPassEdit->setStyleSheet(
+        "QLineEdit { background-color: #0A101D; border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; color: #FFFFFF; padding: 10px 12px; font-size: 13px; }"
+        "QLineEdit:focus { border: 1.5px solid #38BDF8; background-color: #0E172A; }"
+    );
 
-    showPassBtn = new QPushButton("👁️ Show", loginCard);
-    showPassBtn->setFixedWidth(75);
-    showPassBtn->setStyleSheet("padding: 6px 10px; font-size: 11px;");
+    showPassBtn = new QPushButton("Show", passContainer);
+    showPassBtn->setFixedWidth(56);
+    showPassBtn->setStyleSheet("background-color: #162032; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; color: #38BDF8; font-size: 11.5px; font-weight: 600; padding: 6px;");
     connect(showPassBtn, &QPushButton::clicked, this, &MainWindow::onTogglePasswordVisibility);
 
-    passLayout->addWidget(loginPassEdit);
+    passLayout->addWidget(loginPassEdit, 1);
     passLayout->addWidget(showPassBtn);
 
     QLabel* roleLabel = new QLabel("Authorized Role:", loginCard);
-    roleLabel->setStyleSheet("color: #8B949E; font-weight: 600; font-size: 12px;");
-    QLabel* userLabel = new QLabel("Account Username / ID:", loginCard);
-    userLabel->setStyleSheet("color: #8B949E; font-weight: 600; font-size: 12px;");
+    roleLabel->setStyleSheet("color: #8B949E; font-weight: 600; font-size: 11.5px; background: transparent;");
+    QLabel* userLabel = new QLabel("User ID / Roll Number:", loginCard);
+    userLabel->setStyleSheet("color: #8B949E; font-weight: 600; font-size: 11.5px; background: transparent;");
     QLabel* passLabel = new QLabel("Security Password:", loginCard);
-    passLabel->setStyleSheet("color: #8B949E; font-weight: 600; font-size: 12px;");
+    passLabel->setStyleSheet("color: #8B949E; font-weight: 600; font-size: 11.5px; background: transparent;");
 
     form->addRow(roleLabel, loginRoleCombo);
     form->addRow(userLabel, loginUserEdit);
-    form->addRow(passLabel, passLayout);
+    form->addRow(passLabel, passContainer);
+    cardLayout->addLayout(form);
 
-    // Sign In Button (GitHub Green)
+    // Remember Me & Forgot Password
+    QHBoxLayout* auxLayout = new QHBoxLayout();
+    QCheckBox* rememberMeCheck = new QCheckBox("Remember Me", loginCard);
+    rememberMeCheck->setChecked(true);
+    rememberMeCheck->setStyleSheet(
+        "QCheckBox { color: #94A3B8; font-size: 11.5px; font-weight: 500; background: transparent; }"
+        "QCheckBox::indicator { width: 15px; height: 15px; border-radius: 3px; border: 1px solid #38BDF8; background-color: #0A101D; }"
+        "QCheckBox::indicator:checked { background-color: #0284C7; }"
+    );
+    QPushButton* forgotPassBtn = new QPushButton("Forgot Password?", loginCard);
+    forgotPassBtn->setStyleSheet("background: transparent; border: none; color: #38BDF8; font-size: 11.5px; font-weight: 600; text-decoration: underline;");
+    connect(forgotPassBtn, &QPushButton::clicked, this, [this]{
+        QMessageBox::information(
+            this,
+            "Transport Portal Password Support",
+            "Official Credential Recovery Notice:\n\n"
+            "For security compliance, user credential resets must be verified "
+            "by the Graphic Era Hill University Transport Office or IT Helpdesk.\n\n"
+            "Office: Room 104, Transport Control Cell, Admin Block, Bhimtal Campus\n"
+            "Email: transport@gehu.ac.in | it-support@gehu.ac.in\n"
+            "Phone: +91-5942-247000 (Ext: 104)"
+        );
+    });
+
+    auxLayout->addWidget(rememberMeCheck);
+    auxLayout->addStretch();
+    auxLayout->addWidget(forgotPassBtn);
+    cardLayout->addLayout(auxLayout);
+
+    // Sign In Button (Glowing Cyan-Blue)
     QPushButton* signInBtn = new QPushButton("Sign In to Portal", loginCard);
+    signInBtn->setObjectName("signInBtn");
     signInBtn->setStyleSheet(
-        "background-color: #238636; border: 1px solid rgba(240, 246, 252, 0.1); "
-        "color: #FFFFFF; font-weight: 700; font-size: 14px; padding: 10px; border-radius: 6px; margin-top: 8px;"
+        "QPushButton#signInBtn {"
+        "  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0284C7, stop:0.5 #0EA5E9, stop:1 #38BDF8);"
+        "  color: #FFFFFF;"
+        "  font-weight: 800;"
+        "  font-size: 14px;"
+        "  padding: 11px;"
+        "  border-radius: 8px;"
+        "  border: 1px solid #7DD3FC;"
+        "}"
+        "QPushButton#signInBtn:hover {"
+        "  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0EA5E9, stop:1 #7DD3FC);"
+        "  color: #0A101D;"
+        "  border: 1.5px solid #BAE6FD;"
+        "}"
+        "QPushButton#signInBtn:pressed {"
+        "  background-color: #0369A1;"
+        "}"
     );
     connect(signInBtn, &QPushButton::clicked, this, &MainWindow::onPerformLogin);
+    cardLayout->addWidget(signInBtn);
 
     loginStatusLabel = new QLabel("", loginCard);
     loginStatusLabel->setStyleSheet("font-size: 12px; font-weight: 600; color: #F85149; background: transparent;");
     loginStatusLabel->setAlignment(Qt::AlignCenter);
+    cardLayout->addWidget(loginStatusLabel);
 
     // Controlled Development / Demo Mode Helper
     QHBoxLayout* demoLayout = new QHBoxLayout();
-    QPushButton* demoBtn = new QPushButton("⚡ Quick Demo Auto-Fill (Dev Mode)", loginCard);
+    QPushButton* demoBtn = new QPushButton("Quick Demo Auto-Fill (Dev Mode)", loginCard);
     demoBtn->setStyleSheet("background: transparent; border: none; color: #58A6FF; font-size: 11.5px; text-decoration: underline;");
     connect(demoBtn, &QPushButton::clicked, this, &MainWindow::onQuickDemoLogin);
     demoLayout->addWidget(demoBtn, 0, Qt::AlignCenter);
-
-    cardLayout->addWidget(brandIcon);
-    cardLayout->addWidget(brandTitle);
-    cardLayout->addWidget(brandSubtitle);
-    cardLayout->addLayout(form);
-    cardLayout->addWidget(signInBtn);
-    cardLayout->addWidget(loginStatusLabel);
     cardLayout->addLayout(demoLayout);
 
-    rootLayout->addWidget(loginCard);
+    rootLayout->addWidget(loginCard, 0, Qt::AlignRight | Qt::AlignVCenter);
     return screen;
 }
 
@@ -354,7 +452,7 @@ QWidget* MainWindow::createPortalScreen() {
     QHBoxLayout* headerLayout = new QHBoxLayout(headerCard);
     headerLayout->setContentsMargins(4, 4, 4, 4);
 
-    QLabel* titleLabel = new QLabel("🚌 Smart College Bus Management System • Graphic Era Bhimtal Campus", headerCard);
+    QLabel* titleLabel = new QLabel("Smart College Bus Management System - Graphic Era Bhimtal Campus", headerCard);
     titleLabel->setStyleSheet("font-size: 15px; font-weight: 700; color: #58A6FF;");
 
     loggedUserLabel = new QLabel("User: admin", headerCard);
@@ -535,7 +633,7 @@ QWidget* MainWindow::createAdminTab() {
     updateTimingBtn->setStyleSheet("background-color: #1F6FEB; color: #FFFFFF; font-weight: 600; padding: 7px;");
     connect(updateTimingBtn, &QPushButton::clicked, this, &MainWindow::onAdminUpdateTiming);
 
-    QPushButton* noticeBtn = new QPushButton("📢 Dispatch Broadcast Notice", timingBox);
+    QPushButton* noticeBtn = new QPushButton("Dispatch Broadcast Notice", timingBox);
     noticeBtn->setStyleSheet("background-color: #21262D; border: 1px solid #30363D; color: #E6EDF3; font-weight: 600; padding: 7px;");
     connect(noticeBtn, &QPushButton::clicked, this, &MainWindow::onAdminBroadcastNotice);
 
@@ -637,7 +735,7 @@ QWidget* MainWindow::createStudentTab() {
     qrPassBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 600;");
     connect(qrPassBtn, &QPushButton::clicked, this, &MainWindow::onShowDigitalQRPass);
 
-    QPushButton* sosBtn = new QPushButton("🚨 EMERGENCY SOS BROADCAST", box);
+    QPushButton* sosBtn = new QPushButton("EMERGENCY SOS BROADCAST", box);
     sosBtn->setStyleSheet("background-color: #DA3633; color: #FFFFFF; font-weight: 700; padding: 9px;");
     connect(sosBtn, &QPushButton::clicked, this, &MainWindow::onTriggerStudentSOS);
 
@@ -655,11 +753,11 @@ QWidget* MainWindow::createStudentTab() {
 
     ratingDriverIdInput = new QLineEdit("D-01", rateBox);
     ratingStarCombo = new QComboBox(rateBox);
-    ratingStarCombo->addItem("★★★★★ - 5 Stars (Punctual & Safe Mountain Driving)");
-    ratingStarCombo->addItem("★★★★☆ - 4 Stars (Good Driving)");
-    ratingStarCombo->addItem("★★★☆☆ - 3 Stars (Average Speed)");
-    ratingStarCombo->addItem("★★☆☆☆ - 2 Stars (Delayed Arrival)");
-    ratingStarCombo->addItem("★☆☆☆☆ - 1 Star (Unsafe Driving / Violations)");
+    ratingStarCombo->addItem("5 Stars (Punctual and Safe Mountain Driving)");
+    ratingStarCombo->addItem("4 Stars (Good Driving)");
+    ratingStarCombo->addItem("3 Stars (Average Speed)");
+    ratingStarCombo->addItem("2 Stars (Delayed Arrival)");
+    ratingStarCombo->addItem("1 Star (Unsafe Driving / Violations)");
 
     ratingFeedbackInput = new QLineEdit("Very punctual and smooth driving across Kathgodam hill turns.", rateBox);
     QPushButton* submitRateBtn = new QPushButton("Submit Driver Rating", rateBox);
@@ -713,7 +811,7 @@ QWidget* MainWindow::createDriverTab() {
 
     driverDelayReasonInput = new QLineEdit("Kathgodam Highway Landslide / Road Diversion", tripBox);
     driverDelayMinsInput = new QLineEdit("15", tripBox);
-    QPushButton* delayBtn = new QPushButton("⚠️ Dispatch Delay Alert to Students & Parents", tripBox);
+    QPushButton* delayBtn = new QPushButton("Dispatch Delay Alert to Students & Parents", tripBox);
     delayBtn->setStyleSheet("background-color: #D29922; color: #0D1117; font-weight: 700; padding: 8px;");
     connect(delayBtn, &QPushButton::clicked, this, &MainWindow::onDriverReportDelay);
 
@@ -1001,7 +1099,7 @@ QWidget* MainWindow::createRouteVisualizerTab() {
     // ==========================================
     // LEFT SIDE: Route & Simulation Controls
     // ==========================================
-    QGroupBox* leftBox = new QGroupBox("🎛️ Route & Simulation Controls", tab);
+    QGroupBox* leftBox = new QGroupBox("Route & Simulation Controls", tab);
     leftBox->setFixedWidth(270);
     QVBoxLayout* leftLayout = new QVBoxLayout(leftBox);
     leftLayout->setSpacing(8);
@@ -1048,22 +1146,22 @@ QWidget* MainWindow::createRouteVisualizerTab() {
     activeBusesList = new QListWidget(leftBox);
     activeBusesList->setMaximumHeight(85);
     activeBusesList->setStyleSheet("background-color: #0D1117; border: 1px solid #30363D; border-radius: 6px; font-size: 11px;");
-    activeBusesList->addItem("🟢 BUS101: Haldwani ➔ Bhimtal (Operational)");
-    activeBusesList->addItem("🟡 BUS102: Kathgodam Standby (Ready)");
-    activeBusesList->addItem("🟢 BUS103: Bhimtal Campus Shuttling");
+    activeBusesList->addItem("BUS101: Haldwani -> Bhimtal (Operational)");
+    activeBusesList->addItem("BUS102: Kathgodam Standby (Ready)");
+    activeBusesList->addItem("BUS103: Bhimtal Campus Shuttling");
     leftLayout->addWidget(activeBusesList);
 
     leftLayout->addSpacing(4);
-    QLabel* demoTag = new QLabel("⚠️ <b>DEMO SIMULATION CONTROLS</b>", leftBox);
+    QLabel* demoTag = new QLabel("<b>DEMO SIMULATION CONTROLS</b>", leftBox);
     demoTag->setStyleSheet("color: #D29922; font-size: 11.5px;");
     leftLayout->addWidget(demoTag);
 
     QHBoxLayout* simBtnsLayout = new QHBoxLayout();
-    startSimBtn = new QPushButton("▶ Start", leftBox);
+    startSimBtn = new QPushButton("Start Simulation", leftBox);
     startSimBtn->setStyleSheet("background-color: #238636; color: #FFFFFF; font-weight: 700; padding: 6px; border-radius: 6px;");
     connect(startSimBtn, &QPushButton::clicked, this, &MainWindow::onStartLiveSim);
 
-    pauseSimBtn = new QPushButton("⏸ Pause", leftBox);
+    pauseSimBtn = new QPushButton("Pause", leftBox);
     pauseSimBtn->setStyleSheet("background-color: #D29922; color: #0D1117; font-weight: 700; padding: 6px; border-radius: 6px;");
     connect(pauseSimBtn, &QPushButton::clicked, this, &MainWindow::onPauseLiveSim);
 
@@ -1100,7 +1198,7 @@ QWidget* MainWindow::createRouteVisualizerTab() {
     // ==========================================
     // RIGHT SIDE: Bus Info & Live Telemetry
     // ==========================================
-    QGroupBox* rightBox = new QGroupBox("📡 Vehicle & Telemetry HUD", tab);
+    QGroupBox* rightBox = new QGroupBox("Vehicle & Telemetry HUD", tab);
     rightBox->setFixedWidth(290);
     QVBoxLayout* rightLayout = new QVBoxLayout(rightBox);
     rightLayout->setSpacing(8);
@@ -1112,11 +1210,11 @@ QWidget* MainWindow::createRouteVisualizerTab() {
     bicLayout->setSpacing(4);
     bicLayout->setContentsMargins(0, 0, 0, 0);
 
-    rBusIdLabel = new QLabel("<b>Bus ID:</b> BUS101 • <b>Model:</b> Tata Starbus", busInfoCard);
+    rBusIdLabel = new QLabel("<b>Bus ID:</b> BUS101 - <b>Model:</b> Tata Starbus", busInfoCard);
     rBusRegLabel = new QLabel("<b>Plate:</b> UK04-PA-1011 (GPS Unit: #DEMO)", busInfoCard);
     rBusCapLabel = new QLabel("<b>Capacity:</b> 42 Seats (Pass Holders: 38)", busInfoCard);
     rDriverNameLabel = new QLabel("<b>Driver:</b> Ramesh Chandra Joshi", busInfoCard);
-    rDriverPhoneLabel = new QLabel("<b>Contact:</b> +91-9876543210 (Rating: 4.8★)", busInfoCard);
+    rDriverPhoneLabel = new QLabel("<b>Contact:</b> +91-9876543210 (Rating: 4.8 / 5)", busInfoCard);
 
     bicLayout->addWidget(rBusIdLabel);
     bicLayout->addWidget(rBusRegLabel);
@@ -1175,7 +1273,7 @@ QWidget* MainWindow::createRouteVisualizerTab() {
     trackingScheduleTable->setHorizontalHeaderLabels({"Stop ID", "Checkpoint Stop Name", "Scheduled Time", "Estimated Time", "Status"});
     trackingScheduleTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     trackingScheduleTable->setStyleSheet("background-color: #161B22; border: 1px solid #30363D; color: #E6EDF3; font-size: 11px;");
-    bottomTabs->addTab(trackingScheduleTable, "⏱️ Bus Arrival Schedule");
+    bottomTabs->addTab(trackingScheduleTable, "Bus Arrival Schedule");
 
     // Tab 2: Trip History Table (CSV)
     trackingHistoryTable = new QTableWidget(bottomTabs);
@@ -1183,19 +1281,19 @@ QWidget* MainWindow::createRouteVisualizerTab() {
     trackingHistoryTable->setHorizontalHeaderLabels({"Timestamp", "Bus ID", "Event", "Location", "Mode"});
     trackingHistoryTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     trackingHistoryTable->setStyleSheet("background-color: #161B22; border: 1px solid #30363D; color: #E6EDF3; font-size: 11px;");
-    bottomTabs->addTab(trackingHistoryTable, "📜 Real-Time Trip History (data/tracking_history.csv)");
+    bottomTabs->addTab(trackingHistoryTable, "Real-Time Trip History (data/tracking_history.csv)");
 
     // Tab 3: Mountain Corridor Alert
     QWidget* alertTab = new QWidget(bottomTabs);
     QVBoxLayout* atLayout = new QVBoxLayout(alertTab);
     corridorDelayLabel = new QLabel(
-        "<b>Route NH109 Topographic Clearance:</b> Kathgodam ➔ Ranibagh ➔ Bhujiaghat ➔ Bhimtal Lake ➔ Graphic Era Campus.<br>"
+        "<b>Route NH109 Topographic Clearance:</b> Kathgodam -> Ranibagh -> Bhujiaghat -> Bhimtal Lake -> Graphic Era Campus.<br>"
         "<b>Gradient:</b> +996m Elevation Gain over 28.2 KM | <b>Average Mountain Transit Speed:</b> 32-38 KM/H.<br>"
         "<b>Current Mountain Weather:</b> Clear (Surface Dry, Visibility > 5 KM) | <b>Delay Offset:</b> +0 mins (Operating On-Time).",
         alertTab);
     corridorDelayLabel->setStyleSheet("color: #E6EDF3; font-size: 12px; background-color: #161B22; padding: 10px; border-radius: 6px;");
     atLayout->addWidget(corridorDelayLabel);
-    bottomTabs->addTab(alertTab, "⚠️ Mountain Corridor Delays & Road Advisory");
+    bottomTabs->addTab(alertTab, "Mountain Corridor Delays & Road Advisory");
 
     layout->addWidget(bottomTabs);
     return tab;
@@ -1214,7 +1312,7 @@ void MainWindow::renderRouteGraph() {
     osmMapWidget->addMarker(29.2974, 79.5447, "Ranibagh Junction", "Alt: 620m ASL", QColor("#238636"), "3");
     osmMapWidget->addMarker(29.3210, 79.5510, "Bhujiaghat Mountain Pass", "Alt: 910m ASL", QColor("#06b6d4"), "4");
     osmMapWidget->addMarker(29.3500, 79.5530, "Bhimtal Lake Mall Road", "Alt: 1,370m ASL", QColor("#238636"), "5");
-    osmMapWidget->addMarker(29.3600, 79.5580, "Graphic Era Campus [FIXED DESTINATION]", "Alt: 1,420m ASL", QColor("#DA3633"), "★");
+    osmMapWidget->addMarker(29.3600, 79.5580, "Graphic Era Campus [FIXED DESTINATION]", "Alt: 1,420m ASL", QColor("#DA3633"), "GEHU");
 
     // Populate route coordinates
     auto roadCoords = routeController->getActiveRoadCoordinates();
@@ -1386,12 +1484,12 @@ void MainWindow::displayComplaintDetails(const string& complaintId) {
         bool isAccused = (!c->accusedRoll.empty() && c->accusedRoll == activeUsername);
 
         if (alreadyVoted) {
-            pollMessageLabel->setText("✓ You have already cast your confidential vote on this incident.");
+            pollMessageLabel->setText("You have already cast your confidential vote on this incident.");
             pollMessageLabel->setStyleSheet("color: #3FB950; font-size: 11.5px;");
             voteYesBtn->setEnabled(false);
             voteNoBtn->setEnabled(false);
         } else if (isComplainant || isAccused) {
-            pollMessageLabel->setText("⚠ Voting Disabled: Disciplinary rules prohibit parties involved in the complaint from casting a poll vote.");
+            pollMessageLabel->setText("Voting Disabled: Disciplinary rules prohibit parties involved in the complaint from casting a poll vote.");
             pollMessageLabel->setStyleSheet("color: #D29922; font-size: 11.5px;");
             voteYesBtn->setEnabled(false);
             voteNoBtn->setEnabled(false);
@@ -1894,7 +1992,7 @@ void MainWindow::onSimulationTelemetry(const QString& busId, const GPSLocation& 
     if (tripProgressBar) tripProgressBar->setValue(progress);
 
     if (routeInfoLabel) {
-        routeInfoLabel->setText(QString("⏱️ [DEMO GPS] Bus %1 at %2 | Approaching: %3 | ETA: %4 mins")
+        routeInfoLabel->setText(QString("[DEMO GPS] Bus %1 at %2 | Approaching: %3 | ETA: %4 mins")
                                 .arg(busId, curStop, nextStop).arg(etaMins));
     }
 
@@ -1912,7 +2010,7 @@ void MainWindow::onSimulationCompleted(const QString& busId) {
         rTripStatusLabel->setText("Status: <font color='#3FB950'><b>DESTINATION REACHED</b></font>");
     }
     if (routeInfoLabel) {
-        routeInfoLabel->setText("✅ Arrival Confirmed: Bus arrived safely at Graphic Era Hill University, Bhimtal Campus!");
+        routeInfoLabel->setText("Arrival Confirmed: Bus arrived safely at Graphic Era Hill University, Bhimtal Campus!");
     }
     routeController->getTrackingService().logTrackingEvent(busId, "TRIP_COMPLETED", "Graphic Era Bhimtal Campus", "COMPLETED");
     refreshTrackingTables();

@@ -1,0 +1,2 @@
+pollId,complaintId,question,active,totalVotes,yesVotes,noVotes,complainantRoll,accusedRoll
+POL-101,CMP-102,"Do you agree that this incident requires disciplinary action?",1,18,14,4,D-01,2024-ME-012
